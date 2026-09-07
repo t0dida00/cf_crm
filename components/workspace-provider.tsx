@@ -9,11 +9,13 @@ import type {
   Dish,
   Domain,
   Order,
+  OrderLine,
   Settings,
   SpecialTax,
   TableRec,
   Workspace,
 } from "@/lib/types";
+import { lineTotal } from "@/lib/order-math";
 import { LEXICON } from "@/lib/lexicon";
 
 let counter = 0;
@@ -25,17 +27,31 @@ interface WorkspaceContextValue {
   currency: string;
   fmt: (value: number) => string;
   create: (name: string, domain: Domain, withDemoData?: boolean) => void;
-  saveTable: (table: Omit<TableRec, "id"> & { id?: string }) => void;
+  saveTable: (
+    table: Omit<TableRec, "id" | "state" | "seatedAt"> & { id?: string },
+  ) => void;
   deleteTable: (id: string) => void;
   saveCategory: (category: Omit<Category, "id"> & { id?: string }) => void;
   deleteCategory: (id: string) => void;
   saveDish: (dish: Omit<Dish, "id"> & { id?: string }) => void;
   deleteDish: (id: string) => void;
   addOrder: (input: { tableName: string; itemId: string; qty: number }) => void;
+  placeOrder: (
+    tableName: string,
+    lines: { itemId: string; qty: number; note?: string }[],
+  ) => void;
   advanceOrder: (id: string) => void;
+  deleteOrder: (id: string) => void;
+  setOrderLineQty: (orderId: string, itemId: string, qty: number) => void;
+  addOrderLine: (orderId: string, itemId: string) => void;
   saveBooking: (booking: Omit<Booking, "id" | "ts">) => void;
   toggleBooking: (id: string) => void;
   deleteBooking: (id: string) => void;
+  assignBooking: (bookingId: string, tableId: string) => void;
+  unassignBooking: (bookingId: string) => void;
+  seatTable: (id: string) => void;
+  checkoutTable: (id: string) => void;
+  freeTable: (id: string) => void;
   updateSettings: (patch: Partial<Settings>) => void;
   addSpecialTax: (tax: SpecialTax) => void;
   removeSpecialTax: (index: number) => void;
@@ -79,8 +95,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             ? [...w.zones, table.zone]
             : w.zones;
           const tables = table.id
-            ? w.tables.map((t) => (t.id === table.id ? { ...t, ...table } as TableRec : t))
-            : [...w.tables, { ...table, id: nextId("t") } as TableRec];
+            ? w.tables.map((t) => (t.id === table.id ? { ...t, ...table } : t))
+            : [
+                ...w.tables,
+                { ...table, id: nextId("t"), state: "Free", seatedAt: null } as TableRec,
+              ];
           return { zones, tables };
         }),
       deleteTable: (id) =>
@@ -120,6 +139,29 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             total: dish.price * qty,
             ts: Date.now(),
             status: flow[0],
+            closedTs: null,
+          };
+          return { orders: [order, ...w.orders] };
+        }),
+      placeOrder: (tableName, lines) =>
+        patch((w) => {
+          const orderLines: OrderLine[] = lines
+            .map(({ itemId, qty, note }): OrderLine | null => {
+              const dish = w.dishes.find((d) => d.id === itemId);
+              if (!dish) return null;
+              return { itemId: dish.id, name: dish.name, price: dish.price, qty, note };
+            })
+            .filter((l): l is OrderLine => l !== null);
+          if (!orderLines.length) return {};
+          const order: Order = {
+            id: nextId("o"),
+            code: `ORD-${2401 + w.orders.length}`,
+            tableName,
+            lines: orderLines,
+            total: lineTotal(orderLines),
+            ts: Date.now(),
+            status: flow[0],
+            closedTs: null,
           };
           return { orders: [order, ...w.orders] };
         }),
@@ -131,6 +173,33 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             return i < 0 || i >= flow.length - 1 ? o : { ...o, status: flow[i + 1] };
           }),
         })),
+      deleteOrder: (id) =>
+        patch((w) => ({ orders: w.orders.filter((o) => o.id !== id) })),
+      setOrderLineQty: (orderId, itemId, qty) =>
+        patch((w) => ({
+          orders: w.orders.map((o) => {
+            if (o.id !== orderId) return o;
+            const lines = o.lines
+              .map((l) => (l.itemId === itemId ? { ...l, qty } : l))
+              .filter((l) => l.qty > 0);
+            return { ...o, lines, total: lineTotal(lines) };
+          }),
+        })),
+      addOrderLine: (orderId, itemId) =>
+        patch((w) => {
+          const dish = w.dishes.find((d) => d.id === itemId);
+          if (!dish) return {};
+          return {
+            orders: w.orders.map((o) => {
+              if (o.id !== orderId) return o;
+              const existing = o.lines.find((l) => l.itemId === itemId);
+              const lines = existing
+                ? o.lines.map((l) => (l.itemId === itemId ? { ...l, qty: l.qty + 1 } : l))
+                : [...o.lines, { itemId: dish.id, name: dish.name, price: dish.price, qty: 1 }];
+              return { ...o, lines, total: lineTotal(lines) };
+            }),
+          };
+        }),
 
       saveBooking: (booking) =>
         patch((w) => ({
@@ -149,6 +218,67 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         })),
       deleteBooking: (id) =>
         patch((w) => ({ bookings: w.bookings.filter((b) => b.id !== id) })),
+      assignBooking: (bookingId, tableId) =>
+        patch((w) => {
+          const table = w.tables.find((t) => t.id === tableId);
+          if (!table) return {};
+          return {
+            bookings: w.bookings.map((b) =>
+              b.id === bookingId ? { ...b, tableName: table.name } : b,
+            ),
+            tables: w.tables.map((t) =>
+              t.id === tableId ? { ...t, state: "Booked" } : t,
+            ),
+          };
+        }),
+      unassignBooking: (bookingId) =>
+        patch((w) => {
+          const booking = w.bookings.find((b) => b.id === bookingId);
+          return {
+            bookings: w.bookings.map((b) =>
+              b.id === bookingId ? { ...b, tableName: null } : b,
+            ),
+            tables: w.tables.map((t) =>
+              t.name === booking?.tableName && t.state === "Booked"
+                ? { ...t, state: "Free" }
+                : t,
+            ),
+          };
+        }),
+
+      seatTable: (id) =>
+        patch((w) => ({
+          tables: w.tables.map((t) =>
+            t.id === id ? { ...t, state: "Seated", seatedAt: Date.now() } : t,
+          ),
+        })),
+      checkoutTable: (id) =>
+        patch((w) => {
+          const table = w.tables.find((t) => t.id === id);
+          if (!table) return {};
+          return {
+            orders: w.orders.map((o) =>
+              o.tableName === table.name && !o.closedTs
+                ? { ...o, status: "Paid", closedTs: Date.now() }
+                : o,
+            ),
+            tables: w.tables.map((t) =>
+              t.id === id ? { ...t, state: "Finished", seatedAt: null } : t,
+            ),
+          };
+        }),
+      freeTable: (id) =>
+        patch((w) => {
+          const table = w.tables.find((t) => t.id === id);
+          return {
+            tables: w.tables.map((t) =>
+              t.id === id ? { ...t, state: "Free", seatedAt: null } : t,
+            ),
+            bookings: w.bookings.map((b) =>
+              b.tableName === table?.name ? { ...b, tableName: null } : b,
+            ),
+          };
+        }),
 
       updateSettings: (p) => patch((w) => ({ settings: { ...w.settings, ...p } })),
       addSpecialTax: (tax) =>

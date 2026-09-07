@@ -40,11 +40,10 @@ export function rangeBounds({ id, from, to }: RangeState): [number, number] {
 export const formatDate = (ts: number) =>
   new Date(ts).toLocaleDateString("en-GB");
 
-export const formatStamp = (ts: number) =>
-  `${formatDate(ts)} ${new Date(ts).toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })}`;
+export const hhmm = (ts: number) =>
+  new Date(ts).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+export const formatStamp = (ts: number) => `${formatDate(ts)} ${hhmm(ts)}`;
 
 export function rangeCaption(range: RangeState, oldestTs: number): string {
   const today = Date.now();

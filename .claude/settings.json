@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(node -e \"require.resolve\\('playwright'\\)\")",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
+      "Bash(curl -s -o /dev/null -w \"/ -> %{http_code}\\\\n\" http://localhost:3000)",
+      "Bash(curl -s -o /dev/null -w \"/staff -> %{http_code}\\\\n\" http://localhost:3000/staff)",
+      "Bash(curl -s -o /dev/null -w \"/admin -> %{http_code}\\\\n\" http://localhost:3000/admin)"
+    ]
+  }
+}

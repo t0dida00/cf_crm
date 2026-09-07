@@ -4,7 +4,7 @@ export interface DomainLexicon {
   label: string;
   blurb: string;
   zones: string[];
-  categories: { name: string; dishes: [string, number][] }[];
+  categories: { name: string; dishes: [string, number, string][] }[];
   flow: string[];
 }
 
@@ -17,24 +17,24 @@ export const LEXICON: Record<Domain, DomainLexicon> = {
       {
         name: "Starters",
         dishes: [
-          ["Pan con tomate", 5.5],
-          ["Padrón peppers", 7],
-          ["Iberian ham plate", 14],
+          ["Pan con tomate", 5.5, "Toasted sourdough, tomato, olive oil"],
+          ["Padrón peppers", 7, "Blistered, sea salt"],
+          ["Iberian ham plate", 14, "24-month cured, 80g"],
         ],
       },
       {
         name: "Mains",
         dishes: [
-          ["Seafood paella", 19.5],
-          ["Grilled sea bass", 22],
-          ["Ribeye 300g", 26],
+          ["Seafood paella", 19.5, "For one · 25 min · prawn, mussel, squid"],
+          ["Grilled sea bass", 22, "Whole fish, lemon, roast potatoes"],
+          ["Ribeye 300g", 26, "Served medium rare unless asked"],
         ],
       },
       {
         name: "Desserts",
         dishes: [
-          ["Crema catalana", 6.5],
-          ["Cheesecake", 6],
+          ["Crema catalana", 6.5, "Burnt cinnamon sugar"],
+          ["Cheesecake", 6, "Basque style, lightly burnt"],
         ],
       },
     ],
@@ -48,24 +48,24 @@ export const LEXICON: Record<Domain, DomainLexicon> = {
       {
         name: "Coffee",
         dishes: [
-          ["Flat white", 3.2],
-          ["Cortado", 2.4],
-          ["Filter batch", 3],
+          ["Flat white", 3.2, "Double shot, steamed milk"],
+          ["Cortado", 2.4, "Espresso cut with warm milk"],
+          ["Filter batch", 3, "Rotating single origin"],
         ],
       },
       {
         name: "Bakery",
         dishes: [
-          ["Almond croissant", 3.6],
-          ["Sourdough loaf", 4.8],
-          ["Cinnamon bun", 3.9],
+          ["Almond croissant", 3.6, "Twice-baked, almond cream"],
+          ["Sourdough loaf", 4.8, "48-hour ferment, whole loaf"],
+          ["Cinnamon bun", 3.9, "Cardamom sugar, cream cheese glaze"],
         ],
       },
       {
         name: "Brunch",
         dishes: [
-          ["Avocado toast", 9.5],
-          ["Eggs benedict", 11],
+          ["Avocado toast", 9.5, "Sourdough, chilli oil, lime"],
+          ["Eggs benedict", 11, "Poached eggs, hollandaise, muffin"],
         ],
       },
     ],

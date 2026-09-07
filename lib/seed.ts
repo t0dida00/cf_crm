@@ -46,6 +46,8 @@ export function seedWorkspace(
     name: `Table ${i + 1}`,
     seats: n,
     zone: lex.zones[i % lex.zones.length],
+    state: "Free",
+    seatedAt: null,
   }));
 
   const categories: Category[] = lex.categories.map((c, i) => ({
@@ -56,12 +58,13 @@ export function seedWorkspace(
 
   const dishes: Dish[] = [];
   lex.categories.forEach((c, ci) =>
-    c.dishes.forEach(([dishName, price], k) =>
+    c.dishes.forEach(([dishName, price, description], k) =>
       dishes.push({
         id: `d${ci}${k}`,
         catId: `c${ci}`,
         name: dishName,
         price,
+        description,
         valid: true,
         taxMode: "none",
       }),
@@ -92,6 +95,8 @@ export function seedWorkspace(
         else lines.push({ itemId: dish.id, name: dish.name, price: dish.price, qty });
       }
       const table = tables[Math.floor(rnd() * tables.length)];
+      const isOpen = day === 0 && k < 2;
+      const closedTs = isOpen ? null : when.getTime() + (45 + Math.floor(rnd() * 45)) * 60000;
       orders.push({
         id: `o${orders.length}`,
         code: `ORD-${2400 - orders.length}`,
@@ -99,7 +104,8 @@ export function seedWorkspace(
         lines,
         total: lines.reduce((a, l) => a + l.price * l.qty, 0),
         ts: when.getTime(),
-        status: day === 0 && k < 2 ? lex.flow[k] : lex.flow[3],
+        status: isOpen ? lex.flow[k] : lex.flow[3],
+        closedTs,
       });
     }
   }

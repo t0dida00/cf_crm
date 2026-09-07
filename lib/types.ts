@@ -10,11 +10,16 @@ export type TabId =
 
 export type TaxMode = "none" | "include" | "exclude";
 
+export type TableState = "Free" | "Booked" | "Seated" | "Finished";
+
 export interface TableRec {
   id: string;
   name: string;
   seats: number;
   zone: string;
+  state: TableState;
+  /** When the table was seated (ms), or null when not seated. */
+  seatedAt: number | null;
 }
 
 export interface Category {
@@ -30,6 +35,8 @@ export interface Dish {
   catId: string;
   valid: boolean;
   taxMode: TaxMode;
+  /** Short menu description shown to guests, e.g. ingredients or prep notes. */
+  description?: string;
   /** Name of the tax baked into the price when taxMode === "include". */
   taxName?: string;
   /** Percentage added at checkout when taxMode === "exclude". */
@@ -41,6 +48,7 @@ export interface OrderLine {
   name: string;
   price: number;
   qty: number;
+  note?: string;
 }
 
 export interface Order {
@@ -49,9 +57,11 @@ export interface Order {
   tableName: string;
   lines: OrderLine[];
   total: number;
-  /** Checkout timestamp (ms). */
+  /** Opened timestamp (ms). */
   ts: number;
   status: string;
+  /** Checked-out timestamp (ms), or null while still open. */
+  closedTs: number | null;
 }
 
 export interface Booking {
@@ -59,7 +69,8 @@ export interface Booking {
   name: string;
   time: string;
   party: number;
-  tableName: string;
+  /** Assigned table name, or null while awaiting assignment. */
+  tableName: string | null;
   status: "Confirmed" | "Arrived";
   /** Start of the booked day (ms). */
   ts: number;

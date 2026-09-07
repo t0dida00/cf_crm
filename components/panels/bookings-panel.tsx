@@ -80,7 +80,7 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
                   <div className="flex-1">
                     <p className="text-[15px]">{booking.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {booking.party} guests · {booking.tableName}
+                      {booking.party} guests · {booking.tableName ?? "Not assigned"}
                     </p>
                   </div>
                   <Badge
