@@ -9,8 +9,10 @@ import {
   ClockCounterClockwise,
   ForkKnife,
   HandWaving,
+  MapPin,
   Minus,
   NotePencil,
+  Phone,
   Plus,
   QrCode,
   Receipt,
@@ -51,6 +53,8 @@ interface PlacedOrder {
 export interface ClientShellProps {
   tableName: string;
   workspaceName: string;
+  workspaceAddress?: string | null;
+  workspacePhone?: string | null;
   categories: Category[];
   dishes: Dish[];
   taxRate: number;
@@ -66,6 +70,8 @@ export interface ClientShellProps {
 export function ClientShell({
   tableName,
   workspaceName,
+  workspaceAddress,
+  workspacePhone,
   categories,
   dishes,
   taxRate,
@@ -94,6 +100,10 @@ export function ClientShell({
   const tableOrders = useMemo(
     () => orders.filter((o) => o.tableName === tableName).sort((a, b) => b.ts - a.ts),
     [orders, tableName],
+  );
+  const tableOrdersTotal = useMemo(
+    () => tableOrders.reduce((sum, o) => sum + o.total, 0),
+    [tableOrders],
   );
 
   const notify = (action: "staff" | "checkout", title: string, description: string) => {
@@ -355,14 +365,31 @@ export function ClientShell({
     <div className="flex min-h-screen flex-col bg-secondary/20">
       <header className="sticky top-0 z-10 border-b bg-card px-4 pt-3 pb-3 sm:px-6">
         <div className="mx-auto flex w-full max-w-2xl items-center gap-2.5">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-white">
-            <ForkKnife size={15} weight="bold" />
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-white">
+            <ForkKnife size={30} weight="bold" />
           </span>
           <div className="min-w-0 flex-1">
             <div className="truncate text-[15px] font-bold tracking-tight">{workspaceName}</div>
-            <div className="truncate text-xs text-muted-foreground">
-              Scan to order · no app needed
-            </div>
+            {workspaceAddress || workspacePhone ? (
+              <div className="flex flex-col gap-0.5">
+                {workspaceAddress && (
+                  <div className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                    <MapPin size={11} weight="bold" className="shrink-0" />
+                    <span className="truncate">{workspaceAddress}</span>
+                  </div>
+                )}
+                {workspacePhone && (
+                  <div className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                    <Phone size={11} weight="bold" className="shrink-0" />
+                    <span className="truncate">{workspacePhone}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="truncate text-xs text-muted-foreground">
+                Scan to order · no app needed
+              </div>
+            )}
           </div>
           <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-[13px] font-bold text-brand-600">
             <QrCode size={14} weight="bold" />
@@ -633,6 +660,15 @@ export function ClientShell({
             <DialogDescription>{tableName}</DialogDescription>
           </DialogHeader>
 
+          {tableOrders.length > 0 && (
+            <div className="flex items-center justify-between rounded-xl bg-secondary/50 px-4 py-3">
+              <span className="text-sm font-semibold">
+                Total across {tableOrders.length} {tableOrders.length === 1 ? "order" : "orders"}
+              </span>
+              <span className="text-lg font-bold">{fmt(tableOrdersTotal)}</span>
+            </div>
+          )}
+
           <div className="-mx-6 flex-1 space-y-4 overflow-y-auto px-6">
             {tableOrders.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">
@@ -640,7 +676,7 @@ export function ClientShell({
               </p>
             ) : (
               tableOrders.map((order) => {
-                const orderNet = order.total / (1 + taxRate / 100);
+                const orderNet = order.total / (1 + order.taxRate / 100);
                 const orderTax = order.total - orderNet;
                 return (
                   <div key={order.id} className="rounded-xl border p-4 text-left">
@@ -671,7 +707,7 @@ export function ClientShell({
                       <span>{fmt(orderNet)}</span>
                     </div>
                     <div className="mt-1.5 flex justify-between text-[13px] text-muted-foreground">
-                      <span>Tax ({taxRate}%)</span>
+                      <span>Tax ({order.taxRate}%)</span>
                       <span>{fmt(orderTax)}</span>
                     </div>
                     <div className="mt-2.5 flex items-center justify-between border-t pt-2.5">

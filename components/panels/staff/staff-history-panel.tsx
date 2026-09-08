@@ -26,7 +26,7 @@ export function StaffHistoryPanel() {
   }, [workspace.orders, query]);
 
   const detail: Order | null = workspace.orders.find((o) => o.id === detailId) ?? null;
-  const rate = workspace.settings.taxRate;
+  const rate = detail?.taxRate ?? 0;
   const dTotal = detail?.total ?? 0;
   const dNet = dTotal / (1 + rate / 100);
   const dTax = dTotal - dNet;

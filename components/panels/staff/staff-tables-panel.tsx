@@ -31,8 +31,10 @@ export function StaffTablesPanel() {
     [table, workspace.orders],
   );
   const total = tableOrders.reduce((a, o) => a + o.total, 0);
-  const rate = workspace.settings.taxRate;
-  const net = total / (1 + rate / 100);
+  // Each order carries its own snapshotted tax rate (fixed at creation, unaffected
+  // by later Settings changes) — sum net/tax per order rather than applying one
+  // blended rate to the combined total, since open orders can have different rates.
+  const net = tableOrders.reduce((a, o) => a + o.total / (1 + o.taxRate / 100), 0);
   const tax = total - net;
 
   const mins = (seatedAt: number | null) =>
@@ -153,7 +155,7 @@ export function StaffTablesPanel() {
                       <span>{fmt(net)}</span>
                     </div>
                     <div className="flex justify-between pt-1.5 text-[13px] text-muted-foreground">
-                      <span>Tax ({rate}%)</span>
+                      <span>Tax</span>
                       <span>{fmt(tax)}</span>
                     </div>
                     <div className="mt-3 flex items-center justify-between border-t pt-3">
@@ -184,11 +186,14 @@ export function StaffTablesPanel() {
                     Check out
                   </Button>
                 )}
-                {(table.state === "Finished" || table.state === "Booked") && (
+                {(table.state === "Finished" ||
+                  table.state === "Booked" ||
+                  (table.state === "Seated" && tableOrders.length === 0)) && (
                   <Button
                     variant="secondary"
                     onClick={() => {
                       freeTable(table.id);
+                      setTableId(null);
                     }}
                   >
                     Mark free

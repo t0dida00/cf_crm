@@ -22,10 +22,13 @@ export function OrderDetailDialog({
   onClose: () => void;
 }) {
   const { workspace, flow, fmt } = useWorkspace();
-  const { taxRate, specialTaxes } = workspace.settings;
+  const { specialTaxes } = workspace.settings;
 
   const breakdown = useMemo(() => {
     if (!order) return null;
+    // Each order snapshots the tax rate in effect when it was placed — never the
+    // platform's current rate, so a later Settings change can't alter this display.
+    const taxRate = order.taxRate;
     const net = order.total / (1 + taxRate / 100);
     const extras: Record<string, number> = {};
     order.lines.forEach((line) => {
@@ -45,7 +48,7 @@ export function OrderDetailDialog({
         ...Object.entries(extras).map(([label, amount]) => ({ label, amount })),
       ],
     };
-  }, [order, taxRate, specialTaxes, workspace.dishes]);
+  }, [order, specialTaxes, workspace.dishes]);
 
   if (!order || !breakdown) return null;
   const toneIndex = Math.max(0, flow.indexOf(order.status));

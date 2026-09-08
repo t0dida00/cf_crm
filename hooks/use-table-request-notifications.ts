@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
+import { playNotificationSound } from "@/lib/notification-sound";
 
 const POLL_INTERVAL_MS = 2000;
 
@@ -48,6 +49,7 @@ export function useTableRequestNotifications(enabled: boolean, onNewRequest: () 
           for (const request of newRequests) {
             toast(`${request.table_name} ${LABELS[request.type]}`);
           }
+          playNotificationSound();
           onNewRequest();
         }
       } catch {

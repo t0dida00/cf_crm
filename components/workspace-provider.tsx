@@ -141,6 +141,7 @@ interface ApiOrder {
   code: string;
   table_name: string;
   total: string | number;
+  tax_rate: string | number;
   status: string;
   ts: string;
   closed_ts: string | null;
@@ -160,6 +161,7 @@ const mapOrder = (o: ApiOrder): Order => ({
   tableName: o.table_name,
   lines: o.order_lines.map(mapOrderLine),
   total: Number(o.total),
+  taxRate: Number(o.tax_rate),
   ts: new Date(o.ts).getTime(),
   status: o.status,
   closedTs: o.closed_ts ? new Date(o.closed_ts).getTime() : null,
@@ -316,10 +318,9 @@ export function WorkspaceProvider({
       currency,
       fmt: (v: number) => money(v, currency),
 
-      refreshOrders: async () => {
-        const res = await apiFetch<{ orders: ApiOrder[] }>("/orders");
-        patch(() => ({ orders: res.orders.map(mapOrder) }));
-      },
+      // Also refreshes tables: a new order can seat a table (auto-seat on first
+      // round), so anything reacting to "new order" needs both in sync.
+      refreshOrders: refetchOrdersAndTables,
 
       saveTable: async (table) => {
         const body = { name: table.name, seats: table.seats, zone: table.zone };
@@ -402,21 +403,22 @@ export function WorkspaceProvider({
       },
 
       addOrder: async ({ tableName, itemId, qty }) => {
-        const res = await apiFetch<{ order: ApiOrder }>("/orders", {
+        await apiFetch<{ order: ApiOrder }>("/orders", {
           method: "POST",
           body: JSON.stringify({ tableName, status: flow[0], lines: [{ itemId, qty }] }),
         });
-        const order = mapOrder(res.order);
-        patch((w) => ({ orders: [order, ...w.orders] }));
+        // Repeat order rounds merge into the table's existing open order rather than
+        // creating a new one, and the first round seats the table — refetch both
+        // rather than hand-patching so local state always matches the merge outcome.
+        await refetchOrdersAndTables();
       },
       placeOrder: async (tableName, lines) => {
         if (!lines.length) return;
-        const res = await apiFetch<{ order: ApiOrder }>("/orders", {
+        await apiFetch<{ order: ApiOrder }>("/orders", {
           method: "POST",
           body: JSON.stringify({ tableName, status: flow[0], lines }),
         });
-        const order = mapOrder(res.order);
-        patch((w) => ({ orders: [order, ...w.orders] }));
+        await refetchOrdersAndTables();
       },
       advanceOrder: async (id) => {
         const current = workspace.orders.find((o) => o.id === id);

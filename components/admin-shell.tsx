@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   CalendarCheck,
   ChartBar,
@@ -8,6 +9,7 @@ import {
   ForkKnife,
   Gear,
   Plus,
+  QrCode,
   Receipt,
   SignOut,
   SquaresFour,
@@ -136,6 +138,13 @@ export function AdminShell() {
         </nav>
 
         <div className="flex-1" />
+        <Link
+          href="/qr-generation"
+          className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white"
+        >
+          <QrCode size={15} weight="bold" />
+          Table QR codes
+        </Link>
         <form action={signOutAction}>
           <button
             type="submit"

@@ -61,6 +61,9 @@ export interface Order {
   tableName: string;
   lines: OrderLine[];
   total: number;
+  /** Tax rate (%) in effect when this order was placed — fixed at creation, so
+   * later changes to platform settings never alter a past order's Net/Tax split. */
+  taxRate: number;
   /** Opened timestamp (ms). */
   ts: number;
   status: string;

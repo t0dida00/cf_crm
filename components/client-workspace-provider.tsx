@@ -10,10 +10,12 @@ import {
 } from "react";
 import { publicApiFetch } from "@/lib/public-api";
 import { money } from "@/lib/range";
-import type { Category, Dish, TableRec, TableRequestType } from "@/lib/types";
+import type { Category, Dish, Order, OrderLine, TableRec, TableRequestType } from "@/lib/types";
 
 interface ClientWorkspace {
   name: string;
+  address: string | null;
+  phone: string | null;
   categories: Category[];
   dishes: Dish[];
   tables: TableRec[];
@@ -27,6 +29,15 @@ interface ClientWorkspaceContextValue {
   /** Always true for this provider — a guest browsing /client has no session. */
   isGuest: true;
   fmt: (value: number) => string;
+  /** Still-open orders for one table (cleared once staff check the table out). */
+  tableOrders: Order[];
+  /** Fetches this table's currently-open orders — call once the table name is
+   * known, and again after placing an order so the guest sees it immediately. */
+  refreshTableOrders: (tableName: string) => Promise<void>;
+  placeOrder: (
+    tableName: string,
+    lines: { itemId: string; qty: number; note?: string }[],
+  ) => Promise<void>;
   createTableRequest: (input: { tableName: string; type: TableRequestType }) => Promise<void>;
 }
 
@@ -34,6 +45,8 @@ const ClientWorkspaceContext = createContext<ClientWorkspaceContextValue | null>
 
 const emptyWorkspace: ClientWorkspace = {
   name: "",
+  address: null,
+  phone: null,
   categories: [],
   dishes: [],
   tables: [],
@@ -88,6 +101,45 @@ const mapTable = (t: ApiTable): TableRec => ({
   seatedAt: null,
 });
 
+interface ApiOrderLine {
+  id: string;
+  item_id: string;
+  name: string;
+  price: string | number;
+  qty: number;
+  note: string | null;
+}
+interface ApiOrder {
+  id: string;
+  code: string;
+  table_name: string;
+  total: string | number;
+  tax_rate: string | number;
+  status: string;
+  ts: string;
+  closed_ts: string | null;
+  order_lines: ApiOrderLine[];
+}
+const mapOrderLine = (l: ApiOrderLine): OrderLine => ({
+  id: l.id,
+  itemId: l.item_id,
+  name: l.name,
+  price: Number(l.price),
+  qty: l.qty,
+  note: l.note ?? undefined,
+});
+const mapOrder = (o: ApiOrder): Order => ({
+  id: o.id,
+  code: o.code,
+  tableName: o.table_name,
+  lines: o.order_lines.map(mapOrderLine),
+  total: Number(o.total),
+  taxRate: Number(o.tax_rate),
+  ts: new Date(o.ts).getTime(),
+  status: o.status,
+  closedTs: o.closed_ts ? new Date(o.closed_ts).getTime() : null,
+});
+
 export function ClientWorkspaceProvider({
   platformId,
   children,
@@ -97,6 +149,7 @@ export function ClientWorkspaceProvider({
 }) {
   const [workspace, setWorkspace] = useState<ClientWorkspace>(emptyWorkspace);
   const [hydrated, setHydrated] = useState(false);
+  const [tableOrders, setTableOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,15 +157,22 @@ export function ClientWorkspaceProvider({
     Promise.all([
       publicApiFetch<{ categories: ApiCategory[]; dishes: ApiDish[] }>(platformId, "/menu"),
       publicApiFetch<{ tables: ApiTable[] }>(platformId, "/tables"),
-      publicApiFetch<{ settings: { name: string; currency: string; taxRate: string | number } }>(
-        platformId,
-        "/settings",
-      ),
+      publicApiFetch<{
+        settings: {
+          name: string;
+          address: string | null;
+          phone: string | null;
+          currency: string;
+          taxRate: string | number;
+        };
+      }>(platformId, "/settings"),
     ])
       .then(([menuRes, tablesRes, settingsRes]) => {
         if (cancelled) return;
         setWorkspace({
           name: settingsRes.settings.name,
+          address: settingsRes.settings.address,
+          phone: settingsRes.settings.phone,
           categories: menuRes.categories.map(mapCategory),
           dishes: menuRes.dishes.map(mapDish),
           tables: tablesRes.tables.map(mapTable),
@@ -134,6 +194,26 @@ export function ClientWorkspaceProvider({
       hydrated,
       isGuest: true,
       fmt: (v: number) => money(v, workspace.currency),
+      tableOrders,
+      refreshTableOrders: async (tableName) => {
+        const res = await publicApiFetch<{ orders: ApiOrder[] }>(
+          platformId,
+          `/orders?table=${encodeURIComponent(tableName)}`,
+        );
+        setTableOrders(res.orders.map(mapOrder));
+      },
+      placeOrder: async (tableName, lines) => {
+        if (!lines.length) return;
+        await publicApiFetch(platformId, "/orders", {
+          method: "POST",
+          body: JSON.stringify({ tableName, lines }),
+        });
+        const res = await publicApiFetch<{ orders: ApiOrder[] }>(
+          platformId,
+          `/orders?table=${encodeURIComponent(tableName)}`,
+        );
+        setTableOrders(res.orders.map(mapOrder));
+      },
       createTableRequest: async ({ tableName, type }) => {
         await publicApiFetch(platformId, "/requests", {
           method: "POST",
@@ -141,7 +221,7 @@ export function ClientWorkspaceProvider({
         });
       },
     }),
-    [workspace, hydrated, platformId],
+    [workspace, hydrated, platformId, tableOrders],
   );
 
   return (

@@ -28,10 +28,10 @@ import type { TableRequest, TableRequestType } from "@/lib/types";
 type StaffTab = "menu" | "orders" | "bookings" | "tables" | "history";
 
 const NAV: { id: StaffTab; label: string; Icon: PhosphorIcon }[] = [
-  { id: "menu", label: "Menu", Icon: ForkKnife },
   { id: "orders", label: "Orders", Icon: Receipt },
-  { id: "bookings", label: "Bookings", Icon: CalendarCheck },
   { id: "tables", label: "Tables", Icon: SquaresFour },
+  { id: "bookings", label: "Bookings", Icon: CalendarCheck },
+  { id: "menu", label: "Menu", Icon: ForkKnife },
   { id: "history", label: "History", Icon: ClockCounterClockwise },
 ];
 
