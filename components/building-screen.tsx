@@ -11,13 +11,20 @@ import {
   SquaresFour,
 } from "@phosphor-icons/react";
 import { LEXICON } from "@/lib/lexicon";
-import { useWorkspace } from "@/components/workspace-provider";
+import type { Domain } from "@/lib/types";
 
 const DURATION = 3000;
 
-export function BuildingScreen({ onDone }: { onDone: () => void }) {
-  const { workspace } = useWorkspace();
-  const lex = LEXICON[workspace.domain];
+export function BuildingScreen({
+  name,
+  domain,
+  onDone,
+}: {
+  name: string;
+  domain: Domain;
+  onDone: () => void;
+}) {
+  const lex = LEXICON[domain];
 
   useEffect(() => {
     const timer = setTimeout(onDone, DURATION);
@@ -25,10 +32,10 @@ export function BuildingScreen({ onDone }: { onDone: () => void }) {
   }, [onDone]);
 
   const cards = [
-    { Icon: Buildings, title: "Workspace", sub: workspace.name },
-    { Icon: SquaresFour, title: "Tables", sub: `${workspace.tables.length} created` },
-    { Icon: Folders, title: "Categories", sub: `${workspace.categories.length} created` },
-    { Icon: ListBullets, title: "Menu", sub: `${workspace.dishes.length} dishes` },
+    { Icon: Buildings, title: "Workspace", sub: name },
+    { Icon: SquaresFour, title: "Tables", sub: "Ready to add" },
+    { Icon: Folders, title: "Categories", sub: "Ready to add" },
+    { Icon: ListBullets, title: "Menu", sub: "Ready to add" },
     { Icon: Receipt, title: "Orders", sub: "History imported" },
     { Icon: CalendarCheck, title: "Bookings", sub: "Calendar synced" },
   ];
@@ -40,7 +47,7 @@ export function BuildingScreen({ onDone }: { onDone: () => void }) {
           <p className="mb-2.5 text-xs font-semibold tracking-wide text-muted-foreground">
             SETTING UP
           </p>
-          <h1 className="text-3xl font-bold">Welcome, {workspace.name}</h1>
+          <h1 className="text-3xl font-bold">Welcome, {name}</h1>
           <p className="mt-2 mb-10 text-sm text-muted-foreground">
             Assembling your {lex.label.toLowerCase()} workspace.
           </p>

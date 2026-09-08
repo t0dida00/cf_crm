@@ -40,6 +40,9 @@ interface DishForm {
   taxPct: string;
   catId: string;
   valid: boolean;
+  description: string;
+  imageUrl: string;
+  isVegan: boolean;
 }
 
 export function MenuPanel({ createSignal }: { createSignal: number }) {
@@ -57,6 +60,9 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
     taxPct: "",
     catId: "",
     valid: true,
+    description: "",
+    imageUrl: "",
+    isVegan: false,
   });
 
   useEffect(() => {
@@ -70,6 +76,9 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
         taxPct: "",
         catId: categories[0]?.id ?? "",
         valid: true,
+        description: "",
+        imageUrl: "",
+        isVegan: false,
       });
       setOpen(true);
     }
@@ -86,6 +95,9 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
       taxPct: dish.taxPct == null ? "" : String(dish.taxPct),
       catId: dish.catId,
       valid: dish.valid,
+      description: dish.description ?? "",
+      imageUrl: dish.imageUrl ?? "",
+      isVegan: dish.isVegan ?? false,
     });
     setOpen(true);
   };
@@ -125,6 +137,9 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
       taxMode: form.taxMode,
       taxName: form.taxMode === "include" ? form.taxName : undefined,
       taxPct: form.taxMode === "exclude" ? Number(form.taxPct) || 0 : undefined,
+      description: form.description.trim() || undefined,
+      imageUrl: form.imageUrl.trim() || undefined,
+      isVegan: form.isVegan,
     });
     setOpen(false);
   };
@@ -205,6 +220,9 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                   >
                     <span className="flex items-center gap-2.5">
                       <span>{dish.name}</span>
+                      {dish.isVegan && (
+                        <Badge className="rounded-md bg-green-50 text-green-700">Vegan</Badge>
+                      )}
                       {taxBadge(dish) && (
                         <Badge className="rounded-md bg-amber-50 text-amber-700">
                           {taxBadge(dish)}
@@ -352,6 +370,34 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="dish-description">Description</Label>
+              <Input
+                id="dish-description"
+                value={form.description}
+                placeholder="Ingredients, prep notes…"
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="dish-image-url">Image URL</Label>
+              <Input
+                id="dish-image-url"
+                value={form.imageUrl}
+                placeholder="https://…"
+                onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
+              />
+            </div>
+
+            <Label className="flex items-center gap-2 font-normal">
+              <Checkbox
+                checked={form.isVegan}
+                onCheckedChange={(isVegan) => setForm((f) => ({ ...f, isVegan: isVegan === true }))}
+              />
+              Vegan
+            </Label>
 
             <Label className="flex items-center gap-2 font-normal">
               <Checkbox

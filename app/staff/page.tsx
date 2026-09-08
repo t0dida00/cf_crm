@@ -1,18 +1,19 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { StaffShell } from "@/components/staff-shell";
 import { useWorkspace } from "@/components/workspace-provider";
 
 export default function StaffPage() {
-  const { workspace, create } = useWorkspace();
+  const router = useRouter();
+  const { workspace, hydrated } = useWorkspace();
 
   useEffect(() => {
-    if (!workspace.name) create("Casa Marina", "restaurant");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspace.name]);
+    if (hydrated && !workspace.name) router.replace("/");
+  }, [hydrated, workspace.name, router]);
 
-  if (!workspace.name) return null;
+  if (!hydrated || !workspace.name) return null;
 
   return <StaffShell />;
 }

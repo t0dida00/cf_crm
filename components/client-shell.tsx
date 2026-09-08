@@ -6,6 +6,7 @@ import {
   BowlFood,
   Cake,
   CheckCircle,
+  ClockCounterClockwise,
   ForkKnife,
   HandWaving,
   Minus,
@@ -62,6 +63,15 @@ export function ClientShell({ tableName }: { tableName: string }) {
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
   const [activeAction, setActiveAction] = useState<"staff" | "checkout" | null>(null);
   const [notice, setNotice] = useState<{ title: string; description: string } | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const tableOrders = useMemo(
+    () =>
+      workspace.orders
+        .filter((o) => o.tableName === tableName)
+        .sort((a, b) => b.ts - a.ts),
+    [workspace.orders, tableName],
+  );
 
   const notify = (action: "staff" | "checkout", title: string, description: string) => {
     setActiveAction(action);
@@ -359,6 +369,22 @@ export function ClientShell({ tableName }: { tableName: string }) {
           </button>
         </div>
 
+        <div className="mx-auto mt-2 flex w-full max-w-2xl">
+          <button
+            type="button"
+            onClick={() => setHistoryOpen(true)}
+            className="flex w-full items-center justify-center gap-1.5 rounded-full border border-border px-3 py-2 text-[13px] font-semibold text-foreground"
+          >
+            <ClockCounterClockwise size={15} weight="bold" />
+            Order history
+            {tableOrders.length > 0 && (
+              <span className="ml-1 flex min-w-4.5 items-center justify-center rounded-full bg-secondary px-1 text-[11px] font-bold text-muted-foreground">
+                {tableOrders.length}
+              </span>
+            )}
+          </button>
+        </div>
+
         <div className="mx-auto mt-3.5 flex w-full max-w-2xl gap-2 overflow-x-auto">
           {validCategories.map((c) => {
             const active = c.id === activeCategory?.id;
@@ -544,6 +570,69 @@ export function ClientShell({ tableName }: { tableName: string }) {
           <DialogFooter>
             <Button onClick={closeNotice} className="w-full sm:w-auto">
               Got it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="flex max-h-[80vh] w-[90%] flex-col rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Order history</DialogTitle>
+            <DialogDescription>{tableName}</DialogDescription>
+          </DialogHeader>
+
+          <div className="-mx-6 flex-1 space-y-4 overflow-y-auto px-6">
+            {tableOrders.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                No orders yet for this table.
+              </p>
+            ) : (
+              tableOrders.map((order) => {
+                const orderNet = order.total / (1 + taxRate / 100);
+                const orderTax = order.total - orderNet;
+                return (
+                  <div key={order.id} className="rounded-xl border p-4 text-left">
+                    <div className="flex items-center justify-between text-xs font-semibold tracking-wide text-muted-foreground">
+                      <span>{order.code}</span>
+                      <span>{tableName}</span>
+                    </div>
+                    {order.lines.map((line) => (
+                      <div
+                        key={line.itemId}
+                        className="mt-2.5 flex items-center gap-3 border-t pt-2.5 text-sm"
+                      >
+                        <span className="w-6 font-bold text-muted-foreground/70">
+                          {line.qty}×
+                        </span>
+                        <span className="flex-1 truncate">
+                          {line.name}
+                          {line.note ? ` · ${line.note}` : ""}
+                        </span>
+                        <span className="font-semibold">{fmt(line.price * line.qty)}</span>
+                      </div>
+                    ))}
+                    <div className="mt-3 flex justify-between border-t pt-3 text-[13px] text-muted-foreground">
+                      <span>Net</span>
+                      <span>{fmt(orderNet)}</span>
+                    </div>
+                    <div className="mt-1.5 flex justify-between text-[13px] text-muted-foreground">
+                      <span>Tax ({taxRate}%)</span>
+                      <span>{fmt(orderTax)}</span>
+                    </div>
+                    <div className="mt-2.5 flex items-center justify-between border-t pt-2.5">
+                      <span className="text-sm font-semibold">Total</span>
+                      <span className="text-lg font-bold">{fmt(order.total)}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setHistoryOpen(false)} className="w-full sm:w-auto">
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

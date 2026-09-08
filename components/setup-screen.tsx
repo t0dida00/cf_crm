@@ -16,11 +16,21 @@ const ICONS: Record<Domain, typeof ForkKnife> = {
 
 export function SetupScreen({
   onSubmit,
+  error,
 }: {
-  onSubmit: (name: string, domain: Domain) => void;
+  onSubmit: (
+    name: string,
+    domain: Domain,
+    contact: { phone: string; email: string; address: string },
+  ) => void | Promise<void>;
+  error?: string | null;
 }) {
   const [name, setName] = useState("");
   const [domain, setDomain] = useState<Domain>("restaurant");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-12">
@@ -51,6 +61,48 @@ export function SetupScreen({
             placeholder="e.g. Casa Marina"
             className="h-11 text-base"
           />
+
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="business-phone" className="mb-2 block text-sm font-semibold">
+                Phone
+              </Label>
+              <Input
+                id="business-phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="e.g. +34 600 000 000"
+                className="h-11 text-base"
+              />
+            </div>
+            <div>
+              <Label htmlFor="business-email" className="mb-2 block text-sm font-semibold">
+                Email
+              </Label>
+              <Input
+                id="business-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="e.g. hello@casamarina.com"
+                className="h-11 text-base"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <Label htmlFor="business-address" className="mb-2 block text-sm font-semibold">
+              Address
+            </Label>
+            <Input
+              id="business-address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="e.g. Carrer del Mar 12, Barcelona"
+              className="h-11 text-base"
+            />
+          </div>
 
           <p className="mt-8 mb-3 text-sm font-semibold">What kind of business is it?</p>
           <div className="grid grid-cols-2 gap-3">
@@ -84,12 +136,32 @@ export function SetupScreen({
             })}
           </div>
 
+          {error && (
+            <p className="mt-6 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+
           <div className="mt-8 flex items-center justify-between border-t pt-6">
             <span className="text-xs text-muted-foreground">
               You can change all of this later.
             </span>
-            <Button disabled={!name.trim()} onClick={() => onSubmit(name.trim(), domain)}>
-              Build my workspace
+            <Button
+              disabled={!name.trim() || submitting}
+              onClick={async () => {
+                setSubmitting(true);
+                try {
+                  await onSubmit(name.trim(), domain, {
+                    phone: phone.trim(),
+                    email: email.trim(),
+                    address: address.trim(),
+                  });
+                } finally {
+                  setSubmitting(false);
+                }
+              }}
+            >
+              {submitting ? "Building…" : "Build my workspace"}
               <ArrowRight size={16} weight="bold" />
             </Button>
           </div>

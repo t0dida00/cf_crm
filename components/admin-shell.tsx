@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  ArrowCounterClockwise,
   CalendarCheck,
   ChartBar,
   Folders,
@@ -10,11 +9,13 @@ import {
   Gear,
   Plus,
   Receipt,
+  SignOut,
   SquaresFour,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { useWorkspace } from "@/components/workspace-provider";
+import { signOutAction } from "@/app/actions";
 import { DashboardPanel } from "@/components/panels/dashboard-panel";
 import { TablesPanel } from "@/components/panels/tables-panel";
 import { CategoriesPanel } from "@/components/panels/categories-panel";
@@ -63,7 +64,7 @@ const ACTION_LABELS: Partial<Record<TabId, string>> = {
   bookings: "New booking",
 };
 
-export function AdminShell({ onRestart }: { onRestart: () => void }) {
+export function AdminShell() {
   const { workspace } = useWorkspace();
   const [tab, setTab] = useState<TabId>("dash");
   const [createSignal, setCreateSignal] = useState(0);
@@ -132,14 +133,15 @@ export function AdminShell({ onRestart }: { onRestart: () => void }) {
         </nav>
 
         <div className="flex-1" />
-        <button
-          type="button"
-          onClick={onRestart}
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white"
-        >
-          <ArrowCounterClockwise size={15} weight="bold" />
-          Restart setup
-        </button>
+        <form action={signOutAction}>
+          <button
+            type="submit"
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white"
+          >
+            <SignOut size={15} weight="bold" />
+            Sign out
+          </button>
+        </form>
       </aside>
 
       <div className="min-w-0 flex-1">

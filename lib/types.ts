@@ -41,9 +41,13 @@ export interface Dish {
   taxName?: string;
   /** Percentage added at checkout when taxMode === "exclude". */
   taxPct?: number;
+  isVegan?: boolean;
+  imageUrl?: string;
 }
 
 export interface OrderLine {
+  /** Order-line row id (absent for lines that only exist as a local optimistic draft). */
+  id?: string;
   itemId: string;
   name: string;
   price: number;
@@ -77,6 +81,7 @@ export interface Booking {
 }
 
 export interface SpecialTax {
+  id: string;
   name: string;
   pct: number;
 }
@@ -90,6 +95,9 @@ export interface Settings {
 export interface Workspace {
   name: string;
   domain: Domain;
+  phone?: string;
+  email?: string;
+  address?: string;
   zones: string[];
   tables: TableRec[];
   categories: Category[];

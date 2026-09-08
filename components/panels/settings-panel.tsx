@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
+import type { SpecialTax } from "@/lib/types";
 
 const CURRENCIES = [
   { value: "€", label: "Euro (€)" },
@@ -21,13 +22,60 @@ const CURRENCIES = [
   { value: "£", label: "Pound sterling (£)" },
 ];
 
+let draftCounter = 0;
+const nextDraftId = () => `draft-${draftCounter++}`;
+
 export function SettingsPanel() {
   const { workspace, fmt, updateSettings, addSpecialTax, removeSpecialTax } =
     useWorkspace();
   const { taxRate, currency, specialTaxes } = workspace.settings;
-  const [draft, setDraft] = useState({ name: "", pct: "" });
 
-  const taxOnHundred = 100 - 100 / (1 + taxRate / 100);
+  const [billingDraft, setBillingDraft] = useState({ taxRate: String(taxRate), currency });
+  const [taxesDraft, setTaxesDraft] = useState<SpecialTax[]>(specialTaxes);
+  const [newTax, setNewTax] = useState({ name: "", pct: "" });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setBillingDraft({ taxRate: String(taxRate), currency });
+    setTaxesDraft(specialTaxes);
+  }, [taxRate, currency, specialTaxes]);
+
+  const removedIds = specialTaxes
+    .filter((t) => !taxesDraft.some((d) => d.id === t.id))
+    .map((t) => t.id);
+  const addedTaxes = taxesDraft.filter((t) => t.id.startsWith("draft-"));
+
+  const dirty =
+    Number(billingDraft.taxRate) !== taxRate ||
+    billingDraft.currency !== currency ||
+    removedIds.length > 0 ||
+    addedTaxes.length > 0;
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      if (Number(billingDraft.taxRate) !== taxRate || billingDraft.currency !== currency) {
+        await updateSettings({
+          taxRate: Number(billingDraft.taxRate) || 0,
+          currency: billingDraft.currency,
+        });
+      }
+      for (const id of removedIds) {
+        await removeSpecialTax(id);
+      }
+      for (const tax of addedTaxes) {
+        await addSpecialTax({ name: tax.name, pct: tax.pct });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save settings");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const taxOnHundred = 100 - 100 / (1 + Number(billingDraft.taxRate || 0) / 100);
 
   return (
     <Card className="max-w-xl">
@@ -41,8 +89,10 @@ export function SettingsPanel() {
                 <Input
                   id="tax-rate"
                   type="number"
-                  value={String(taxRate)}
-                  onChange={(e) => updateSettings({ taxRate: Number(e.target.value) || 0 })}
+                  value={billingDraft.taxRate}
+                  onChange={(e) =>
+                    setBillingDraft((d) => ({ ...d, taxRate: e.target.value }))
+                  }
                 />
                 <span className="text-sm text-muted-foreground">%</span>
               </div>
@@ -50,8 +100,10 @@ export function SettingsPanel() {
             <div className="space-y-1.5">
               <Label>Currency</Label>
               <Select
-                value={currency}
-                onValueChange={(value) => updateSettings({ currency: value })}
+                value={billingDraft.currency}
+                onValueChange={(value) =>
+                  setBillingDraft((d) => ({ ...d, currency: value }))
+                }
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -78,18 +130,20 @@ export function SettingsPanel() {
             Optional. Define them here, then apply one to a dish from the Menu tab.
           </p>
 
-          {specialTaxes.length === 0 ? (
+          {taxesDraft.length === 0 ? (
             <p className="border-t py-2.5 text-sm text-muted-foreground">
               No special taxes yet.
             </p>
           ) : (
-            specialTaxes.map((tax, i) => (
-              <div key={tax.name} className="flex items-center gap-3 border-t py-2.5">
+            taxesDraft.map((tax) => (
+              <div key={tax.id} className="flex items-center gap-3 border-t py-2.5">
                 <span className="flex-1 text-[15px]">{tax.name}</span>
                 <span className="font-semibold">{tax.pct}%</span>
                 <button
                   type="button"
-                  onClick={() => removeSpecialTax(i)}
+                  onClick={() =>
+                    setTaxesDraft((list) => list.filter((t) => t.id !== tax.id))
+                  }
                   className="text-muted-foreground transition-colors hover:text-destructive"
                   aria-label={`Remove ${tax.name}`}
                 >
@@ -101,30 +155,42 @@ export function SettingsPanel() {
 
           <div className="mt-3.5 flex items-center gap-2.5">
             <Input
-              value={draft.name}
+              value={newTax.name}
               placeholder="Tax name"
-              onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+              onChange={(e) => setNewTax((d) => ({ ...d, name: e.target.value }))}
             />
             <Input
               type="number"
-              value={draft.pct}
+              value={newTax.pct}
               placeholder="%"
               className="w-22"
-              onChange={(e) => setDraft((d) => ({ ...d, pct: e.target.value }))}
+              onChange={(e) => setNewTax((d) => ({ ...d, pct: e.target.value }))}
             />
             <Button
               variant="outline"
               onClick={() => {
-                const name = draft.name.trim();
-                const pct = Number(draft.pct);
+                const name = newTax.name.trim();
+                const pct = Number(newTax.pct);
                 if (!name || !Number.isFinite(pct)) return;
-                addSpecialTax({ name, pct });
-                setDraft({ name: "", pct: "" });
+                setTaxesDraft((list) => [...list, { id: nextDraftId(), name, pct }]);
+                setNewTax({ name: "", pct: "" });
               }}
             >
               Add
             </Button>
           </div>
+        </div>
+
+        {error && (
+          <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+
+        <div className="flex justify-end border-t pt-5">
+          <Button onClick={handleSave} disabled={!dirty || saving}>
+            {saving ? "Saving…" : "Save"}
+          </Button>
         </div>
       </CardContent>
     </Card>

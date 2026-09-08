@@ -1,20 +1,20 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ClientShell } from "@/components/client-shell";
 import { useWorkspace } from "@/components/workspace-provider";
 
 function ClientPageInner() {
-  const { workspace, create } = useWorkspace();
+  const router = useRouter();
+  const { workspace, hydrated } = useWorkspace();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (!workspace.name) create("Casa Marina", "restaurant");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspace.name]);
+    if (hydrated && !workspace.name) router.replace("/");
+  }, [hydrated, workspace.name, router]);
 
-  if (!workspace.name) return null;
+  if (!hydrated || !workspace.name) return null;
 
   const requested = searchParams.get("table");
   const tableName =

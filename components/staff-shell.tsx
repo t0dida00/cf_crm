@@ -6,6 +6,7 @@ import {
   ClockCounterClockwise,
   ForkKnife,
   Receipt,
+  SignOut,
   SquaresFour,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
@@ -16,6 +17,7 @@ import { StaffBookingsPanel } from "@/components/panels/staff/staff-bookings-pan
 import { StaffTablesPanel } from "@/components/panels/staff/staff-tables-panel";
 import { StaffHistoryPanel } from "@/components/panels/staff/staff-history-panel";
 import { cn } from "@/lib/utils";
+import { signOutAction } from "@/app/actions";
 
 type StaffTab = "menu" | "orders" | "bookings" | "tables" | "history";
 
@@ -122,6 +124,15 @@ export function StaffShell() {
 
         <div className="flex-1" />
         <div className="px-3 py-2.5 text-[13px] text-white/55">{clock}</div>
+        <form action={signOutAction}>
+          <button
+            type="submit"
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white"
+          >
+            <SignOut size={15} weight="bold" />
+            Sign out
+          </button>
+        </form>
       </aside>
 
       <div className="min-w-0 flex-1">

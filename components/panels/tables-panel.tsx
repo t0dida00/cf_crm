@@ -30,6 +30,16 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
   const [editing, setEditing] = useState<TableRec | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", seats: "4", zone: "", newZone: "" });
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    setError(null);
+    try {
+      await deleteTable(id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete table");
+    }
+  };
 
   const startCreate = () => {
     setEditing(null);
@@ -67,6 +77,11 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
 
   return (
     <>
+      {error && (
+        <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
+          {error}
+        </p>
+      )}
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
         {workspace.tables.map((table) => (
           <Card key={table.id}>
@@ -88,7 +103,7 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => deleteTable(table.id)}
+                  onClick={() => handleDelete(table.id)}
                   className="text-muted-foreground transition-colors hover:text-destructive"
                   aria-label={`Delete ${table.name}`}
                 >
@@ -168,8 +183,8 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
               <Button
                 variant="ghost"
                 className="mr-auto"
-                onClick={() => {
-                  deleteTable(editing.id);
+                onClick={async () => {
+                  await handleDelete(editing.id);
                   setOpen(false);
                 }}
               >

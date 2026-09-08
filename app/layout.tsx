@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Nunito_Sans } from "next/font/google";
+import { auth } from "@/auth";
+import { fetchMyPlatform } from "@/lib/platform-api";
 import { WorkspaceProvider } from "@/components/workspace-provider";
 import "../node_modules/tw-animate-css/dist/tw-animate.css";
 import "./globals.scss";
@@ -15,13 +17,17 @@ export const metadata: Metadata = {
   description: "Set up a restaurant or café workspace and manage it.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const session = await auth();
+  const accessToken = (session as { accessToken?: string } | null)?.accessToken;
+  const initialPlatform = accessToken ? await fetchMyPlatform(accessToken).catch(() => null) : null;
+
   return (
     <html lang="en" className={nunito.variable}>
       <body>
-        <WorkspaceProvider>{children}</WorkspaceProvider>
+        <WorkspaceProvider initialPlatform={initialPlatform}>{children}</WorkspaceProvider>
       </body>
     </html>
   );

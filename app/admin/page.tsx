@@ -7,13 +7,13 @@ import { useWorkspace } from "@/components/workspace-provider";
 
 export default function AdminPage() {
   const router = useRouter();
-  const { workspace } = useWorkspace();
+  const { workspace, hydrated } = useWorkspace();
 
   useEffect(() => {
-    if (!workspace.name) router.replace("/");
-  }, [workspace.name, router]);
+    if (hydrated && !workspace.name) router.replace("/");
+  }, [hydrated, workspace.name, router]);
 
-  if (!workspace.name) return null;
+  if (!hydrated || !workspace.name) return null;
 
-  return <AdminShell onRestart={() => router.push("/")} />;
+  return <AdminShell />;
 }
