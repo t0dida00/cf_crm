@@ -134,7 +134,14 @@ export function StaffTablesPanel() {
                       {o.lines.map((l) => (
                         <div key={l.itemId} className="flex items-baseline gap-2.5 py-1 text-sm">
                           <span className="w-6.5 font-bold text-muted-foreground">{l.qty}×</span>
-                          <span className="flex-1">{l.name}</span>
+                          <span className="flex-1">
+                            {l.name}
+                            {l.note && (
+                              <span className="block text-[13px] text-muted-foreground">
+                                {l.note}
+                              </span>
+                            )}
+                          </span>
                           <span className="font-semibold">{fmt(l.price * l.qty)}</span>
                         </div>
                       ))}

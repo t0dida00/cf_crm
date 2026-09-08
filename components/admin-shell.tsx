@@ -25,6 +25,7 @@ import { BookingsPanel } from "@/components/panels/bookings-panel";
 import { SettingsPanel } from "@/components/panels/settings-panel";
 import type { TabId } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useNewOrderNotifications } from "@/hooks/use-new-order-notifications";
 
 const NAV: { id: TabId; label: string; Icon: PhosphorIcon }[] = [
   { id: "dash", label: "Dashboard", Icon: ChartBar },
@@ -65,9 +66,11 @@ const ACTION_LABELS: Partial<Record<TabId, string>> = {
 };
 
 export function AdminShell() {
-  const { workspace } = useWorkspace();
+  const { workspace, fmt, refreshOrders } = useWorkspace();
   const [tab, setTab] = useState<TabId>("dash");
   const [createSignal, setCreateSignal] = useState(0);
+
+  useNewOrderNotifications(true, refreshOrders, fmt);
 
   const initials = (workspace.name || "W")
     .trim()

@@ -1,0 +1,156 @@
+"use client";
+
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { publicApiFetch } from "@/lib/public-api";
+import { money } from "@/lib/range";
+import type { Category, Dish, TableRec, TableRequestType } from "@/lib/types";
+
+interface ClientWorkspace {
+  name: string;
+  categories: Category[];
+  dishes: Dish[];
+  tables: TableRec[];
+  currency: string;
+  taxRate: number;
+}
+
+interface ClientWorkspaceContextValue {
+  workspace: ClientWorkspace;
+  hydrated: boolean;
+  /** Always true for this provider — a guest browsing /client has no session. */
+  isGuest: true;
+  fmt: (value: number) => string;
+  createTableRequest: (input: { tableName: string; type: TableRequestType }) => Promise<void>;
+}
+
+const ClientWorkspaceContext = createContext<ClientWorkspaceContextValue | null>(null);
+
+const emptyWorkspace: ClientWorkspace = {
+  name: "",
+  categories: [],
+  dishes: [],
+  tables: [],
+  currency: "€",
+  taxRate: 0,
+};
+
+interface ApiCategory {
+  id: string;
+  name: string;
+  is_active: boolean;
+}
+const mapCategory = (c: ApiCategory): Category => ({ id: c.id, name: c.name, valid: c.is_active });
+
+interface ApiDish {
+  id: string;
+  name: string;
+  price: string | number;
+  category_id: string | null;
+  description: string | null;
+  tax_mode: string;
+  tax_name: string | null;
+  tax_pct: string | number | null;
+  is_available: boolean;
+  is_vegan: boolean;
+  image_url: string | null;
+}
+const mapDish = (d: ApiDish): Dish => ({
+  id: d.id,
+  name: d.name,
+  price: Number(d.price),
+  catId: d.category_id ?? "",
+  valid: d.is_available,
+  taxMode: d.tax_mode as Dish["taxMode"],
+  description: d.description ?? undefined,
+  taxName: d.tax_name ?? undefined,
+  taxPct: d.tax_pct !== null ? Number(d.tax_pct) : undefined,
+  isVegan: d.is_vegan,
+  imageUrl: d.image_url ?? undefined,
+});
+
+interface ApiTable {
+  id: string;
+  name: string;
+}
+const mapTable = (t: ApiTable): TableRec => ({
+  id: t.id,
+  name: t.name,
+  seats: 0,
+  zone: "",
+  state: "Free",
+  seatedAt: null,
+});
+
+export function ClientWorkspaceProvider({
+  platformId,
+  children,
+}: {
+  platformId: string;
+  children: ReactNode;
+}) {
+  const [workspace, setWorkspace] = useState<ClientWorkspace>(emptyWorkspace);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setHydrated(false);
+    Promise.all([
+      publicApiFetch<{ categories: ApiCategory[]; dishes: ApiDish[] }>(platformId, "/menu"),
+      publicApiFetch<{ tables: ApiTable[] }>(platformId, "/tables"),
+      publicApiFetch<{ settings: { name: string; currency: string; taxRate: string | number } }>(
+        platformId,
+        "/settings",
+      ),
+    ])
+      .then(([menuRes, tablesRes, settingsRes]) => {
+        if (cancelled) return;
+        setWorkspace({
+          name: settingsRes.settings.name,
+          categories: menuRes.categories.map(mapCategory),
+          dishes: menuRes.dishes.map(mapDish),
+          tables: tablesRes.tables.map(mapTable),
+          currency: settingsRes.settings.currency,
+          taxRate: Number(settingsRes.settings.taxRate),
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setHydrated(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [platformId]);
+
+  const value = useMemo<ClientWorkspaceContextValue>(
+    () => ({
+      workspace,
+      hydrated,
+      isGuest: true,
+      fmt: (v: number) => money(v, workspace.currency),
+      createTableRequest: async ({ tableName, type }) => {
+        await publicApiFetch(platformId, "/requests", {
+          method: "POST",
+          body: JSON.stringify({ tableName, type }),
+        });
+      },
+    }),
+    [workspace, hydrated, platformId],
+  );
+
+  return (
+    <ClientWorkspaceContext.Provider value={value}>{children}</ClientWorkspaceContext.Provider>
+  );
+}
+
+export function useClientWorkspace() {
+  const ctx = useContext(ClientWorkspaceContext);
+  if (!ctx) throw new Error("useClientWorkspace must be used inside <ClientWorkspaceProvider>");
+  return ctx;
+}

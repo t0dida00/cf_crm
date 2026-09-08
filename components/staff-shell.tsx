@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  BellRinging,
   CalendarCheck,
   ClockCounterClockwise,
   ForkKnife,
@@ -16,8 +17,13 @@ import { StaffOrdersPanel } from "@/components/panels/staff/staff-orders-panel";
 import { StaffBookingsPanel } from "@/components/panels/staff/staff-bookings-panel";
 import { StaffTablesPanel } from "@/components/panels/staff/staff-tables-panel";
 import { StaffHistoryPanel } from "@/components/panels/staff/staff-history-panel";
+import { TableRequestsModal } from "@/components/panels/staff/table-requests-modal";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/app/actions";
+import { apiFetch } from "@/lib/api";
+import { useNewOrderNotifications } from "@/hooks/use-new-order-notifications";
+import { useTableRequestNotifications } from "@/hooks/use-table-request-notifications";
+import type { TableRequest, TableRequestType } from "@/lib/types";
 
 type StaffTab = "menu" | "orders" | "bookings" | "tables" | "history";
 
@@ -37,15 +43,55 @@ const TITLES: Record<StaffTab, string> = {
   history: "History",
 };
 
+interface ApiTableRequest {
+  id: string;
+  table_name: string;
+  type: TableRequestType;
+  status: "pending" | "resolved";
+  created_at: string;
+  resolved_at: string | null;
+}
+
+const mapRequest = (r: ApiTableRequest): TableRequest => ({
+  id: r.id,
+  tableName: r.table_name,
+  type: r.type,
+  status: r.status,
+  ts: new Date(r.created_at).getTime(),
+  resolvedTs: r.resolved_at ? new Date(r.resolved_at).getTime() : null,
+});
+
 export function StaffShell() {
-  const { workspace } = useWorkspace();
+  const { workspace, fmt, refreshOrders } = useWorkspace();
   const [tab, setTab] = useState<StaffTab>("menu");
   const [now, setNow] = useState(() => Date.now());
+  const [pendingRequests, setPendingRequests] = useState<TableRequest[]>([]);
+  const [requestsModalOpen, setRequestsModalOpen] = useState(false);
 
   useEffect(() => {
     const i = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(i);
   }, []);
+
+  const refreshRequests = async () => {
+    const res = await apiFetch<{ requests: ApiTableRequest[] }>("/table-requests?status=pending");
+    setPendingRequests(res.requests.map(mapRequest));
+  };
+
+  useEffect(() => {
+    refreshRequests();
+  }, []);
+
+  useNewOrderNotifications(true, refreshOrders, fmt);
+  useTableRequestNotifications(true, () => {
+    refreshRequests();
+    setRequestsModalOpen(true);
+  });
+
+  const handleResolveRequest = async (id: string) => {
+    await apiFetch(`/table-requests/${id}/resolve`, { method: "POST" });
+    setPendingRequests((prev) => prev.filter((r) => r.id !== id));
+  };
 
   const initials = (workspace.name || "W")
     .trim()
@@ -139,6 +185,19 @@ export function StaffShell() {
         <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b bg-card px-6">
           <h1 className="text-xl font-bold">{TITLES[tab]}</h1>
           <div className="flex-1" />
+          <button
+            type="button"
+            onClick={() => setRequestsModalOpen(true)}
+            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            aria-label="Table requests"
+          >
+            <BellRinging size={18} weight="bold" />
+            {pendingRequests.length > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-brand-500 text-[10px] font-bold text-white">
+                {pendingRequests.length}
+              </span>
+            )}
+          </button>
           <span className="flex size-7 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">
             {initials}
           </span>
@@ -152,6 +211,13 @@ export function StaffShell() {
           {tab === "history" && <StaffHistoryPanel />}
         </div>
       </div>
+
+      <TableRequestsModal
+        open={requestsModalOpen}
+        onOpenChange={setRequestsModalOpen}
+        requests={pendingRequests}
+        onResolve={handleResolveRequest}
+      />
     </div>
   );
 }

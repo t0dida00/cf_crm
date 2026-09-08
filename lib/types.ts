@@ -108,3 +108,15 @@ export interface Workspace {
 }
 
 export type RangeId = "today" | "week" | "month" | "year" | "all" | "custom";
+
+export type TableRequestType = "call_staff" | "checkout";
+
+export interface TableRequest {
+  id: string;
+  tableName: string;
+  type: TableRequestType;
+  status: "pending" | "resolved";
+  /** Created timestamp (ms). */
+  ts: number;
+  resolvedTs: number | null;
+}

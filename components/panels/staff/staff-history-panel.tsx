@@ -103,7 +103,12 @@ export function StaffHistoryPanel() {
               {detail.lines.map((l) => (
                 <div key={l.itemId} className="flex items-center gap-4 border-t py-3 text-sm">
                   <span className="w-8.5 font-bold text-muted-foreground">{l.qty}×</span>
-                  <span className="flex-1">{l.name}</span>
+                  <span className="flex-1">
+                    {l.name}
+                    {l.note && (
+                      <span className="block text-[13px] text-muted-foreground">{l.note}</span>
+                    )}
+                  </span>
                   <span className="text-muted-foreground">{fmt(l.price)}</span>
                   <span className="w-20 text-right font-semibold">{fmt(l.price * l.qty)}</span>
                 </div>

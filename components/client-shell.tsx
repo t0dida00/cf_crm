@@ -18,9 +18,10 @@ import {
   Wine,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
-import { useWorkspace } from "@/components/workspace-provider";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { OrderLine } from "@/lib/types";
+import { TONE_CLASSES } from "@/lib/tone";
+import type { Category, Dish, Order, OrderLine, TableRec, TableRequestType } from "@/lib/types";
 import {
   Dialog,
   DialogContent,
@@ -47,9 +48,32 @@ interface PlacedOrder {
   total: number;
 }
 
-export function ClientShell({ tableName }: { tableName: string }) {
-  const { workspace, fmt, placeOrder } = useWorkspace();
-  const { categories, dishes, settings } = workspace;
+export interface ClientShellProps {
+  tableName: string;
+  workspaceName: string;
+  categories: Category[];
+  dishes: Dish[];
+  taxRate: number;
+  fmt: (value: number) => string;
+  orders: Order[];
+  /** null for a guest session — ordering isn't available without a staff-logged-in browser yet. */
+  placeOrder:
+    | ((tableName: string, lines: { itemId: string; qty: number; note?: string }[]) => Promise<void>)
+    | null;
+  createTableRequest: (input: { tableName: string; type: TableRequestType }) => Promise<void>;
+}
+
+export function ClientShell({
+  tableName,
+  workspaceName,
+  categories,
+  dishes,
+  taxRate,
+  fmt,
+  orders,
+  placeOrder,
+  createTableRequest,
+}: ClientShellProps) {
   const validCategories = useMemo(
     () => categories.filter((c) => c.valid && dishes.some((d) => d.catId === c.id && d.valid)),
     [categories, dishes],
@@ -65,17 +89,23 @@ export function ClientShell({ tableName }: { tableName: string }) {
   const [notice, setNotice] = useState<{ title: string; description: string } | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
 
+  const canOrder = placeOrder !== null;
+
   const tableOrders = useMemo(
-    () =>
-      workspace.orders
-        .filter((o) => o.tableName === tableName)
-        .sort((a, b) => b.ts - a.ts),
-    [workspace.orders, tableName],
+    () => orders.filter((o) => o.tableName === tableName).sort((a, b) => b.ts - a.ts),
+    [orders, tableName],
   );
 
   const notify = (action: "staff" | "checkout", title: string, description: string) => {
     setActiveAction(action);
     setNotice({ title, description });
+    createTableRequest({
+      tableName,
+      type: action === "staff" ? "call_staff" : "checkout",
+    }).catch(() => {
+      // A missed ping is recoverable — the guest can just tap again. Don't
+      // break the local confirmation UI over a transient network hiccup.
+    });
   };
 
   const closeNotice = () => {
@@ -102,11 +132,11 @@ export function ClientShell({ tableName }: { tableName: string }) {
   const cartTotal = cartLines.reduce((a, l) => a + l.qty * l.price, 0);
 
   const handleConfirmOrder = () => {
-    if (!cartCount) return;
+    if (!cartCount || !placeOrder) return;
     const lines = cartLines.map(({ itemId, qty, note }) => ({ itemId, qty, note }));
     placeOrder(tableName, lines);
     setPlaced({
-      code: `ORD-${2401 + workspace.orders.length}`,
+      code: `ORD-${2401 + orders.length}`,
       lines: cartLines.map((l) => ({
         itemId: l.itemId,
         name: l.name,
@@ -122,7 +152,6 @@ export function ClientShell({ tableName }: { tableName: string }) {
     setScreen("done");
   };
 
-  const { taxRate } = settings;
   const net = placed ? placed.total / (1 + taxRate / 100) : 0;
   const tax = placed ? placed.total - net : 0;
 
@@ -153,6 +182,9 @@ export function ClientShell({ tableName }: { tableName: string }) {
                 <span className="w-6 font-bold text-muted-foreground/70">{line.qty}×</span>
                 <span className="flex-1 truncate">
                   {line.name}
+                  {dishes.find((d) => d.id === line.itemId)?.isVegan && (
+                    <Badge className={cn(TONE_CLASSES.green, "ml-1.5")}>Vegan</Badge>
+                  )}
                   {line.note ? ` · ${line.note}` : ""}
                 </span>
                 <span className="font-semibold">{fmt(line.price * line.qty)}</span>
@@ -226,7 +258,12 @@ export function ClientShell({ tableName }: { tableName: string }) {
                   <div className="flex min-w-0 flex-1 items-stretch justify-between gap-2">
                     <div className="flex min-w-0 flex-col ">
                       <div>
-                        <div className="text-[15px] font-semibold">{line.name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[15px] font-semibold">{line.name}</span>
+                          {dish?.isVegan && (
+                            <Badge className={cn(TONE_CLASSES.green, "shrink-0")}>Vegan</Badge>
+                          )}
+                        </div>
                         {line.note && (
                           <div className="mt-1 flex items-center gap-1.5 text-xs text-brand-600">
                             <NotePencil size={12} weight="bold" />
@@ -283,6 +320,11 @@ export function ClientShell({ tableName }: { tableName: string }) {
                 <span className="text-lg font-bold">{fmt(cartTotal)}</span>
               </div>
             )}
+            {!canOrder && cartCount > 0 && (
+              <p className="mb-3 text-center text-[13px] text-muted-foreground">
+                Ask a staff member to place your order for now.
+              </p>
+            )}
             <div className="flex gap-3">
               <button
                 type="button"
@@ -293,11 +335,11 @@ export function ClientShell({ tableName }: { tableName: string }) {
               </button>
               <button
                 type="button"
-                disabled={!cartCount}
+                disabled={!cartCount || !canOrder}
                 onClick={handleConfirmOrder}
                 className={cn(
                   "flex h-13 flex-1 items-center justify-center rounded-2xl px-5 text-base font-bold text-white transition-colors",
-                  cartCount ? "bg-brand-500" : "cursor-not-allowed bg-muted-foreground/30",
+                  cartCount && canOrder ? "bg-brand-500" : "cursor-not-allowed bg-muted-foreground/30",
                 )}
               >
                 Confirm order
@@ -317,7 +359,7 @@ export function ClientShell({ tableName }: { tableName: string }) {
             <ForkKnife size={15} weight="bold" />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[15px] font-bold tracking-tight">{workspace.name}</div>
+            <div className="truncate text-[15px] font-bold tracking-tight">{workspaceName}</div>
             <div className="truncate text-xs text-muted-foreground">
               Scan to order · no app needed
             </div>
@@ -369,21 +411,23 @@ export function ClientShell({ tableName }: { tableName: string }) {
           </button>
         </div>
 
-        <div className="mx-auto mt-2 flex w-full max-w-2xl">
-          <button
-            type="button"
-            onClick={() => setHistoryOpen(true)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-full border border-border px-3 py-2 text-[13px] font-semibold text-foreground"
-          >
-            <ClockCounterClockwise size={15} weight="bold" />
-            Order history
-            {tableOrders.length > 0 && (
-              <span className="ml-1 flex min-w-4.5 items-center justify-center rounded-full bg-secondary px-1 text-[11px] font-bold text-muted-foreground">
-                {tableOrders.length}
-              </span>
-            )}
-          </button>
-        </div>
+        {canOrder && (
+          <div className="mx-auto mt-2 flex w-full max-w-2xl">
+            <button
+              type="button"
+              onClick={() => setHistoryOpen(true)}
+              className="flex w-full items-center justify-center gap-1.5 rounded-full border border-border px-3 py-2 text-[13px] font-semibold text-foreground"
+            >
+              <ClockCounterClockwise size={15} weight="bold" />
+              Order history
+              {tableOrders.length > 0 && (
+                <span className="ml-1 flex min-w-4.5 items-center justify-center rounded-full bg-secondary px-1 text-[11px] font-bold text-muted-foreground">
+                  {tableOrders.length}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
 
         <div className="mx-auto mt-3.5 flex w-full max-w-2xl gap-2 overflow-x-auto">
           {validCategories.map((c) => {
@@ -432,7 +476,12 @@ export function ClientShell({ tableName }: { tableName: string }) {
                 <Icon size={28} weight="fill" className="sm:size-[30px]" />
               </div>
               <div className="flex min-w-0 flex-1 flex-col">
-                <div className="pr-8 text-[15px] font-semibold">{dish.name}</div>
+                <div className="flex items-center gap-1.5 pr-8">
+                  <span className="text-[15px] font-semibold">{dish.name}</span>
+                  {dish.isVegan && (
+                    <Badge className={cn(TONE_CLASSES.green, "shrink-0")}>Vegan</Badge>
+                  )}
+                </div>
                 {dish.description && (
                   <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
                     {dish.description}
@@ -546,7 +595,9 @@ export function ClientShell({ tableName }: { tableName: string }) {
             )}
           >
             <span>
-              {cartCount ? `Order · ${cartCount} ${cartCount === 1 ? "item" : "items"}` : "Order"}
+              {cartCount
+                ? `${canOrder ? "Order" : "View cart"} · ${cartCount} ${cartCount === 1 ? "item" : "items"}`
+                : "Order"}
             </span>
             <span className="flex-1" />
             <span>{cartCount ? fmt(cartTotal) : ""}</span>
@@ -607,6 +658,9 @@ export function ClientShell({ tableName }: { tableName: string }) {
                         </span>
                         <span className="flex-1 truncate">
                           {line.name}
+                          {dishes.find((d) => d.id === line.itemId)?.isVegan && (
+                            <Badge className={cn(TONE_CLASSES.green, "ml-1.5")}>Vegan</Badge>
+                          )}
                           {line.note ? ` · ${line.note}` : ""}
                         </span>
                         <span className="font-semibold">{fmt(line.price * line.qty)}</span>

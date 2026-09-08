@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, MagnifyingGlass, Plus, Trash } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,14 +43,52 @@ export function StaffOrdersPanel() {
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({ tableName: "", itemId: "", qty: "1" });
 
+  // Keep a just-closed order visible for a few seconds after it lands on "Paid" so
+  // staff see the confirmation before it drops out of the list into History. Only
+  // orders seen open *during this session* get the grace period — orders that were
+  // already closed before mount (e.g. paid yesterday) skip straight past it.
+  const [recentlyClosedIds, setRecentlyClosedIds] = useState<Set<string>>(new Set());
+  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const seenOpenIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    for (const order of workspace.orders) {
+      if (!order.closedTs) {
+        seenOpenIdsRef.current.add(order.id);
+        continue;
+      }
+      if (seenOpenIdsRef.current.has(order.id) && !timersRef.current.has(order.id)) {
+        seenOpenIdsRef.current.delete(order.id);
+        setRecentlyClosedIds((prev) => new Set(prev).add(order.id));
+        const timer = setTimeout(() => {
+          setRecentlyClosedIds((prev) => {
+            const next = new Set(prev);
+            next.delete(order.id);
+            return next;
+          });
+          timersRef.current.delete(order.id);
+        }, 5000);
+        timersRef.current.set(order.id, timer);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspace.orders]);
+
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, []);
+
   const open = useMemo(() => {
     const q = query.toLowerCase();
     return workspace.orders.filter(
       (o) =>
-        !o.closedTs &&
+        (!o.closedTs || recentlyClosedIds.has(o.id)) &&
         (!q || o.code.toLowerCase().includes(q) || o.tableName.toLowerCase().includes(q)),
     );
-  }, [workspace.orders, query]);
+  }, [workspace.orders, query, recentlyClosedIds]);
 
   const editing: Order | null = workspace.orders.find((o) => o.id === editId) ?? null;
 
@@ -107,7 +145,14 @@ export function StaffOrdersPanel() {
                     {order.lines.map((line) => (
                       <div key={line.itemId} className="flex items-baseline gap-2.5 text-sm">
                         <span className="w-6.5 font-bold text-muted-foreground">{line.qty}×</span>
-                        <span className="flex-1">{line.name}</span>
+                        <span className="flex-1">
+                          {line.name}
+                          {line.note && (
+                            <span className="block text-[13px] text-muted-foreground">
+                              {line.note}
+                            </span>
+                          )}
+                        </span>
                         <span className="font-semibold">{fmt(line.price * line.qty)}</span>
                       </div>
                     ))}

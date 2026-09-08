@@ -77,7 +77,12 @@ export function OrderDetailDialog({
             className="flex items-center gap-4 border-t py-3 text-sm"
           >
             <span className="w-9 font-bold text-muted-foreground">{line.qty}×</span>
-            <span className="flex-1">{line.name}</span>
+            <span className="flex-1">
+              {line.name}
+              {line.note && (
+                <span className="block text-[13px] text-muted-foreground">{line.note}</span>
+              )}
+            </span>
             <span className="text-muted-foreground">{fmt(line.price)}</span>
             <span className="w-20 text-right font-semibold">
               {fmt(line.price * line.qty)}

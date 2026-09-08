@@ -30,6 +30,7 @@ interface WorkspaceContextValue {
   flow: string[];
   currency: string;
   fmt: (value: number) => string;
+  refreshOrders: () => Promise<void>;
   saveTable: (
     table: Omit<TableRec, "id" | "state" | "seatedAt"> & { id?: string },
   ) => Promise<void>;
@@ -314,6 +315,11 @@ export function WorkspaceProvider({
       flow,
       currency,
       fmt: (v: number) => money(v, currency),
+
+      refreshOrders: async () => {
+        const res = await apiFetch<{ orders: ApiOrder[] }>("/orders");
+        patch(() => ({ orders: res.orders.map(mapOrder) }));
+      },
 
       saveTable: async (table) => {
         const body = { name: table.name, seats: table.seats, zone: table.zone };

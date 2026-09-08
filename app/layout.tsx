@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Nunito_Sans } from "next/font/google";
+import { Toaster } from "sonner";
 import { auth } from "@/auth";
 import { fetchMyPlatform } from "@/lib/platform-api";
 import { WorkspaceProvider } from "@/components/workspace-provider";
@@ -28,6 +29,7 @@ export default async function RootLayout({
     <html lang="en" className={nunito.variable}>
       <body>
         <WorkspaceProvider initialPlatform={initialPlatform}>{children}</WorkspaceProvider>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );
