@@ -27,7 +27,12 @@ function GuestClientPage({
     fixedTableName;
 
   useEffect(() => {
-    if (hydrated) refreshTableOrders(tableName);
+    if (!hydrated) return;
+    refreshTableOrders(tableName);
+    // Poll so a staff-side checkout (which clears this table's order history)
+    // is reflected here without the guest needing to reload the page.
+    const interval = setInterval(() => refreshTableOrders(tableName), 10000);
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, tableName]);
 

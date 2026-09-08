@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import {
   BellRinging,
   CalendarCheck,
+  CaretLineLeft,
+  CaretLineRight,
   ClockCounterClockwise,
   ForkKnife,
   Receipt,
@@ -23,6 +25,7 @@ import { signOutAction } from "@/app/actions";
 import { apiFetch } from "@/lib/api";
 import { useNewOrderNotifications } from "@/hooks/use-new-order-notifications";
 import { useTableRequestNotifications } from "@/hooks/use-table-request-notifications";
+import { useSidebarCollapse } from "@/hooks/use-sidebar-collapse";
 import type { TableRequest, TableRequestType } from "@/lib/types";
 
 type StaffTab = "menu" | "orders" | "bookings" | "tables" | "history";
@@ -67,6 +70,7 @@ export function StaffShell() {
   const [now, setNow] = useState(() => Date.now());
   const [pendingRequests, setPendingRequests] = useState<TableRequest[]>([]);
   const [requestsModalOpen, setRequestsModalOpen] = useState(false);
+  const { collapsed, toggle: toggleCollapsed } = useSidebarCollapse();
 
   useEffect(() => {
     const i = setInterval(() => setNow(Date.now()), 1000);
@@ -127,18 +131,41 @@ export function StaffShell() {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="sticky top-0 flex h-screen w-58 shrink-0 flex-col gap-7 bg-ink p-3.5 text-white">
-        <div className="flex items-center gap-2.5 px-2">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-brand-500">
+      <aside
+        className={cn(
+          "sticky top-0 flex h-screen shrink-0 flex-col gap-7 bg-ink p-3.5 text-white transition-[width] duration-200",
+          collapsed ? "w-16" : "w-58",
+        )}
+      >
+        <div className={cn("flex items-center gap-2.5", collapsed ? "justify-center px-0" : "px-2")}>
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-500">
             <ForkKnife size={15} weight="bold" />
           </span>
-          <span className="text-[15px] font-bold tracking-tight">{workspace.name}</span>
+          {!collapsed && (
+            <span className="min-w-0 flex-1 truncate text-[15px] font-bold tracking-tight">
+              {workspace.name}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="flex size-6 shrink-0 items-center justify-center rounded-md text-white/55 transition-colors hover:text-white"
+          >
+            {collapsed ? (
+              <CaretLineRight size={15} weight="bold" />
+            ) : (
+              <CaretLineLeft size={15} weight="bold" />
+            )}
+          </button>
         </div>
 
         <nav className="flex flex-col gap-1">
-          <p className="px-2 pb-1.5 text-[11px] font-semibold tracking-widest text-white/40">
-            STAFF
-          </p>
+          {!collapsed && (
+            <p className="px-2 pb-1.5 text-[11px] font-semibold tracking-widest text-white/40">
+              STAFF
+            </p>
+          )}
           {NAV.map(({ id, label, Icon }) => {
             const active = tab === id;
             return (
@@ -146,37 +173,47 @@ export function StaffShell() {
                 key={id}
                 type="button"
                 onClick={() => setTab(id)}
+                title={collapsed ? label : undefined}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                  "flex items-center gap-2.5 rounded-lg py-2.5 text-sm transition-colors",
+                  collapsed ? "justify-center px-0" : "px-3",
                   active
                     ? "bg-white/12 font-semibold text-white"
                     : "font-medium text-white/65 hover:text-white",
                 )}
               >
                 <Icon size={17} weight="bold" />
-                <span className="flex-1 text-left">{label}</span>
-                <span
-                  className={cn(
-                    "min-w-5.5 rounded-full px-1.5 text-center text-[11px] font-bold",
-                    active ? "bg-brand-500" : "bg-white/12",
-                  )}
-                >
-                  {counts[id]}
-                </span>
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-left">{label}</span>
+                    <span
+                      className={cn(
+                        "min-w-5.5 rounded-full px-1.5 text-center text-[11px] font-bold",
+                        active ? "bg-brand-500" : "bg-white/12",
+                      )}
+                    >
+                      {counts[id]}
+                    </span>
+                  </>
+                )}
               </button>
             );
           })}
         </nav>
 
         <div className="flex-1" />
-        <div className="px-3 py-2.5 text-[13px] text-white/55">{clock}</div>
+        {!collapsed && <div className="px-3 py-2.5 text-[13px] text-white/55">{clock}</div>}
         <form action={signOutAction}>
           <button
             type="submit"
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white"
+            title={collapsed ? "Sign out" : undefined}
+            className={cn(
+              "flex w-full items-center gap-2.5 rounded-lg py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white",
+              collapsed ? "justify-center px-0" : "px-3",
+            )}
           >
             <SignOut size={15} weight="bold" />
-            Sign out
+            {!collapsed && "Sign out"}
           </button>
         </form>
       </aside>

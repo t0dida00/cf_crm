@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   CalendarCheck,
+  CaretLineLeft,
+  CaretLineRight,
   ChartBar,
   Folders,
   ForkKnife,
@@ -28,6 +30,7 @@ import { SettingsPanel } from "@/components/panels/settings-panel";
 import type { TabId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useNewOrderNotifications } from "@/hooks/use-new-order-notifications";
+import { useSidebarCollapse } from "@/hooks/use-sidebar-collapse";
 
 const NAV: { id: TabId; label: string; Icon: PhosphorIcon }[] = [
   { id: "dash", label: "Dashboard", Icon: ChartBar },
@@ -71,6 +74,7 @@ export function AdminShell() {
   const { workspace, fmt, refreshOrders } = useWorkspace();
   const [tab, setTab] = useState<TabId>("dash");
   const [createSignal, setCreateSignal] = useState(0);
+  const { collapsed, toggle: toggleCollapsed } = useSidebarCollapse();
 
   useNewOrderNotifications(true, refreshOrders, fmt);
 
@@ -94,18 +98,41 @@ export function AdminShell() {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="sticky top-0 flex h-screen w-58 shrink-0 flex-col gap-7 bg-ink p-3.5 text-white">
-        <div className="flex items-center gap-2.5 px-2">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-brand-500">
+      <aside
+        className={cn(
+          "sticky top-0 flex h-screen shrink-0 flex-col gap-7 bg-ink p-3.5 text-white transition-[width] duration-200",
+          collapsed ? "w-16" : "w-58",
+        )}
+      >
+        <div className={cn("flex items-center gap-2.5", collapsed ? "justify-center px-0" : "px-2")}>
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-500">
             <SquaresFour size={15} weight="bold" />
           </span>
-          <span className="text-[15px] font-bold tracking-tight">{workspace.name}</span>
+          {!collapsed && (
+            <span className="min-w-0 flex-1 truncate text-[15px] font-bold tracking-tight">
+              {workspace.name}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="flex size-6 shrink-0 items-center justify-center rounded-md text-white/55 transition-colors hover:text-white"
+          >
+            {collapsed ? (
+              <CaretLineRight size={15} weight="bold" />
+            ) : (
+              <CaretLineLeft size={15} weight="bold" />
+            )}
+          </button>
         </div>
 
         <nav className="flex flex-col gap-1">
-          <p className="px-2 pb-1.5 text-[11px] font-semibold tracking-widest text-white/40">
-            ADMIN
-          </p>
+          {!collapsed && (
+            <p className="px-2 pb-1.5 text-[11px] font-semibold tracking-widest text-white/40">
+              ADMIN
+            </p>
+          )}
           {NAV.map(({ id, label, Icon }) => {
             const active = tab === id;
             return (
@@ -113,24 +140,30 @@ export function AdminShell() {
                 key={id}
                 type="button"
                 onClick={() => setTab(id)}
+                title={collapsed ? label : undefined}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                  "flex items-center gap-2.5 rounded-lg py-2.5 text-sm transition-colors",
+                  collapsed ? "justify-center px-0" : "px-3",
                   active
                     ? "bg-white/12 font-semibold text-white"
                     : "font-medium text-white/65 hover:text-white",
                 )}
               >
                 <Icon size={17} weight="bold" />
-                <span className="flex-1 text-left">{label}</span>
-                {counts[id] !== undefined && (
-                  <span
-                    className={cn(
-                      "min-w-5.5 rounded-full px-1.5 text-[11px] font-bold",
-                      active ? "bg-brand-500" : "bg-white/12",
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-left">{label}</span>
+                    {counts[id] !== undefined && (
+                      <span
+                        className={cn(
+                          "min-w-5.5 rounded-full px-1.5 text-[11px] font-bold",
+                          active ? "bg-brand-500" : "bg-white/12",
+                        )}
+                      >
+                        {counts[id]}
+                      </span>
                     )}
-                  >
-                    {counts[id]}
-                  </span>
+                  </>
                 )}
               </button>
             );
@@ -140,18 +173,26 @@ export function AdminShell() {
         <div className="flex-1" />
         <Link
           href="/qr-generation"
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white"
+          title={collapsed ? "Table QR codes" : undefined}
+          className={cn(
+            "flex items-center gap-2.5 rounded-lg py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white",
+            collapsed ? "justify-center px-0" : "px-3",
+          )}
         >
           <QrCode size={15} weight="bold" />
-          Table QR codes
+          {!collapsed && "Table QR codes"}
         </Link>
         <form action={signOutAction}>
           <button
             type="submit"
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white"
+            title={collapsed ? "Sign out" : undefined}
+            className={cn(
+              "flex w-full items-center gap-2.5 rounded-lg py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white",
+              collapsed ? "justify-center px-0" : "px-3",
+            )}
           >
             <SignOut size={15} weight="bold" />
-            Sign out
+            {!collapsed && "Sign out"}
           </button>
         </form>
       </aside>
