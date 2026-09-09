@@ -97,3 +97,64 @@
   from { width: 0%; }
   to { width: 100%; }
 }
+
+/* Printing a bill: hide everything except the bill's own print area, which
+ * is rendered off-screen at all times and only made visible by @media print
+ * — this way the print layout never affects normal on-screen rendering.
+ * Styled as a narrow till-style receipt (not the dialog's own classes,
+ * which are sized for a modal, not paper) — centered, fixed width, tight
+ * spacing, monospace so amount columns line up. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #bill-print-area,
+  #bill-print-area * {
+    visibility: visible;
+  }
+  #bill-print-area {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80mm;
+    padding: 4mm 0;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 11px;
+    line-height: 1.45;
+    color: #000;
+  }
+  #bill-print-area .bill-center {
+    text-align: center;
+  }
+  #bill-print-area .bill-name {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  #bill-print-area .bill-rule {
+    border-top: 1px dashed #000;
+    margin: 3mm 0;
+  }
+  #bill-print-area .bill-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  #bill-print-area .bill-item-name {
+    flex: 1;
+  }
+  #bill-print-area .bill-muted {
+    color: #444;
+  }
+  #bill-print-area .bill-total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 700;
+  }
+}
+
+@page {
+  margin: 0;
+}
