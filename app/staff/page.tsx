@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StaffShell } from "@/components/staff-shell";
 import { BuildingScreen } from "@/components/building-screen";
@@ -27,5 +27,9 @@ export default function StaffPage() {
     );
   }
 
-  return <StaffShell />;
+  return (
+    <Suspense fallback={null}>
+      <StaffShell />
+    </Suspense>
+  );
 }

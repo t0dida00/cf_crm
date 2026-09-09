@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminShell } from "@/components/admin-shell";
 import { BuildingScreen } from "@/components/building-screen";
@@ -27,5 +27,9 @@ export default function AdminPage() {
     );
   }
 
-  return <AdminShell />;
+  return (
+    <Suspense fallback={null}>
+      <AdminShell />
+    </Suspense>
+  );
 }

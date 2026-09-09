@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   CalendarCheck,
   CaretLineLeft,
@@ -76,11 +77,34 @@ const ACTION_LABELS: Partial<Record<TabId, string>> = {
   staff: "Add staff",
 };
 
+const TAB_IDS = NAV.map((n) => n.id);
+const isTabId = (value: string | null): value is TabId =>
+  value !== null && (TAB_IDS as string[]).includes(value);
+
 export function AdminShell() {
   const { workspace, fmt, refreshOrders } = useWorkspace();
-  const [tab, setTab] = useState<TabId>("dash");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const tab: TabId = isTabId(tabParam) ? tabParam : "dash";
   const [createSignal, setCreateSignal] = useState(0);
   const { collapsed, toggle: toggleCollapsed } = useSidebarCollapse();
+
+  const setTab = (next: TabId) => {
+    setCreateSignal(0);
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", next);
+    router.replace(`/admin?${params.toString()}`, { scroll: false });
+  };
+
+  useEffect(() => {
+    if (!isTabId(tabParam)) {
+      const params = new URLSearchParams(searchParams);
+      params.set("tab", "dash");
+      router.replace(`/admin?${params.toString()}`, { scroll: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabParam]);
 
   useNewOrderNotifications(true, workspace.id, refreshOrders, fmt);
 

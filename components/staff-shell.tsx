@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   BellRinging,
   CalendarCheck,
@@ -46,6 +47,10 @@ const TITLES: Record<StaffTab, string> = {
   history: "History",
 };
 
+const TAB_IDS = NAV.map((n) => n.id);
+const isStaffTab = (value: string | null): value is StaffTab =>
+  value !== null && (TAB_IDS as string[]).includes(value);
+
 interface ApiTableRequest {
   id: string;
   table_name: string;
@@ -66,11 +71,29 @@ const mapRequest = (r: ApiTableRequest): TableRequest => ({
 
 export function StaffShell() {
   const { workspace, fmt, refreshOrders } = useWorkspace();
-  const [tab, setTab] = useState<StaffTab>("orders");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const tab: StaffTab = isStaffTab(tabParam) ? tabParam : "orders";
   const [now, setNow] = useState(() => Date.now());
   const [pendingRequests, setPendingRequests] = useState<TableRequest[]>([]);
   const [requestsModalOpen, setRequestsModalOpen] = useState(false);
   const { collapsed, toggle: toggleCollapsed } = useSidebarCollapse();
+
+  const setTab = (next: StaffTab) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("tab", next);
+    router.replace(`/staff?${params.toString()}`, { scroll: false });
+  };
+
+  useEffect(() => {
+    if (!isStaffTab(tabParam)) {
+      const params = new URLSearchParams(searchParams);
+      params.set("tab", "orders");
+      router.replace(`/staff?${params.toString()}`, { scroll: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabParam]);
 
   useEffect(() => {
     const i = setInterval(() => setNow(Date.now()), 1000);
