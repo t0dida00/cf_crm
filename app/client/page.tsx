@@ -32,25 +32,25 @@ function GuestClientPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, tableName]);
 
-  const socket = usePlatformSocket(hydrated ? { platformId } : null);
+  const channel = usePlatformSocket(hydrated ? platformId : null);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!channel) return;
     // A staff-side checkout closes this table's orders (clearing them from
     // history) and a new order round can be placed by another device at the
     // same table — refetch this table's history on either so the guest sees
     // it live instead of needing to reload.
     const refresh = () => refreshTableOrders(tableName);
-    socket.on("order:created", refresh);
-    socket.on("order:updated", refresh);
-    socket.on("table:checked_out", refresh);
+    channel.bind("order:created", refresh);
+    channel.bind("order:updated", refresh);
+    channel.bind("table:checked_out", refresh);
     return () => {
-      socket.off("order:created", refresh);
-      socket.off("order:updated", refresh);
-      socket.off("table:checked_out", refresh);
+      channel.unbind("order:created", refresh);
+      channel.unbind("order:updated", refresh);
+      channel.unbind("table:checked_out", refresh);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket, tableName]);
+  }, [channel, tableName]);
 
   if (!hydrated) return null;
 

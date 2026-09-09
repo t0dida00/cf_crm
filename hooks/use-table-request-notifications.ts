@@ -22,13 +22,13 @@ const LABELS: Record<ApiTableRequest["type"], string> = {
  * stays in sync with what triggered the toast. */
 export function useTableRequestNotifications(
   enabled: boolean,
-  token: string | null,
+  platformId: string | null,
   onNewRequest: () => void,
 ) {
-  const socket = usePlatformSocket(enabled && token ? { token } : null);
+  const channel = usePlatformSocket(enabled ? platformId : null);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!channel) return;
 
     const onCreated = ({ request }: { request: ApiTableRequest }) => {
       toast(`${request.table_name} ${LABELS[request.type]}`);
@@ -36,10 +36,10 @@ export function useTableRequestNotifications(
       onNewRequest();
     };
 
-    socket.on("table_request:created", onCreated);
+    channel.bind("table_request:created", onCreated);
     return () => {
-      socket.off("table_request:created", onCreated);
+      channel.unbind("table_request:created", onCreated);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]);
+  }, [channel]);
 }

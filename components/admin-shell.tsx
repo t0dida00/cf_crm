@@ -71,12 +71,12 @@ const ACTION_LABELS: Partial<Record<TabId, string>> = {
 };
 
 export function AdminShell() {
-  const { workspace, fmt, refreshOrders, accessToken } = useWorkspace();
+  const { workspace, fmt, refreshOrders } = useWorkspace();
   const [tab, setTab] = useState<TabId>("dash");
   const [createSignal, setCreateSignal] = useState(0);
   const { collapsed, toggle: toggleCollapsed } = useSidebarCollapse();
 
-  useNewOrderNotifications(true, accessToken, refreshOrders, fmt);
+  useNewOrderNotifications(true, workspace.id, refreshOrders, fmt);
 
   const initials = (workspace.name || "W")
     .trim()

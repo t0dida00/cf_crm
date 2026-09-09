@@ -68,6 +68,7 @@ interface WorkspaceContextValue {
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
 const emptyWorkspace: Workspace = {
+  id: null,
   name: "",
   domain: "restaurant",
   zones: [],
@@ -214,7 +215,7 @@ interface ApiBookingRaw extends ApiBooking {
   table_id: string | null;
 }
 
-async function fetchWorkspaceData(domain: "restaurant" | "cafe", name: string, contact: {
+async function fetchWorkspaceData(id: string, domain: "restaurant" | "cafe", name: string, contact: {
   phone?: string;
   email?: string;
   address?: string;
@@ -233,6 +234,7 @@ async function fetchWorkspaceData(domain: "restaurant" | "cafe", name: string, c
   const zones = Array.from(new Set(tables.map((t) => t.zone).filter(Boolean)));
 
   return {
+    id,
     name,
     domain,
     phone: contact.phone,
@@ -274,7 +276,7 @@ export function WorkspaceProvider({
       return;
     }
     setHydrated(false);
-    fetchWorkspaceData(initialPlatform.domain, initialPlatform.name, {
+    fetchWorkspaceData(initialPlatform.id, initialPlatform.domain, initialPlatform.name, {
       phone: initialPlatform.phone ?? undefined,
       email: initialPlatform.email ?? undefined,
       address: initialPlatform.address ?? undefined,

@@ -96,6 +96,7 @@ export interface Settings {
 }
 
 export interface Workspace {
+  id: string | null;
   name: string;
   domain: Domain;
   phone?: string;

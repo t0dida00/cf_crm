@@ -21,15 +21,15 @@ interface ApiOrder {
  * stay in sync with what triggered the toast. */
 export function useNewOrderNotifications(
   enabled: boolean,
-  token: string | null,
+  platformId: string | null,
   onNewOrder: () => void,
   fmt: (value: number) => string,
 ) {
-  const socket = usePlatformSocket(enabled && token ? { token } : null);
+  const channel = usePlatformSocket(enabled ? platformId : null);
   const lastTotals = useRef(new Map<string, number>());
 
   useEffect(() => {
-    if (!socket) return;
+    if (!channel) return;
 
     const notify = (order: ApiOrder) => {
       toast(`New order ${order.code}`, {
@@ -51,12 +51,12 @@ export function useNewOrderNotifications(
       else onNewOrder();
     };
 
-    socket.on("order:created", onCreated);
-    socket.on("order:updated", onUpdated);
+    channel.bind("order:created", onCreated);
+    channel.bind("order:updated", onUpdated);
     return () => {
-      socket.off("order:created", onCreated);
-      socket.off("order:updated", onUpdated);
+      channel.unbind("order:created", onCreated);
+      channel.unbind("order:updated", onUpdated);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket]);
+  }, [channel]);
 }

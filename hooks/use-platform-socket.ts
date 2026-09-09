@@ -1,42 +1,51 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { io, type Socket } from "socket.io-client";
+import Pusher, { type Channel } from "pusher-js";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const PUSHER_KEY = process.env.NEXT_PUBLIC_PUSHER_KEY || "";
+const PUSHER_CLUSTER = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || "";
 
-export type SocketAuth = { token: string } | { platformId: string };
-
-const authKey = (auth: SocketAuth | null) =>
-  auth === null ? null : "token" in auth ? auth.token : auth.platformId;
+let pusherClient: Pusher | null = null;
+function getPusherClient(): Pusher | null {
+  if (!PUSHER_KEY || !PUSHER_CLUSTER) return null;
+  if (!pusherClient) {
+    pusherClient = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
+  }
+  return pusherClient;
+}
 
 /**
- * One live connection to the backend, scoped server-side to a platform's
- * room. Staff pass their session JWT (same token used for REST auth);
- * guests pass only their platformId (no auth, matching the public REST
- * endpoints). Returns the connected socket (or null before/between
- * connections) so callers can register `.on(...)` listeners in an effect
- * keyed off this value.
+ * Subscribes to a platform's public Pusher channel — the JWT param is kept
+ * only so callers don't need to change (staff already prove auth via REST;
+ * this channel carries nothing a guest with the platformId can't already
+ * see through the public REST endpoints). Returns the channel (or null
+ * before/between subscriptions) so callers can `.bind(...)` in an effect
+ * keyed off this value, mirroring the old socket.io-based hook's shape.
  */
-export function usePlatformSocket(auth: SocketAuth | null) {
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const key = authKey(auth);
+export function usePlatformSocket(platformId: string | null) {
+  const [channel, setChannel] = useState<Channel | null>(null);
 
   useEffect(() => {
-    if (!auth) {
-      setSocket(null);
+    if (!platformId) {
+      setChannel(null);
       return;
     }
 
-    const instance = io(API_URL, { auth, transports: ["websocket"] });
-    setSocket(instance);
+    const client = getPusherClient();
+    if (!client) {
+      setChannel(null);
+      return;
+    }
+
+    const instance = client.subscribe(`platform-${platformId}`);
+    setChannel(instance);
 
     return () => {
-      instance.disconnect();
-      setSocket(null);
+      client.unsubscribe(`platform-${platformId}`);
+      setChannel(null);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [platformId]);
 
-  return socket;
+  return channel;
 }
