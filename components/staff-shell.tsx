@@ -69,6 +69,111 @@ const mapRequest = (r: ApiTableRequest): TableRequest => ({
   resolvedTs: r.resolved_at ? new Date(r.resolved_at).getTime() : null,
 });
 
+/** Shared by the static icon rail and the mobile drawer overlay, so the two
+ * never drift out of sync — only `collapsed` and container styling differ
+ * between them. */
+function SidebarBody({
+  collapsed,
+  workspaceName,
+  tab,
+  setTab,
+  counts,
+  clock,
+  onToggle,
+}: {
+  collapsed: boolean;
+  workspaceName: string;
+  tab: StaffTab;
+  setTab: (next: StaffTab) => void;
+  counts: Record<StaffTab, number>;
+  clock: string;
+  onToggle: () => void;
+}) {
+  return (
+    <>
+      <div className={cn("flex items-center gap-2.5", collapsed ? "justify-center px-0" : "px-2")}>
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-500">
+          <ForkKnife size={15} weight="bold" />
+        </span>
+        {!collapsed && (
+          <span className="min-w-0 flex-1 truncate text-[15px] font-bold tracking-tight">
+            {workspaceName}
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={onToggle}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="flex size-6 shrink-0 items-center justify-center rounded-md text-white/55 transition-colors hover:text-white"
+        >
+          {collapsed ? (
+            <CaretLineRight size={15} weight="bold" />
+          ) : (
+            <CaretLineLeft size={15} weight="bold" />
+          )}
+        </button>
+      </div>
+
+      <nav className="flex flex-col gap-1">
+        {!collapsed && (
+          <p className="px-2 pb-1.5 text-[11px] font-semibold tracking-widest text-white/40">
+            STAFF
+          </p>
+        )}
+        {NAV.map(({ id, label, Icon }) => {
+          const active = tab === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              title={collapsed ? label : undefined}
+              className={cn(
+                "flex items-center gap-2.5 rounded-lg py-2.5 text-sm transition-colors",
+                collapsed ? "justify-center px-0" : "px-3",
+                active
+                  ? "bg-white/12 font-semibold text-white"
+                  : "font-medium text-white/65 hover:text-white",
+              )}
+            >
+              <Icon size={17} weight="bold" />
+              {!collapsed && (
+                <>
+                  <span className="flex-1 text-left">{label}</span>
+                  <span
+                    className={cn(
+                      "min-w-5.5 rounded-full px-1.5 text-center text-[11px] font-bold",
+                      active ? "bg-brand-500" : "bg-white/12",
+                    )}
+                  >
+                    {counts[id]}
+                  </span>
+                </>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="flex-1" />
+      {!collapsed && <div className="px-3 py-2.5 text-[13px] text-white/55">{clock}</div>}
+      <form action={signOutAction}>
+        <button
+          type="submit"
+          title={collapsed ? "Sign out" : undefined}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-lg py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white",
+            collapsed ? "justify-center px-0" : "px-3",
+          )}
+        >
+          <SignOut size={15} weight="bold" />
+          {!collapsed && "Sign out"}
+        </button>
+      </form>
+    </>
+  );
+}
+
 export function StaffShell() {
   const { workspace, fmt, refreshOrders } = useWorkspace();
   const router = useRouter();
@@ -78,7 +183,8 @@ export function StaffShell() {
   const [now, setNow] = useState(() => Date.now());
   const [pendingRequests, setPendingRequests] = useState<TableRequest[]>([]);
   const [requestsModalOpen, setRequestsModalOpen] = useState(false);
-  const { collapsed, toggle: toggleCollapsed } = useSidebarCollapse();
+  const { collapsed, isNarrow, mobileOpen, closeMobile, toggle: toggleCollapsed } =
+    useSidebarCollapse();
 
   const setTab = (next: StaffTab) => {
     const params = new URLSearchParams(searchParams);
@@ -160,95 +266,51 @@ export function StaffShell() {
           collapsed ? "w-16" : "w-58",
         )}
       >
-        <div className={cn("flex items-center gap-2.5", collapsed ? "justify-center px-0" : "px-2")}>
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-500">
-            <ForkKnife size={15} weight="bold" />
-          </span>
-          {!collapsed && (
-            <span className="min-w-0 flex-1 truncate text-[15px] font-bold tracking-tight">
-              {workspace.name}
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="flex size-6 shrink-0 items-center justify-center rounded-md text-white/55 transition-colors hover:text-white"
-          >
-            {collapsed ? (
-              <CaretLineRight size={15} weight="bold" />
-            ) : (
-              <CaretLineLeft size={15} weight="bold" />
-            )}
-          </button>
-        </div>
-
-        <nav className="flex flex-col gap-1">
-          {!collapsed && (
-            <p className="px-2 pb-1.5 text-[11px] font-semibold tracking-widest text-white/40">
-              STAFF
-            </p>
-          )}
-          {NAV.map(({ id, label, Icon }) => {
-            const active = tab === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setTab(id)}
-                title={collapsed ? label : undefined}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-lg py-2.5 text-sm transition-colors",
-                  collapsed ? "justify-center px-0" : "px-3",
-                  active
-                    ? "bg-white/12 font-semibold text-white"
-                    : "font-medium text-white/65 hover:text-white",
-                )}
-              >
-                <Icon size={17} weight="bold" />
-                {!collapsed && (
-                  <>
-                    <span className="flex-1 text-left">{label}</span>
-                    <span
-                      className={cn(
-                        "min-w-5.5 rounded-full px-1.5 text-center text-[11px] font-bold",
-                        active ? "bg-brand-500" : "bg-white/12",
-                      )}
-                    >
-                      {counts[id]}
-                    </span>
-                  </>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="flex-1" />
-        {!collapsed && <div className="px-3 py-2.5 text-[13px] text-white/55">{clock}</div>}
-        <form action={signOutAction}>
-          <button
-            type="submit"
-            title={collapsed ? "Sign out" : undefined}
-            className={cn(
-              "flex w-full items-center gap-2.5 rounded-lg py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white",
-              collapsed ? "justify-center px-0" : "px-3",
-            )}
-          >
-            <SignOut size={15} weight="bold" />
-            {!collapsed && "Sign out"}
-          </button>
-        </form>
+        <SidebarBody
+          collapsed={collapsed}
+          workspaceName={workspace.name}
+          tab={tab}
+          setTab={setTab}
+          counts={counts}
+          clock={clock}
+          onToggle={toggleCollapsed}
+        />
       </aside>
 
+      {isNarrow && mobileOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/40"
+            onClick={closeMobile}
+            aria-hidden="true"
+          />
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-58 flex-col gap-7 bg-ink p-3.5 text-white">
+            <SidebarBody
+              collapsed={false}
+              workspaceName={workspace.name}
+              tab={tab}
+              setTab={(next) => {
+                setTab(next);
+                closeMobile();
+              }}
+              counts={counts}
+              clock={clock}
+              onToggle={closeMobile}
+            />
+          </aside>
+        </>
+      )}
+
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-4 border-b bg-card px-6">
-          <h1 className="text-xl font-bold">{TITLES[tab]}</h1>
-          <div className="flex-1" />
+        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-card px-4 md:gap-4 md:px-6">
+          <h1 className="min-w-0 flex-1 truncate text-xl font-bold sm:flex-initial">
+            {TITLES[tab]}
+          </h1>
+          <div className="hidden flex-1 sm:block" />
           <button
             type="button"
             onClick={() => setRequestsModalOpen(true)}
-            className="relative flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="relative flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="Table requests"
           >
             <BellRinging size={18} weight="bold" />
@@ -258,12 +320,12 @@ export function StaffShell() {
               </span>
             )}
           </button>
-          <span className="flex size-7 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">
             {initials}
           </span>
         </header>
 
-        <div className="w-full p-6">
+        <div className="w-full p-4 md:p-6">
           {tab === "menu" && <StaffMenuPanel />}
           {tab === "orders" && <StaffOrdersPanel />}
           {tab === "bookings" && <StaffBookingsPanel />}

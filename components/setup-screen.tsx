@@ -62,7 +62,7 @@ export function SetupScreen({
             className="h-11 text-base"
           />
 
-          <div className="mt-6 grid grid-cols-2 gap-4">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="business-phone" className="mb-2 block text-sm font-semibold">
                 Phone
@@ -105,7 +105,7 @@ export function SetupScreen({
           </div>
 
           <p className="mt-8 mb-3 text-sm font-semibold">What kind of business is it?</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(Object.keys(LEXICON) as Domain[]).map((key) => {
               const Icon = ICONS[key];
               const selected = domain === key;

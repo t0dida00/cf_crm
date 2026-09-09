@@ -214,9 +214,9 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                 </p>
               ) : (
                 items.map((dish) => (
+                  <div key={dish.id} className="overflow-x-auto border-b last:border-0">
                   <div
-                    key={dish.id}
-                    className="grid grid-cols-[minmax(160px,1fr)_110px_100px_80px] items-center gap-3 border-b px-5 py-3 last:border-0"
+                    className="grid min-w-[450px] grid-cols-[minmax(160px,1fr)_110px_100px_80px] items-center gap-3 px-5 py-3"
                   >
                     <span className="flex items-center gap-2.5">
                       <span>{dish.name}</span>
@@ -259,6 +259,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                         <Trash size={15} weight="bold" />
                       </button>
                     </span>
+                  </div>
                   </div>
                 ))
               )}

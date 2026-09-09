@@ -103,8 +103,8 @@ export function StaffOrdersPanel() {
 
   return (
     <>
-      <div className="mb-4 flex items-center gap-3">
-        <div className="relative w-80">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="relative w-full sm:w-80">
           <MagnifyingGlass
             size={16}
             weight="bold"
@@ -117,7 +117,7 @@ export function StaffOrdersPanel() {
             className="pl-9"
           />
         </div>
-        <div className="flex-1" />
+        <div className="hidden flex-1 sm:block" />
         <Button size="sm" onClick={startCreate}>
           <Plus size={14} weight="bold" />
           New order
@@ -127,7 +127,7 @@ export function StaffOrdersPanel() {
       {open.length === 0 ? (
         <p className="py-12 text-center text-sm text-muted-foreground">No open orders.</p>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
           {open.map((order) => {
             const i = flow.indexOf(order.status);
             const canAdvance = i > -1 && i < flow.length - 1;
@@ -166,7 +166,7 @@ export function StaffOrdersPanel() {
                     <span className="text-base font-bold">{fmt(order.total)}</span>
                   </div>
 
-                  <div className="mt-3 flex items-center gap-2.5">
+                  <div className="mt-3 flex flex-wrap items-center gap-2.5">
                     {canAdvance && (
                       <Button size="sm" onClick={() => advanceOrder(order.id)}>
                         {flow[i + 1]}

@@ -193,7 +193,7 @@ export function StaffTablesPanel() {
 
   return (
     <>
-      <div className="-mx-6 mb-4 flex gap-2 overflow-x-auto px-6">
+      <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 md:-mx-6 md:px-6">
         {STATES.map((s) => (
           <button
             key={s}

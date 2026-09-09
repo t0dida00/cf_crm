@@ -33,7 +33,7 @@ export function StaffHistoryPanel() {
 
   return (
     <>
-      <div className="relative mb-4 w-80">
+      <div className="relative mb-4 w-full sm:w-80">
         <MagnifyingGlass
           size={16}
           weight="bold"
@@ -48,36 +48,46 @@ export function StaffHistoryPanel() {
       </div>
 
       <Card className="overflow-hidden">
-        <CardContent className="px-0">
-          <div className="grid grid-cols-[120px_120px_minmax(200px,1fr)_110px_150px] gap-3 border-b bg-secondary px-5 py-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            <span>#</span>
-            <span>Table</span>
-            <span>Items</span>
-            <span>Total</span>
-            <span>Checked out</span>
+        <CardContent className="overflow-x-auto px-0">
+          <div className="min-w-[600px]">
+            <div className="grid grid-cols-[120px_120px_minmax(200px,1fr)_110px_150px] items-center gap-3 border-b bg-secondary py-3 pr-5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              {/* # is sticky so it stays on screen while scrolling right to
+                  see Total/Checked out — otherwise the row you're looking at
+                  scrolls off with nothing left to identify it by. Negative
+                  margin + matching padding bleeds its background across the
+                  row's own edge padding, so there's no visible seam between
+                  the sticky column and the rest of the (scrolled-away) row. */}
+              <span className="sticky left-0 -my-3 bg-secondary py-3 pl-5">#</span>
+              <span>Table</span>
+              <span>Items</span>
+              <span>Total</span>
+              <span>Checked out</span>
+            </div>
+            {history.length === 0 ? (
+              <p className="py-12 text-center text-sm text-muted-foreground">
+                Nothing checked out yet.
+              </p>
+            ) : (
+              history.map((o) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  onClick={() => setDetailId(o.id)}
+                  className="group grid w-full grid-cols-[120px_120px_minmax(200px,1fr)_110px_150px] items-center gap-3 border-b py-3 pr-5 text-left text-sm transition-colors last:border-0 hover:bg-secondary"
+                >
+                  <span className="sticky left-0 -my-3 bg-card py-3 pl-5 font-bold group-hover:bg-secondary">
+                    {o.code}
+                  </span>
+                  <span>{o.tableName}</span>
+                  <span className="overflow-hidden text-ellipsis whitespace-nowrap text-muted-foreground">
+                    {o.lines.map((l) => `${l.qty}× ${l.name}`).join(", ")}
+                  </span>
+                  <span className="font-semibold">{fmt(o.total)}</span>
+                  <span className="text-muted-foreground">{hhmm(o.closedTs as number)}</span>
+                </button>
+              ))
+            )}
           </div>
-          {history.length === 0 ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">
-              Nothing checked out yet.
-            </p>
-          ) : (
-            history.map((o) => (
-              <button
-                key={o.id}
-                type="button"
-                onClick={() => setDetailId(o.id)}
-                className="grid w-full grid-cols-[120px_120px_minmax(200px,1fr)_110px_150px] items-center gap-3 border-b px-5 py-3 text-left text-sm transition-colors last:border-0 hover:bg-secondary"
-              >
-                <span className="font-bold">{o.code}</span>
-                <span>{o.tableName}</span>
-                <span className="overflow-hidden text-ellipsis whitespace-nowrap text-muted-foreground">
-                  {o.lines.map((l) => `${l.qty}× ${l.name}`).join(", ")}
-                </span>
-                <span className="font-semibold">{fmt(o.total)}</span>
-                <span className="text-muted-foreground">{hhmm(o.closedTs as number)}</span>
-              </button>
-            ))
-          )}
         </CardContent>
       </Card>
 
