@@ -65,7 +65,7 @@ const mapRequest = (r: ApiTableRequest): TableRequest => ({
 });
 
 export function StaffShell() {
-  const { workspace, fmt, refreshOrders } = useWorkspace();
+  const { workspace, fmt, refreshOrders, accessToken } = useWorkspace();
   const [tab, setTab] = useState<StaffTab>("menu");
   const [now, setNow] = useState(() => Date.now());
   const [pendingRequests, setPendingRequests] = useState<TableRequest[]>([]);
@@ -86,8 +86,8 @@ export function StaffShell() {
     refreshRequests();
   }, []);
 
-  useNewOrderNotifications(true, refreshOrders, fmt);
-  useTableRequestNotifications(true, () => {
+  useNewOrderNotifications(true, accessToken, refreshOrders, fmt);
+  useTableRequestNotifications(true, accessToken, () => {
     refreshRequests();
     setRequestsModalOpen(true);
   });

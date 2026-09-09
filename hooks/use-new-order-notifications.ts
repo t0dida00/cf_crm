@@ -2,72 +2,61 @@
 
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api";
 import { playNotificationSound } from "@/lib/notification-sound";
+import { usePlatformSocket } from "@/hooks/use-platform-socket";
 
-const POLL_INTERVAL_MS = 2000;
-
-interface ApiOrderSummary {
+interface ApiOrder {
   id: string;
   code: string;
   table_name: string;
   total: string | number;
-  ts: string;
 }
 
-/** Polls for orders placed or added to from other sessions (e.g. the customer-facing
- * /client flow) and toasts once per order that's new OR whose total changed since the
- * last poll — a table can order multiple times, and repeat rounds merge into the same
- * open order (same id, bigger total), so id-only tracking would miss every round after
- * the first. `onNewOrder` lets the caller refresh its own order list so counts/panels
+/** Live-updates on orders placed or added to from other sessions (e.g. the
+ * customer-facing /client flow). Toasts on order:created, and on
+ * order:updated only when the total actually changed (new items) — a plain
+ * status advance (e.g. staff moving a card along the flow) touches the same
+ * event but not the total, and shouldn't toast "new order" for that.
+ * `onNewOrder` lets the caller refresh its own order list so counts/panels
  * stay in sync with what triggered the toast. */
 export function useNewOrderNotifications(
   enabled: boolean,
+  token: string | null,
   onNewOrder: () => void,
   fmt: (value: number) => string,
 ) {
-  const seenTotals = useRef<Map<string, number> | null>(null);
+  const socket = usePlatformSocket(enabled && token ? { token } : null);
+  const lastTotals = useRef(new Map<string, number>());
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!socket) return;
 
-    let cancelled = false;
-
-    const poll = async () => {
-      try {
-        const res = await apiFetch<{ orders: ApiOrderSummary[] }>("/orders?open=true");
-        if (cancelled) return;
-
-        if (seenTotals.current === null) {
-          seenTotals.current = new Map(res.orders.map((o) => [o.id, Number(o.total)]));
-          return;
-        }
-
-        const changedOrders = res.orders.filter(
-          (o) => seenTotals.current!.get(o.id) !== Number(o.total),
-        );
-        for (const order of res.orders) seenTotals.current.set(order.id, Number(order.total));
-
-        if (changedOrders.length > 0) {
-          for (const order of changedOrders) {
-            toast(`New order ${order.code}`, {
-              description: `${order.table_name} · ${fmt(Number(order.total))}`,
-            });
-          }
-          playNotificationSound();
-          onNewOrder();
-        }
-      } catch {
-        // Transient network/backend hiccups shouldn't spam the UI; next poll retries.
-      }
+    const notify = (order: ApiOrder) => {
+      toast(`New order ${order.code}`, {
+        description: `${order.table_name} · ${fmt(Number(order.total))}`,
+      });
+      playNotificationSound();
+      onNewOrder();
     };
 
-    poll();
-    const interval = setInterval(poll, POLL_INTERVAL_MS);
+    const onCreated = ({ order }: { order: ApiOrder }) => {
+      lastTotals.current.set(order.id, Number(order.total));
+      notify(order);
+    };
+    const onUpdated = ({ order }: { order: ApiOrder }) => {
+      const total = Number(order.total);
+      const changed = lastTotals.current.get(order.id) !== total;
+      lastTotals.current.set(order.id, total);
+      if (changed) notify(order);
+      else onNewOrder();
+    };
+
+    socket.on("order:created", onCreated);
+    socket.on("order:updated", onUpdated);
     return () => {
-      cancelled = true;
-      clearInterval(interval);
+      socket.off("order:created", onCreated);
+      socket.off("order:updated", onUpdated);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled]);
+  }, [socket]);
 }

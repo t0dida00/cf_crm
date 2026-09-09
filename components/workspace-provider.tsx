@@ -27,6 +27,9 @@ import { LEXICON } from "@/lib/lexicon";
 interface WorkspaceContextValue {
   workspace: Workspace;
   hydrated: boolean;
+  /** Session JWT, exposed for the direct browser->backend WebSocket connection
+   * (REST calls go through the server-side proxy and don't need this). */
+  accessToken: string | null;
   flow: string[];
   currency: string;
   fmt: (value: number) => string;
@@ -57,6 +60,7 @@ interface WorkspaceContextValue {
   checkoutTable: (id: string) => Promise<void>;
   freeTable: (id: string) => Promise<void>;
   updateSettings: (patch: Partial<Settings>) => Promise<void>;
+  updateProfile: (patch: { name?: string; phone?: string; address?: string }) => Promise<void>;
   addSpecialTax: (tax: Omit<SpecialTax, "id">) => Promise<void>;
   removeSpecialTax: (id: string) => Promise<void>;
 }
@@ -253,9 +257,11 @@ async function fetchWorkspaceData(domain: "restaurant" | "cafe", name: string, c
 export function WorkspaceProvider({
   children,
   initialPlatform = null,
+  accessToken = null,
 }: {
   children: ReactNode;
   initialPlatform?: PlatformRecord | null;
+  accessToken?: string | null;
 }) {
   const [workspace, setWorkspace] = useState<Workspace>(emptyWorkspace);
   const [hydrated, setHydrated] = useState(false);
@@ -314,6 +320,7 @@ export function WorkspaceProvider({
     return {
       workspace,
       hydrated,
+      accessToken,
       flow,
       currency,
       fmt: (v: number) => money(v, currency),
@@ -535,6 +542,13 @@ export function WorkspaceProvider({
         });
         patch((w) => ({ settings: { ...w.settings, ...p } }));
       },
+      updateProfile: async (p) => {
+        await apiFetch("/platforms/me", {
+          method: "PATCH",
+          body: JSON.stringify(p),
+        });
+        patch(() => ({ ...p }));
+      },
       addSpecialTax: async (tax) => {
         const res = await apiFetch<{ specialTax: ApiSpecialTax }>("/settings/special-taxes", {
           method: "POST",
@@ -555,7 +569,7 @@ export function WorkspaceProvider({
         }));
       },
     };
-  }, [workspace, hydrated]);
+  }, [workspace, hydrated, accessToken]);
 
   return (
     <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>

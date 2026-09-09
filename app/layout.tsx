@@ -28,7 +28,9 @@ export default async function RootLayout({
   return (
     <html lang="en" className={nunito.variable}>
       <body>
-        <WorkspaceProvider initialPlatform={initialPlatform}>{children}</WorkspaceProvider>
+        <WorkspaceProvider initialPlatform={initialPlatform} accessToken={accessToken ?? null}>
+          {children}
+        </WorkspaceProvider>
         <Toaster richColors position="top-right" />
       </body>
     </html>

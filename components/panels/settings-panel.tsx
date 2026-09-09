@@ -26,15 +26,25 @@ let draftCounter = 0;
 const nextDraftId = () => `draft-${draftCounter++}`;
 
 export function SettingsPanel() {
-  const { workspace, fmt, updateSettings, addSpecialTax, removeSpecialTax } =
+  const { workspace, fmt, updateSettings, updateProfile, addSpecialTax, removeSpecialTax } =
     useWorkspace();
   const { taxRate, currency, specialTaxes } = workspace.settings;
+  const { name, phone, address } = workspace;
 
+  const [profileDraft, setProfileDraft] = useState({
+    name,
+    phone: phone ?? "",
+    address: address ?? "",
+  });
   const [billingDraft, setBillingDraft] = useState({ taxRate: String(taxRate), currency });
   const [taxesDraft, setTaxesDraft] = useState<SpecialTax[]>(specialTaxes);
   const [newTax, setNewTax] = useState({ name: "", pct: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setProfileDraft({ name, phone: phone ?? "", address: address ?? "" });
+  }, [name, phone, address]);
 
   useEffect(() => {
     setBillingDraft({ taxRate: String(taxRate), currency });
@@ -46,7 +56,13 @@ export function SettingsPanel() {
     .map((t) => t.id);
   const addedTaxes = taxesDraft.filter((t) => t.id.startsWith("draft-"));
 
+  const profileDirty =
+    profileDraft.name.trim() !== name ||
+    profileDraft.phone !== (phone ?? "") ||
+    profileDraft.address !== (address ?? "");
+
   const dirty =
+    profileDirty ||
     Number(billingDraft.taxRate) !== taxRate ||
     billingDraft.currency !== currency ||
     removedIds.length > 0 ||
@@ -56,6 +72,13 @@ export function SettingsPanel() {
     setSaving(true);
     setError(null);
     try {
+      if (profileDirty) {
+        await updateProfile({
+          name: profileDraft.name.trim(),
+          phone: profileDraft.phone.trim(),
+          address: profileDraft.address.trim(),
+        });
+      }
       if (Number(billingDraft.taxRate) !== taxRate || billingDraft.currency !== currency) {
         await updateSettings({
           taxRate: Number(billingDraft.taxRate) || 0,
@@ -81,6 +104,45 @@ export function SettingsPanel() {
     <Card className="max-w-xl">
       <CardContent className="space-y-5">
         <div>
+          <p className="text-lg font-semibold">Restaurant</p>
+          <div className="mt-4 space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="restaurant-name">Name</Label>
+              <Input
+                id="restaurant-name"
+                value={profileDraft.name}
+                onChange={(e) =>
+                  setProfileDraft((d) => ({ ...d, name: e.target.value }))
+                }
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="restaurant-phone">Phone</Label>
+                <Input
+                  id="restaurant-phone"
+                  type="tel"
+                  value={profileDraft.phone}
+                  onChange={(e) =>
+                    setProfileDraft((d) => ({ ...d, phone: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="restaurant-address">Address</Label>
+                <Input
+                  id="restaurant-address"
+                  value={profileDraft.address}
+                  onChange={(e) =>
+                    setProfileDraft((d) => ({ ...d, address: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t pt-5">
           <p className="text-lg font-semibold">Billing</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
@@ -188,7 +250,10 @@ export function SettingsPanel() {
         )}
 
         <div className="flex justify-end border-t pt-5">
-          <Button onClick={handleSave} disabled={!dirty || saving}>
+          <Button
+            onClick={handleSave}
+            disabled={!dirty || saving || !profileDraft.name.trim()}
+          >
             {saving ? "Saving…" : "Save"}
           </Button>
         </div>

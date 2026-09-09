@@ -8,6 +8,7 @@ import {
   ClientWorkspaceProvider,
   useClientWorkspace,
 } from "@/components/client-workspace-provider";
+import { usePlatformSocket } from "@/hooks/use-platform-socket";
 import { apiFetch } from "@/lib/api";
 import type { TableRequestType } from "@/lib/types";
 
@@ -27,14 +28,29 @@ function GuestClientPage({
     fixedTableName;
 
   useEffect(() => {
-    if (!hydrated) return;
-    refreshTableOrders(tableName);
-    // Poll so a staff-side checkout (which clears this table's order history)
-    // is reflected here without the guest needing to reload the page.
-    const interval = setInterval(() => refreshTableOrders(tableName), 10000);
-    return () => clearInterval(interval);
+    if (hydrated) refreshTableOrders(tableName);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, tableName]);
+
+  const socket = usePlatformSocket(hydrated ? { platformId } : null);
+
+  useEffect(() => {
+    if (!socket) return;
+    // A staff-side checkout closes this table's orders (clearing them from
+    // history) and a new order round can be placed by another device at the
+    // same table — refetch this table's history on either so the guest sees
+    // it live instead of needing to reload.
+    const refresh = () => refreshTableOrders(tableName);
+    socket.on("order:created", refresh);
+    socket.on("order:updated", refresh);
+    socket.on("table:checked_out", refresh);
+    return () => {
+      socket.off("order:created", refresh);
+      socket.off("order:updated", refresh);
+      socket.off("table:checked_out", refresh);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, tableName]);
 
   if (!hydrated) return null;
 

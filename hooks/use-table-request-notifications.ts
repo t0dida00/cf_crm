@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api";
 import { playNotificationSound } from "@/lib/notification-sound";
-
-const POLL_INTERVAL_MS = 2000;
+import { usePlatformSocket } from "@/hooks/use-platform-socket";
 
 interface ApiTableRequest {
   id: string;
@@ -18,51 +16,30 @@ const LABELS: Record<ApiTableRequest["type"], string> = {
   checkout: "requested checkout",
 };
 
-/** Polls for pending Call Staff / Checkout requests from /client (a separate,
- * often anonymous session) and toasts once per newly-seen request id.
+/** Live-updates on pending Call Staff / Checkout requests from /client (a
+ * separate, often anonymous session) — toasts on table_request:created.
  * `onNewRequest` lets the caller refresh its own list so the queue panel
  * stays in sync with what triggered the toast. */
-export function useTableRequestNotifications(enabled: boolean, onNewRequest: () => void) {
-  const seenIds = useRef<Set<string> | null>(null);
+export function useTableRequestNotifications(
+  enabled: boolean,
+  token: string | null,
+  onNewRequest: () => void,
+) {
+  const socket = usePlatformSocket(enabled && token ? { token } : null);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!socket) return;
 
-    let cancelled = false;
-
-    const poll = async () => {
-      try {
-        const res = await apiFetch<{ requests: ApiTableRequest[] }>(
-          "/table-requests?status=pending",
-        );
-        if (cancelled) return;
-
-        if (seenIds.current === null) {
-          seenIds.current = new Set(res.requests.map((r) => r.id));
-          return;
-        }
-
-        const newRequests = res.requests.filter((r) => !seenIds.current!.has(r.id));
-        for (const request of res.requests) seenIds.current.add(request.id);
-
-        if (newRequests.length > 0) {
-          for (const request of newRequests) {
-            toast(`${request.table_name} ${LABELS[request.type]}`);
-          }
-          playNotificationSound();
-          onNewRequest();
-        }
-      } catch {
-        // Transient network/backend hiccups shouldn't spam the UI; next poll retries.
-      }
+    const onCreated = ({ request }: { request: ApiTableRequest }) => {
+      toast(`${request.table_name} ${LABELS[request.type]}`);
+      playNotificationSound();
+      onNewRequest();
     };
 
-    poll();
-    const interval = setInterval(poll, POLL_INTERVAL_MS);
+    socket.on("table_request:created", onCreated);
     return () => {
-      cancelled = true;
-      clearInterval(interval);
+      socket.off("table_request:created", onCreated);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled]);
+  }, [socket]);
 }
