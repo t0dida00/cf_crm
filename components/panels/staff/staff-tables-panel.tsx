@@ -193,14 +193,14 @@ export function StaffTablesPanel() {
 
   return (
     <>
-      <div className="mb-4 flex gap-2 overflow-x-auto">
+      <div className="-mx-6 mb-4 flex gap-2 overflow-x-auto px-6">
         {STATES.map((s) => (
           <button
             key={s}
             type="button"
             onClick={() => setStateFilter(s)}
             className={cn(
-              "shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+              "shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors",
               stateFilter === s
                 ? "border-foreground bg-foreground font-bold text-white"
                 : "border-border bg-white text-muted-foreground",
