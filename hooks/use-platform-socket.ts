@@ -15,6 +15,35 @@ function getPusherClient(): Pusher | null {
   return pusherClient;
 }
 
+// Multiple hook instances (e.g. useNewOrderNotifications and
+// useTableRequestNotifications, both mounted in the same staff shell) often
+// subscribe to the exact same channel name at once. Pusher tracks one real
+// channel object per name — if each consumer unsubscribed independently on
+// its own effect cleanup, whichever unmounted/re-ran first would tear down
+// the channel out from under the others (or under itself, on React 18
+// StrictMode's synchronous mount->cleanup->mount dev cycle), leaving a
+// subscription that looked alive locally but wasn't actually receiving
+// events until something forced a fresh client (a full page reload). This
+// map reference-counts subscribers per channel name so the real
+// unsubscribe only happens once nothing is using it anymore.
+const refCounts = new Map<string, number>();
+
+function acquireChannel(client: Pusher, name: string): Channel {
+  const count = refCounts.get(name) ?? 0;
+  refCounts.set(name, count + 1);
+  return client.channel(name) ?? client.subscribe(name);
+}
+
+function releaseChannel(client: Pusher, name: string) {
+  const count = refCounts.get(name) ?? 0;
+  if (count <= 1) {
+    refCounts.delete(name);
+    client.unsubscribe(name);
+  } else {
+    refCounts.set(name, count - 1);
+  }
+}
+
 /**
  * Subscribes to a platform's public Pusher channel — the JWT param is kept
  * only so callers don't need to change (staff already prove auth via REST;
@@ -38,11 +67,12 @@ export function usePlatformSocket(platformId: string | null) {
       return;
     }
 
-    const instance = client.subscribe(`platform-${platformId}`);
+    const name = `platform-${platformId}`;
+    const instance = acquireChannel(client, name);
     setChannel(instance);
 
     return () => {
-      client.unsubscribe(`platform-${platformId}`);
+      releaseChannel(client, name);
       setChannel(null);
     };
   }, [platformId]);
