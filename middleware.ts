@@ -18,5 +18,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/", "/admin/:path*", "/staff/:path*", "/qr-generation/:path*"],
+  matcher: ["/admin/:path*", "/staff/:path*", "/qr-generation/:path*"],
 };
