@@ -37,7 +37,7 @@ interface ClientWorkspaceContextValue {
   placeOrder: (
     tableName: string,
     lines: { itemId: string; qty: number; note?: string }[],
-  ) => Promise<void>;
+  ) => Promise<Order>;
   createTableRequest: (input: { tableName: string; type: TableRequestType }) => Promise<void>;
 }
 
@@ -203,8 +203,8 @@ export function ClientWorkspaceProvider({
         setTableOrders(res.orders.map(mapOrder));
       },
       placeOrder: async (tableName, lines) => {
-        if (!lines.length) return;
-        await publicApiFetch(platformId, "/orders", {
+        if (!lines.length) throw new Error("placeOrder called with no lines");
+        const { order } = await publicApiFetch<{ order: ApiOrder }>(platformId, "/orders", {
           method: "POST",
           body: JSON.stringify({ tableName, lines }),
         });
@@ -213,6 +213,7 @@ export function ClientWorkspaceProvider({
           `/orders?table=${encodeURIComponent(tableName)}`,
         );
         setTableOrders(res.orders.map(mapOrder));
+        return mapOrder(order);
       },
       createTableRequest: async ({ tableName, type }) => {
         await publicApiFetch(platformId, "/requests", {

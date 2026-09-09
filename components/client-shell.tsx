@@ -62,7 +62,7 @@ export interface ClientShellProps {
   orders: Order[];
   /** null for a guest session — ordering isn't available without a staff-logged-in browser yet. */
   placeOrder:
-    | ((tableName: string, lines: { itemId: string; qty: number; note?: string }[]) => Promise<void>)
+    | ((tableName: string, lines: { itemId: string; qty: number; note?: string }[]) => Promise<Order>)
     | null;
   createTableRequest: (input: { tableName: string; type: TableRequestType }) => Promise<void>;
 }
@@ -94,6 +94,8 @@ export function ClientShell({
   const [activeAction, setActiveAction] = useState<"staff" | "checkout" | null>(null);
   const [notice, setNotice] = useState<{ title: string; description: string } | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   const canOrder = placeOrder !== null;
 
@@ -141,25 +143,27 @@ export function ClientShell({
   const cartCount = cartLines.reduce((a, l) => a + l.qty, 0);
   const cartTotal = cartLines.reduce((a, l) => a + l.qty * l.price, 0);
 
-  const handleConfirmOrder = () => {
-    if (!cartCount || !placeOrder) return;
+  const handleConfirmOrder = async () => {
+    if (!cartCount || !placeOrder || submitting) return;
     const lines = cartLines.map(({ itemId, qty, note }) => ({ itemId, qty, note }));
-    placeOrder(tableName, lines);
-    setPlaced({
-      code: `ORD-${2401 + orders.length}`,
-      lines: cartLines.map((l) => ({
-        itemId: l.itemId,
-        name: l.name,
-        price: l.price,
-        qty: l.qty,
-        note: l.note,
-      })),
-      total: cartTotal,
-    });
-    setCart({});
-    setNotes({});
-    setNoteOpenId(null);
-    setScreen("done");
+    setSubmitting(true);
+    setOrderError(null);
+    try {
+      const order = await placeOrder(tableName, lines);
+      // The backend is the source of truth for the order code — it's the
+      // same code staff see in their Orders panel — not something to guess
+      // client-side (a prior version fabricated one from local order count,
+      // which never matched what staff actually saw).
+      setPlaced({ code: order.code, lines: order.lines, total: order.total });
+      setCart({});
+      setNotes({});
+      setNoteOpenId(null);
+      setScreen("done");
+    } catch (err) {
+      setOrderError(err instanceof Error ? err.message : "Failed to place order");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const net = placed ? placed.total / (1 + taxRate / 100) : 0;
@@ -335,6 +339,9 @@ export function ClientShell({
                 Ask a staff member to place your order for now.
               </p>
             )}
+            {orderError && (
+              <p className="mb-3 text-center text-[13px] text-destructive">{orderError}</p>
+            )}
             <div className="flex gap-3">
               <button
                 type="button"
@@ -345,14 +352,16 @@ export function ClientShell({
               </button>
               <button
                 type="button"
-                disabled={!cartCount || !canOrder}
+                disabled={!cartCount || !canOrder || submitting}
                 onClick={handleConfirmOrder}
                 className={cn(
                   "flex h-13 flex-1 items-center justify-center rounded-2xl px-5 text-base font-bold text-white transition-colors",
-                  cartCount && canOrder ? "bg-brand-500" : "cursor-not-allowed bg-muted-foreground/30",
+                  cartCount && canOrder && !submitting
+                    ? "bg-brand-500"
+                    : "cursor-not-allowed bg-muted-foreground/30",
                 )}
               >
-                Confirm order
+                {submitting ? "Placing order…" : "Confirm order"}
               </button>
             </div>
           </div>

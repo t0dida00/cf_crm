@@ -46,7 +46,7 @@ interface WorkspaceContextValue {
   placeOrder: (
     tableName: string,
     lines: { itemId: string; qty: number; note?: string }[],
-  ) => Promise<void>;
+  ) => Promise<Order>;
   advanceOrder: (id: string) => Promise<void>;
   deleteOrder: (id: string) => Promise<void>;
   setOrderLineQty: (orderId: string, itemId: string, qty: number) => Promise<void>;
@@ -422,12 +422,13 @@ export function WorkspaceProvider({
         await refetchOrdersAndTables();
       },
       placeOrder: async (tableName, lines) => {
-        if (!lines.length) return;
-        await apiFetch<{ order: ApiOrder }>("/orders", {
+        if (!lines.length) throw new Error("placeOrder called with no lines");
+        const { order } = await apiFetch<{ order: ApiOrder }>("/orders", {
           method: "POST",
           body: JSON.stringify({ tableName, status: flow[0], lines }),
         });
         await refetchOrdersAndTables();
+        return mapOrder(order);
       },
       advanceOrder: async (id) => {
         const current = workspace.orders.find((o) => o.id === id);
