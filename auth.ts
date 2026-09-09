@@ -1,7 +1,12 @@
 import NextAuth from "next-auth";
+import { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
 const API_URL = process.env.API_URL || "http://localhost:3000";
+
+class AccountDisabledError extends CredentialsSignin {
+  code = "account_disabled";
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -34,7 +39,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           body: JSON.stringify({ email, password }),
         });
 
-        if (!res.ok) return null;
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          if (body?.error === "ACCOUNT_DISABLED") throw new AccountDisabledError();
+          return null;
+        }
 
         const data = await res.json();
         if (!data?.user) return null;

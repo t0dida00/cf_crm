@@ -9,9 +9,9 @@ import { Label } from "@/components/ui/label";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ callbackUrl?: string; error?: string }>;
+  searchParams: Promise<{ callbackUrl?: string; error?: string; code?: string }>;
 }) {
-  const { callbackUrl, error } = await searchParams;
+  const { callbackUrl, error, code } = await searchParams;
 
   const postLoginUrl = callbackUrl
     ? `/post-login?callbackUrl=${encodeURIComponent(callbackUrl)}`
@@ -33,6 +33,9 @@ export default async function LoginPage({
           "error",
           err.type === "CredentialsSignin" ? "CredentialsSignin" : "Default",
         );
+        if ("code" in err && typeof err.code === "string") {
+          url.searchParams.set("code", err.code);
+        }
         redirect(url.pathname + url.search);
       }
       throw err;
@@ -59,11 +62,13 @@ export default async function LoginPage({
 
           {error && (
             <p className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
-              {error === "AccessDenied"
-                ? "That account isn't allowed. Sign in with a @gmail.com account."
-                : error === "CredentialsSignin"
-                  ? "Invalid email or password."
-                  : "Something went wrong signing in. Please try again."}
+              {code === "account_disabled"
+                ? "Your account is disabled temporarily. Please contact your owner(s)."
+                : error === "AccessDenied"
+                  ? "That account isn't allowed. Sign in with a @gmail.com account."
+                  : error === "CredentialsSignin"
+                    ? "Invalid email or password."
+                    : "Something went wrong signing in. Please try again."}
             </p>
           )}
 

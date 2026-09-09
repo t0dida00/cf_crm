@@ -34,6 +34,7 @@ export interface StaffAccount {
   id: string;
   userId: string;
   email: string | null;
+  phone: string | null;
   fullName: string;
   isActive: boolean;
   createdAt: number;

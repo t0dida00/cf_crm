@@ -28,6 +28,7 @@ interface ApiStaffAccount {
   id: string;
   userId: string;
   email: string | null;
+  phone: string | null;
   fullName: string;
   isActive: boolean;
   createdAt: string;
@@ -37,6 +38,7 @@ const mapStaff = (s: ApiStaffAccount): StaffAccount => ({
   id: s.id,
   userId: s.userId,
   email: s.email,
+  phone: s.phone,
   fullName: s.fullName,
   isActive: s.isActive,
   createdAt: new Date(s.createdAt).getTime(),
@@ -44,7 +46,7 @@ const mapStaff = (s: ApiStaffAccount): StaffAccount => ({
 
 const helper = createColumnHelper<StaffAccount>();
 
-const emptyForm = { fullName: "", email: "", password: "" };
+const emptyForm = { fullName: "", email: "", phone: "", password: "" };
 
 export function StaffPanel({ createSignal }: { createSignal: number }) {
   const [staff, setStaff] = useState<StaffAccount[]>([]);
@@ -75,7 +77,12 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
 
   const startEdit = (account: StaffAccount) => {
     setEditing(account);
-    setForm({ fullName: account.fullName, email: account.email ?? "", password: "" });
+    setForm({
+      fullName: account.fullName,
+      email: account.email ?? "",
+      phone: account.phone ?? "",
+      password: "",
+    });
     setError(null);
     setOpen(true);
   };
@@ -99,6 +106,11 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
         helper.accessor("email", {
           header: "Email",
           cell: (c) => <span className="text-muted-foreground">{c.getValue()}</span>,
+        }),
+        helper.accessor("phone", {
+          header: "Phone",
+          cell: (c) => <span className="text-muted-foreground">{c.getValue() || "—"}</span>,
+          size: 140,
         }),
         helper.accessor("createdAt", {
           header: "Added",
@@ -169,6 +181,7 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
           body: JSON.stringify({
             fullName: form.fullName.trim(),
             email: form.email.trim(),
+            phone: form.phone.trim(),
             ...(form.password ? { password: form.password } : {}),
           }),
         });
@@ -179,6 +192,7 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
           body: JSON.stringify({
             fullName: form.fullName.trim(),
             email: form.email.trim(),
+            phone: form.phone.trim(),
             password: form.password,
           }),
         });
@@ -226,6 +240,16 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
                 value={form.email}
                 placeholder="e.g. jamie@example.com"
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="staff-phone">Phone</Label>
+              <Input
+                id="staff-phone"
+                type="tel"
+                value={form.phone}
+                placeholder="e.g. +34 600 000 000"
+                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
               />
             </div>
             <div className="space-y-1.5">
