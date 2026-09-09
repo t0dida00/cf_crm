@@ -6,6 +6,7 @@ export type TabId =
   | "menu"
   | "orders"
   | "bookings"
+  | "staff"
   | "settings";
 
 export type TaxMode = "none" | "include" | "exclude";
@@ -26,6 +27,16 @@ export interface Category {
   id: string;
   name: string;
   valid: boolean;
+}
+
+export interface StaffAccount {
+  /** platform_users row id — use this for edit/disable calls. */
+  id: string;
+  userId: string;
+  email: string | null;
+  fullName: string;
+  isActive: boolean;
+  createdAt: number;
 }
 
 export interface Dish {

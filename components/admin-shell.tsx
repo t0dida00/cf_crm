@@ -15,6 +15,7 @@ import {
   Receipt,
   SignOut,
   SquaresFour,
+  Users,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import { CategoriesPanel } from "@/components/panels/categories-panel";
 import { MenuPanel } from "@/components/panels/menu-panel";
 import { OrdersPanel } from "@/components/panels/orders-panel";
 import { BookingsPanel } from "@/components/panels/bookings-panel";
+import { StaffPanel } from "@/components/panels/staff-panel";
 import { SettingsPanel } from "@/components/panels/settings-panel";
 import type { TabId } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -39,6 +41,7 @@ const NAV: { id: TabId; label: string; Icon: PhosphorIcon }[] = [
   { id: "menu", label: "Menu", Icon: ForkKnife },
   { id: "orders", label: "Orders", Icon: Receipt },
   { id: "bookings", label: "Bookings", Icon: CalendarCheck },
+  { id: "staff", label: "Staffs", Icon: Users },
   { id: "settings", label: "Settings", Icon: Gear },
 ];
 
@@ -49,6 +52,7 @@ const TITLES: Record<TabId, string> = {
   menu: "Menu",
   orders: "Orders",
   bookings: "Bookings",
+  staff: "Staffs",
   settings: "Settings",
 };
 
@@ -59,6 +63,7 @@ const SUBTITLES: Record<TabId, string> = {
   menu: "Every dish, its price and the category it belongs to.",
   orders: "Full order history. Filter, page through and export.",
   bookings: "Today's reservations and how full each slot is.",
+  staff: "Staff accounts for this workspace. Disable an account to revoke access.",
   settings: "Tax and currency applied across the workspace.",
 };
 
@@ -68,6 +73,7 @@ const ACTION_LABELS: Partial<Record<TabId, string>> = {
   menu: "Add dish",
   orders: "New order",
   bookings: "New booking",
+  staff: "Add staff",
 };
 
 export function AdminShell() {
@@ -220,6 +226,7 @@ export function AdminShell() {
           {tab === "menu" && <MenuPanel createSignal={createSignal} />}
           {tab === "orders" && <OrdersPanel createSignal={createSignal} />}
           {tab === "bookings" && <BookingsPanel createSignal={createSignal} />}
+          {tab === "staff" && <StaffPanel createSignal={createSignal} />}
           {tab === "settings" && <SettingsPanel />}
         </div>
       </div>
