@@ -45,6 +45,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: data.user.email,
           image: data.user.image ?? null,
           accessToken: data.token,
+          role: data.user.role ?? null,
         };
       },
     }),
@@ -57,11 +58,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user && "accessToken" in user) {
         token.accessToken = (user as { accessToken?: string }).accessToken;
       }
+      if (user && "role" in user) {
+        token.role = (user as { role?: string | null }).role;
+      }
       return token;
     },
     session({ session, token }) {
       if (token.accessToken) {
         (session as { accessToken?: string }).accessToken = token.accessToken as string;
+      }
+      if ("role" in token) {
+        (session as { role?: string | null }).role = token.role as string | null;
       }
       return session;
     },
