@@ -13,13 +13,17 @@ export default async function LoginPage({
 }) {
   const { callbackUrl, error } = await searchParams;
 
+  const postLoginUrl = callbackUrl
+    ? `/post-login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    : "/post-login";
+
   async function loginWithCredentials(formData: FormData) {
     "use server";
     try {
       await signIn("credentials", {
         email: formData.get("email"),
         password: formData.get("password"),
-        redirectTo: callbackUrl || "/admin",
+        redirectTo: postLoginUrl,
       });
     } catch (err) {
       if (err instanceof AuthError) {
@@ -100,7 +104,7 @@ export default async function LoginPage({
           <form
             action={async () => {
               "use server";
-              await signIn("google", { redirectTo: callbackUrl || "/admin" });
+              await signIn("google", { redirectTo: postLoginUrl });
             }}
           >
             <Button
