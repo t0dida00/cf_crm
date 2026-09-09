@@ -56,12 +56,15 @@ export function StaffHistoryPanel() {
                   scrolls off with nothing left to identify it by. Negative
                   margin + matching padding bleeds its background across the
                   row's own edge padding, so there's no visible seam between
-                  the sticky column and the rest of the (scrolled-away) row. */}
+                  the sticky column and the rest of the (scrolled-away) row.
+                  bg-secondary is repeated explicitly (not just inherited
+                  from the row) since the sticky span otherwise paints over
+                  its own transparent background at some scroll positions. */}
               <span className="sticky left-0 -my-3 bg-secondary py-3 pl-5">#</span>
-              <span>Table</span>
-              <span>Items</span>
-              <span>Total</span>
-              <span>Checked out</span>
+              <span className="bg-secondary">Table</span>
+              <span className="bg-secondary">Items</span>
+              <span className="bg-secondary">Total</span>
+              <span className="bg-secondary">Checked out</span>
             </div>
             {history.length === 0 ? (
               <p className="py-12 text-center text-sm text-muted-foreground">

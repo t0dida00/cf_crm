@@ -62,10 +62,10 @@ export function StaffBookingsPanel() {
                   row's own edge padding, so there's no visible seam between
                   the sticky column and the rest of the (scrolled-away) row. */}
               <span className="sticky left-0 -my-3 bg-secondary py-3 pl-5">Time</span>
-              <span>Guest</span>
-              <span>Party</span>
-              <span>Table</span>
-              <span>Status</span>
+              <span className="bg-secondary">Guest</span>
+              <span className="bg-secondary">Party</span>
+              <span className="bg-secondary">Table</span>
+              <span className="bg-secondary">Status</span>
             </div>
             {bookings.length === 0 ? (
               <p className="py-12 text-center text-sm text-muted-foreground">
