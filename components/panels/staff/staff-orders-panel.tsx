@@ -5,6 +5,7 @@ import { ArrowRight, MagnifyingGlass, Plus, Trash } from "@phosphor-icons/react"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +45,8 @@ export function StaffOrdersPanel() {
   const [addDishId, setAddDishId] = useState(workspace.dishes[0]?.id ?? "");
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({ tableName: "", itemId: "", qty: "1" });
+  const [servingId, setServingId] = useState<string | null>(null);
+  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
   // Keep a just-closed order visible for a few seconds after it lands on "Paid" so
   // staff see the confirmation before it drops out of the list into History. Only
@@ -93,6 +96,9 @@ export function StaffOrdersPanel() {
   }, [workspace.orders, query, recentlyClosedIds]);
 
   const editing: Order | null = workspace.orders.find((o) => o.id === editId) ?? null;
+  const serving: Order | null = workspace.orders.find((o) => o.id === servingId) ?? null;
+  const allChecked =
+    !!serving && serving.lines.length > 0 && serving.lines.every((l) => checkedItems.has(l.itemId));
 
   const startCreate = () => {
     setForm({
@@ -173,9 +179,14 @@ export function StaffOrdersPanel() {
                       <Button
                         size="sm"
                         loading={isPending(`advance-${order.id}`)}
-                        onClick={() =>
-                          run(`advance-${order.id}`, () => advanceOrder(order.id), "Failed to update order.")
-                        }
+                        onClick={() => {
+                          if (order.status === "Preparing") {
+                            setCheckedItems(new Set());
+                            setServingId(order.id);
+                            return;
+                          }
+                          run(`advance-${order.id}`, () => advanceOrder(order.id), "Failed to update order.");
+                        }}
                       >
                         {flow[i + 1]}
                         <ArrowRight size={12} weight="bold" />
@@ -306,6 +317,66 @@ export function StaffOrdersPanel() {
               </Button>
             )}
             <Button onClick={() => setEditId(null)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!serving} onOpenChange={(o) => !o && setServingId(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {serving ? `Confirm ${serving.code} · ${serving.tableName}` : ""}
+            </DialogTitle>
+          </DialogHeader>
+          {serving && (
+            <div className="space-y-1">
+              <p className="mb-2 text-[13px] text-muted-foreground">
+                Check off each dish as it leaves the kitchen.
+              </p>
+              {serving.lines.map((line) => {
+                const checked = checkedItems.has(line.itemId);
+                return (
+                  <label
+                    key={line.itemId}
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border py-2.5 px-3 text-sm transition-colors hover:bg-secondary"
+                  >
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={(value) =>
+                        setCheckedItems((prev) => {
+                          const next = new Set(prev);
+                          if (value === true) next.add(line.itemId);
+                          else next.delete(line.itemId);
+                          return next;
+                        })
+                      }
+                    />
+                    <span className="w-6.5 font-bold text-muted-foreground">{line.qty}×</span>
+                    <span className="flex-1">{line.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setServingId(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!allChecked}
+              loading={!!serving && isPending(`advance-${serving.id}`)}
+              onClick={async () => {
+                if (!serving) return;
+                const ok = await run(
+                  `advance-${serving.id}`,
+                  () => advanceOrder(serving.id),
+                  "Failed to update order.",
+                );
+                if (ok) setServingId(null);
+              }}
+            >
+              {serving ? flow[flow.indexOf(serving.status) + 1] : ""}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
