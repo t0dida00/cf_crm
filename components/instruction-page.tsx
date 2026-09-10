@@ -7,12 +7,16 @@ import {
   CalendarCheck,
   ChartBar,
   ClockCounterClockwise,
+  Download,
+  Flag,
   ForkKnife,
   Gear,
+  ListChecks,
   QrCode,
   Receipt,
   ShoppingCart,
   SquaresFour,
+  UserPlus,
   Users,
 } from "@phosphor-icons/react/ssr";
 import { MarketingShell, MarketingFooter } from "@/components/marketing-theme";
@@ -135,6 +139,44 @@ const ROLES = [
   },
 ];
 
+const WORKFLOW_STEPS = [
+  {
+    icon: UserPlus,
+    title: "Create an account",
+    description: "Sign up and set up your workspace as the admin.",
+  },
+  {
+    icon: SquaresFour,
+    title: "Create a table",
+    description: "Add each table in your venue from the Tables panel.",
+  },
+  {
+    icon: QrCode,
+    title: "QR generates automatically",
+    description: "Every table gets its own QR code the moment it's created — nothing else to set up.",
+  },
+  {
+    icon: Download,
+    title: "Download & place the QR",
+    description: "Download the code and stick it on the matching table for guests to scan.",
+  },
+  {
+    icon: ForkKnife,
+    title: "Guests scan & order",
+    description: "Scanning opens the menu — guests browse and place their order straight from their phone.",
+  },
+  {
+    icon: Receipt,
+    title: "Staff & admin see the order",
+    description: "The order lands on the live board instantly, tied to its table.",
+  },
+  {
+    icon: ListChecks,
+    title: "Order moves through status",
+    description: "Staff track it from New → Preparing → Served → Paid as service progresses.",
+  },
+];
+
 export function InstructionPage() {
   return (
     <MarketingShell fontVariable={lora.variable}>
@@ -231,6 +273,61 @@ export function InstructionPage() {
           </div>
         </section>
       ))}
+
+      <section
+        className="border-t py-14"
+        style={{
+          borderColor: "var(--landing-border)",
+          backgroundColor: ROLES.length % 2 === 1 ? "var(--landing-bg-alt)" : undefined,
+        }}
+      >
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <span
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase"
+              style={{ backgroundColor: "var(--landing-card)", border: "1px solid var(--landing-border)", color: "var(--landing-accent)" }}
+            >
+              <Flag size={13} weight="bold" />
+              End to end
+            </span>
+            <h2 className={`${lora.className} mt-4 text-3xl font-semibold text-balance`}>
+              From sign-up to a paid order
+            </h2>
+            <p className="mt-2.5 text-pretty" style={{ color: "var(--landing-muted)" }}>
+              Here&apos;s the full loop, start to finish.
+            </p>
+          </div>
+
+          <ol className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {WORKFLOW_STEPS.map(({ icon: Icon, title, description }, i) => (
+              <li
+                key={title}
+                className="relative rounded-2xl border p-6"
+                style={{ borderColor: "var(--landing-border)", backgroundColor: "var(--landing-card)" }}
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className="flex size-10 shrink-0 items-center justify-center rounded-lg"
+                    style={{ backgroundColor: "var(--landing-bg-alt)", color: "var(--landing-accent)" }}
+                  >
+                    <Icon size={20} weight="bold" />
+                  </span>
+                  <span
+                    className="text-xs font-semibold tracking-wide"
+                    style={{ color: "var(--landing-muted)" }}
+                  >
+                    Step {i + 1}
+                  </span>
+                </div>
+                <h3 className="mt-4 text-base font-semibold">{title}</h3>
+                <p className="mt-1.5 text-sm text-pretty" style={{ color: "var(--landing-muted)" }}>
+                  {description}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
 
       <MarketingFooter />
     </MarketingShell>

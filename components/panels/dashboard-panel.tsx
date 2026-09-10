@@ -67,7 +67,7 @@ export function DashboardPanel() {
     );
     return Object.values(agg)
       .sort((a, b) => b.qty - a.qty)
-      .slice(0, 5)
+      .slice(0, 10)
       .map((b, i) => ({ rank: i + 1, ...b }));
   }, [inRange]);
 
@@ -208,7 +208,7 @@ export function DashboardPanel() {
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+      <div className="grid items-start gap-4 xl:grid-cols-[1.4fr_1fr]">
         <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle>Orders in Range</CardTitle>
@@ -225,7 +225,7 @@ export function DashboardPanel() {
 
         <Card className="overflow-hidden">
           <CardHeader>
-            <CardTitle>Top 5 Bestsellers</CardTitle>
+            <CardTitle>Top 10 Bestsellers</CardTitle>
           </CardHeader>
           <CardContent className="px-0">
             <DataTable
