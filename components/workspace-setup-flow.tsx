@@ -26,6 +26,7 @@ export function WorkspaceSetupFlow() {
         name={building.name}
         domain={building.domain}
         onDone={() => {
+          sessionStorage.setItem("tably:building-seen", "1");
           router.refresh();
           router.push("/admin");
         }}

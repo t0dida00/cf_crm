@@ -6,10 +6,14 @@ import { AdminShell } from "@/components/admin-shell";
 import { BuildingScreen } from "@/components/building-screen";
 import { useWorkspace } from "@/components/workspace-provider";
 
+const BUILDING_SEEN_KEY = "tably:building-seen";
+
 export default function AdminPage() {
   const router = useRouter();
   const { workspace, hydrated } = useWorkspace();
-  const [showBuilding, setShowBuilding] = useState(true);
+  const [showBuilding, setShowBuilding] = useState(
+    () => typeof window !== "undefined" && !sessionStorage.getItem(BUILDING_SEEN_KEY),
+  );
 
   useEffect(() => {
     if (hydrated && !workspace.name) router.replace("/");
@@ -22,7 +26,10 @@ export default function AdminPage() {
       <BuildingScreen
         name={workspace.name}
         domain={workspace.domain}
-        onDone={() => setShowBuilding(false)}
+        onDone={() => {
+          sessionStorage.setItem(BUILDING_SEEN_KEY, "1");
+          setShowBuilding(false);
+        }}
       />
     );
   }
