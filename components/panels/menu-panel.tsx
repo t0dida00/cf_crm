@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { MagnifyingGlass, PencilSimple, Trash } from "@phosphor-icons/react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ImageSquare, MagnifyingGlass, PencilSimple, Trash } from "@phosphor-icons/react";
 import {
   Accordion,
   AccordionContent,
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -54,6 +55,9 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Dish | null>(null);
+  const [imageError, setImageError] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<DishForm>({
     name: "",
     price: "",
@@ -82,6 +86,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
         imageUrl: "",
         isVegan: false,
       });
+      setImageError(false);
       setOpen(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -101,7 +106,25 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
       imageUrl: dish.imageUrl ?? "",
       isVegan: dish.isVegan ?? false,
     });
+    setImageError(false);
     setOpen(true);
+  };
+
+  const uploadImage = async (file: File) => {
+    await run("upload-image", async () => {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": file.type, "X-Filename": file.name },
+        body: file,
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || "Failed to upload image.");
+      }
+      const { url } = await res.json();
+      setImageError(false);
+      setForm((f) => ({ ...f, imageUrl: url }));
+    }, "Failed to upload image.");
   };
 
   const filtered = useMemo(
@@ -223,15 +246,25 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                     className="grid min-w-[450px] grid-cols-[minmax(160px,1fr)_110px_100px_80px] items-center gap-3 px-5 py-3"
                   >
                     <span className="flex items-center gap-2.5">
-                      <span>{dish.name}</span>
-                      {dish.isVegan && (
-                        <Badge className="rounded-md bg-green-50 text-green-700">Vegan</Badge>
-                      )}
-                      {taxBadge(dish) && (
-                        <Badge className="rounded-md bg-amber-50 text-amber-700">
-                          {taxBadge(dish)}
-                        </Badge>
-                      )}
+                      <span className="flex size-[108px] shrink-0 items-center justify-center overflow-hidden rounded-md border bg-secondary/50 text-muted-foreground">
+                        {dish.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={dish.imageUrl} alt="" className="size-full object-cover" />
+                        ) : (
+                          <ImageSquare size={48} />
+                        )}
+                      </span>
+                      <span className="flex flex-col items-start gap-1.5">
+                        <span>{dish.name}</span>
+                        {dish.isVegan && (
+                          <Badge className="rounded-md bg-green-50 text-green-700">Vegan</Badge>
+                        )}
+                        {taxBadge(dish) && (
+                          <Badge className="rounded-md bg-amber-50 text-amber-700">
+                            {taxBadge(dish)}
+                          </Badge>
+                        )}
+                      </span>
                     </span>
                     <span className="font-semibold">{fmt(dish.price)}</span>
                     <span>
@@ -281,6 +314,70 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
             <DialogTitle>{editing ? "Edit dish" : "New dish"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="flex justify-center">
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click();
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragActive(true);
+                }}
+                onDragLeave={() => setDragActive(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragActive(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) uploadImage(file);
+                }}
+                className={`relative flex aspect-square w-full max-w-48 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed text-center transition-colors ${
+                  dragActive ? "border-primary bg-primary/5" : "border-input bg-secondary hover:bg-secondary/70"
+                }`}
+              >
+                {form.imageUrl.trim() && !imageError ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={form.imageUrl.trim()}
+                    src={form.imageUrl.trim()}
+                    alt=""
+                    className="absolute inset-0 size-full object-contain"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <>
+                    <ImageSquare size={24} className="text-muted-foreground" />
+                    <p className="px-4 text-xs text-muted-foreground">
+                      Drag & drop an image, or click to browse
+                    </p>
+                  </>
+                )}
+                {form.imageUrl.trim() && !isPending("upload-image") && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-opacity hover:bg-black/40 hover:opacity-100">
+                    <span className="text-xs font-medium text-white">Replace image</span>
+                  </div>
+                )}
+                {isPending("upload-image") && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                    <span className="text-xs font-medium text-white">Uploading…</span>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) uploadImage(file);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="dish-name">Name</Label>
               <Input
@@ -381,21 +478,12 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
 
             <div className="space-y-1.5">
               <Label htmlFor="dish-description">Description</Label>
-              <Input
+              <Textarea
                 id="dish-description"
                 value={form.description}
                 placeholder="Ingredients, prep notes…"
+                rows={3}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="dish-image-url">Image URL</Label>
-              <Input
-                id="dish-image-url"
-                value={form.imageUrl}
-                placeholder="https://…"
-                onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
               />
             </div>
 
