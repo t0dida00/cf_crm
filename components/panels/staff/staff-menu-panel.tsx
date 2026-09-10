@@ -138,6 +138,7 @@ export function StaffMenuPanel() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search dishes"
+            aria-label="Search dishes"
             className="pl-9"
           />
         </div>
@@ -403,7 +404,7 @@ export function StaffMenuPanel() {
               <div className="space-y-1.5 border-t pt-3.5">
                 <Label>Table</Label>
                 <Select value={tableName} onValueChange={setTableName}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full" aria-label="Table">
                     <SelectValue placeholder="Pick a table" />
                   </SelectTrigger>
                   <SelectContent>

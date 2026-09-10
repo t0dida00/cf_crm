@@ -123,6 +123,7 @@ function SidebarBody({
           type="button"
           onClick={onToggle}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className="flex size-6 shrink-0 items-center justify-center rounded-md text-white/55 transition-colors hover:text-white"
         >
           {collapsed ? (
@@ -148,6 +149,7 @@ function SidebarBody({
               type="button"
               onClick={() => setTab(id)}
               title={collapsed ? label : undefined}
+              aria-label={collapsed ? label : undefined}
               className={cn(
                 "flex items-center gap-2.5 rounded-lg py-2.5 text-sm transition-colors",
                 collapsed ? "justify-center px-0" : "px-3",
@@ -181,6 +183,7 @@ function SidebarBody({
       <Link
         href="/qr-generation"
         title={collapsed ? "Table QR codes" : undefined}
+        aria-label={collapsed ? "Table QR codes" : undefined}
         className={cn(
           "flex items-center gap-2.5 rounded-lg py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white",
           collapsed ? "justify-center px-0" : "px-3",
@@ -193,6 +196,7 @@ function SidebarBody({
         <button
           type="submit"
           title={collapsed ? "Sign out" : undefined}
+          aria-label={collapsed ? "Sign out" : undefined}
           className={cn(
             "flex w-full items-center gap-2.5 rounded-lg py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white",
             collapsed ? "justify-center px-0" : "px-3",
@@ -318,7 +322,7 @@ export function AdminShell() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-card px-4 md:gap-4 md:px-6">
-          <Link href="/" className="flex shrink-0 items-center gap-2">
+          <Link href="/" aria-label="Tably home" className="flex shrink-0 items-center gap-2">
             <span className="flex size-6 items-center justify-center overflow-hidden rounded-md">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/icons/bell_master.png" alt="" className="size-full object-cover" />
@@ -331,7 +335,12 @@ export function AdminShell() {
           </h1>
           <div className="hidden flex-1 sm:block" />
           {actionLabel && (
-            <Button size="sm" onClick={() => setCreateSignal((n) => n + 1)} className="shrink-0">
+            <Button
+              size="sm"
+              onClick={() => setCreateSignal((n) => n + 1)}
+              aria-label={actionLabel}
+              className="shrink-0"
+            >
               <Plus size={14} weight="bold" />
               <span className="hidden sm:inline">{actionLabel}</span>
             </Button>

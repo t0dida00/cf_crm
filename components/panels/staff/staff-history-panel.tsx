@@ -43,6 +43,7 @@ export function StaffHistoryPanel() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search session or order ID"
+          aria-label="Search session or order ID"
           className="pl-9"
         />
       </div>

@@ -193,6 +193,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by ref or table"
+            aria-label="Search by ref or table"
             className="pl-9"
           />
         </div>
@@ -202,7 +203,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
           value={String(pageSize)}
           onValueChange={(v) => table.setPageSize(Number(v))}
         >
-          <SelectTrigger className="w-20">
+          <SelectTrigger className="w-20" aria-label="Rows per page">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -532,7 +532,7 @@ export function ClientShell({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={dish.imageUrl}
-                    alt=""
+                    alt={dish.name}
                     className="size-full object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";

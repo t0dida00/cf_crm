@@ -232,12 +232,14 @@ export function SettingsPanel() {
             <Input
               value={newTax.name}
               placeholder="Tax name"
+              aria-label="New tax name"
               onChange={(e) => setNewTax((d) => ({ ...d, name: e.target.value }))}
             />
             <Input
               type="number"
               value={newTax.pct}
               placeholder="%"
+              aria-label="New tax percentage"
               className="w-22"
               onChange={(e) => setNewTax((d) => ({ ...d, pct: e.target.value }))}
             />

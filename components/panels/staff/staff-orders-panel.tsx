@@ -122,6 +122,7 @@ export function StaffOrdersPanel() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search order ID"
+            aria-label="Search order ID"
             className="pl-9"
           />
         </div>
@@ -274,7 +275,7 @@ export function StaffOrdersPanel() {
 
               <div className="flex items-center gap-2.5">
                 <Select value={addDishId} onValueChange={setAddDishId}>
-                  <SelectTrigger className="flex-1">
+                  <SelectTrigger className="flex-1" aria-label="Add a dish">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

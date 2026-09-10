@@ -191,11 +191,12 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search dishes"
+            aria-label="Search dishes"
             className="pl-9"
           />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-52">
+          <SelectTrigger className="w-52" aria-label="Filter by category">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -253,7 +254,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                       <span className="flex size-[108px] shrink-0 items-center justify-center overflow-hidden rounded-md border bg-secondary/50 text-muted-foreground">
                         {dish.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={dish.imageUrl} alt="" className="size-full object-cover" />
+                          <img src={dish.imageUrl} alt={dish.name} className="size-full object-cover" />
                         ) : (
                           <ImageSquare size={48} />
                         )}
