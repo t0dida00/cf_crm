@@ -90,6 +90,7 @@ function SidebarBody({
   tab,
   setTab,
   counts,
+  clock,
   onToggle,
 }: {
   collapsed: boolean;
@@ -97,6 +98,7 @@ function SidebarBody({
   tab: TabId;
   setTab: (next: TabId) => void;
   counts: Partial<Record<TabId, number>>;
+  clock: string;
   onToggle: () => void;
 }) {
   return (
@@ -123,6 +125,7 @@ function SidebarBody({
           )}
         </button>
       </div>
+      {!collapsed && <div className="px-2 text-[13px] text-white/55">{clock}</div>}
 
       <nav className="flex flex-col gap-1">
         {!collapsed && (
@@ -203,6 +206,7 @@ export function AdminShell() {
   const tabParam = searchParams.get("tab");
   const tab: TabId = isTabId(tabParam) ? tabParam : "dash";
   const [createSignal, setCreateSignal] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   const { collapsed, isNarrow, mobileOpen, closeMobile, toggle: toggleCollapsed } =
     useSidebarCollapse();
 
@@ -221,6 +225,11 @@ export function AdminShell() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
+
+  useEffect(() => {
+    const i = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(i);
+  }, []);
 
   useNewOrderNotifications(true, workspace.id, refreshOrders, fmt, workspace.orders);
 
@@ -242,6 +251,19 @@ export function AdminShell() {
 
   const actionLabel = ACTION_LABELS[tab];
 
+  const clock =
+    new Date(now).toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+    }) +
+    " · " +
+    new Date(now).toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+
   return (
     <div className="flex min-h-screen">
       <aside
@@ -256,6 +278,7 @@ export function AdminShell() {
           tab={tab}
           setTab={setTab}
           counts={counts}
+          clock={clock}
           onToggle={toggleCollapsed}
         />
       </aside>
@@ -277,6 +300,7 @@ export function AdminShell() {
                 closeMobile();
               }}
               counts={counts}
+              clock={clock}
               onToggle={closeMobile}
             />
           </aside>

@@ -30,9 +30,34 @@ import {
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
 import { useAsyncAction } from "@/hooks/use-async-action";
-import type { Dish, TaxMode } from "@/lib/types";
+import type { Dish, DishStatus, TaxMode } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const COMMON_TAX = "Common tax";
+
+const STATUS_LABEL: Record<DishStatus, string> = {
+  valid: "Valid",
+  sold_out: "Sold out",
+  hidden: "Hidden",
+};
+
+const STATUS_TONE: Record<DishStatus, string> = {
+  valid: "bg-green-50 text-green-700",
+  sold_out: "bg-amber-50 text-amber-700",
+  hidden: "bg-red-50 text-red-700",
+};
+
+const STATUS_RADIO_TONE: Record<DishStatus, string> = {
+  valid: "border-green-500 has-checked:bg-green-50 has-checked:text-green-700",
+  sold_out: "border-amber-500 has-checked:bg-amber-50 has-checked:text-amber-700",
+  hidden: "border-red-500 has-checked:bg-red-50 has-checked:text-red-700",
+};
+
+const STATUS_DOT_TONE: Record<DishStatus, string> = {
+  valid: "bg-green-500",
+  sold_out: "bg-amber-500",
+  hidden: "bg-red-500",
+};
 
 interface DishForm {
   name: string;
@@ -41,7 +66,7 @@ interface DishForm {
   taxName: string;
   taxPct: string;
   catId: string;
-  valid: boolean;
+  status: DishStatus;
   description: string;
   imageUrl: string;
   isVegan: boolean;
@@ -65,7 +90,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
     taxName: COMMON_TAX,
     taxPct: "",
     catId: "",
-    valid: true,
+    status: "valid",
     description: "",
     imageUrl: "",
     isVegan: false,
@@ -81,7 +106,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
         taxName: COMMON_TAX,
         taxPct: "",
         catId: categories[0]?.id ?? "",
-        valid: true,
+        status: "valid",
         description: "",
         imageUrl: "",
         isVegan: false,
@@ -101,7 +126,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
       taxName: dish.taxName || COMMON_TAX,
       taxPct: dish.taxPct == null ? "" : String(dish.taxPct),
       catId: dish.catId,
-      valid: dish.valid,
+      status: dish.status,
       description: dish.description ?? "",
       imageUrl: dish.imageUrl ?? "",
       isVegan: dish.isVegan ?? false,
@@ -159,7 +184,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
         name: form.name.trim(),
         price: Number(form.price) || 0,
         catId: form.catId || categories[0]?.id || "",
-        valid: form.valid,
+        status: form.status,
         taxMode: form.taxMode,
         taxName: form.taxMode === "include" ? form.taxName : undefined,
         taxPct: form.taxMode === "exclude" ? Number(form.taxPct) || 0 : undefined,
@@ -268,14 +293,8 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                     </span>
                     <span className="font-semibold">{fmt(dish.price)}</span>
                     <span>
-                      <Badge
-                        className={
-                          dish.valid
-                            ? "bg-green-50 text-green-700"
-                            : "bg-secondary text-muted-foreground"
-                        }
-                      >
-                        {dish.valid ? "Valid" : "Hidden"}
+                      <Badge className={STATUS_TONE[category.valid ? dish.status : "hidden"]}>
+                        {category.valid ? STATUS_LABEL[dish.status] : "Hidden (category)"}
                       </Badge>
                     </span>
                     <span className="flex justify-end gap-3.5">
@@ -495,13 +514,31 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
               Vegan
             </Label>
 
-            <Label className="flex items-center gap-2 font-normal">
-              <Checkbox
-                checked={form.valid}
-                onCheckedChange={(valid) => setForm((f) => ({ ...f, valid: valid === true }))}
-              />
-              Valid — available to order
-            </Label>
+            <div className="space-y-1.5">
+              <Label>Status</Label>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {(Object.keys(STATUS_LABEL) as DishStatus[]).map((status) => (
+                  <label
+                    key={status}
+                    className={cn(
+                      "flex cursor-pointer items-center gap-2 rounded-lg border bg-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors",
+                      STATUS_RADIO_TONE[status],
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="dish-status"
+                      value={status}
+                      checked={form.status === status}
+                      onChange={() => setForm((f) => ({ ...f, status }))}
+                      className="sr-only"
+                    />
+                    <span className={cn("size-2 shrink-0 rounded-full", STATUS_DOT_TONE[status])} />
+                    {STATUS_LABEL[status]}
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             {editing && (

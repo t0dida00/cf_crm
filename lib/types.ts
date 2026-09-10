@@ -11,6 +11,8 @@ export type TabId =
 
 export type TaxMode = "none" | "include" | "exclude";
 
+export type DishStatus = "valid" | "sold_out" | "hidden";
+
 export type TableState = "Free" | "Booked" | "Seated" | "Finished";
 
 export interface TableRec {
@@ -45,7 +47,7 @@ export interface Dish {
   name: string;
   price: number;
   catId: string;
-  valid: boolean;
+  status: DishStatus;
   taxMode: TaxMode;
   /** Short menu description shown to guests, e.g. ingredients or prep notes. */
   description?: string;

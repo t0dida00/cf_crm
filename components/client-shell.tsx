@@ -81,7 +81,7 @@ export function ClientShell({
   createTableRequest,
 }: ClientShellProps) {
   const validCategories = useMemo(
-    () => categories.filter((c) => c.valid && dishes.some((d) => d.catId === c.id && d.valid)),
+    () => categories.filter((c) => c.valid && dishes.some((d) => d.catId === c.id)),
     [categories, dishes],
   );
 
@@ -126,7 +126,12 @@ export function ClientShell({
   };
 
   const activeCategory = validCategories.find((c) => c.id === tab) ?? validCategories[0];
-  const items = dishes.filter((d) => d.valid && d.catId === activeCategory?.id);
+  const items = dishes
+    .filter((d) => d.catId === activeCategory?.id)
+    .sort((a, b) => {
+      if (a.status !== b.status) return a.status === "valid" ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
 
   const setQty = (itemId: string, qty: number) =>
     setCart((c) => {
@@ -493,8 +498,15 @@ export function ClientShell({
           const qty = cart[dish.id] ?? 0;
           const noteOpen = noteOpenId === dish.id;
           const noteText = notes[dish.id] ?? "";
+          const soldOut = dish.status === "sold_out";
           return (
-            <div key={dish.id} className="relative flex gap-3 rounded-xl border bg-card p-3">
+            <div
+              key={dish.id}
+              className={cn(
+                "relative flex gap-3 rounded-xl border bg-card p-3",
+                soldOut && "opacity-60",
+              )}
+            >
               {qty > 0 && (
                 <button
                   type="button"
@@ -532,6 +544,9 @@ export function ClientShell({
                   <span className="text-[15px] font-semibold">{dish.name}</span>
                   {dish.isVegan && (
                     <Badge className={cn(TONE_CLASSES.green, "shrink-0")}>Vegan</Badge>
+                  )}
+                  {soldOut && (
+                    <Badge className={cn(TONE_CLASSES.amber, "shrink-0")}>Sold out</Badge>
                   )}
                 </div>
                 {dish.description && (
@@ -598,7 +613,11 @@ export function ClientShell({
                   >
                     <NotePencil size={15} weight="bold" />
                   </button>
-                  {qty === 0 ? (
+                  {soldOut ? (
+                    <span className="flex h-[34px] items-center rounded-full bg-secondary px-3.5 text-[13px] font-bold text-muted-foreground">
+                      Sold out
+                    </span>
+                  ) : qty === 0 ? (
                     <button
                       type="button"
                       onClick={() => setQty(dish.id, 1)}

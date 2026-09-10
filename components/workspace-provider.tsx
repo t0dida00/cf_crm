@@ -115,7 +115,7 @@ interface ApiDish {
   tax_mode: string;
   tax_name: string | null;
   tax_pct: string | number | null;
-  is_available: boolean;
+  status: Dish["status"];
   is_vegan: boolean;
   image_url: string | null;
 }
@@ -124,7 +124,7 @@ const mapDish = (d: ApiDish): Dish => ({
   name: d.name,
   price: Number(d.price),
   catId: d.category_id ?? "",
-  valid: d.is_available,
+  status: d.status,
   taxMode: d.tax_mode as Dish["taxMode"],
   description: d.description ?? undefined,
   taxName: d.tax_name ?? undefined,
@@ -388,7 +388,7 @@ export function WorkspaceProvider({
           taxMode: dish.taxMode,
           taxName: dish.taxName ?? null,
           taxPct: dish.taxPct ?? null,
-          isAvailable: dish.valid,
+          status: dish.status,
           isVegan: dish.isVegan ?? false,
           imageUrl: dish.imageUrl ?? null,
         };

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Nunito_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import { auth } from "@/auth";
 import { fetchMyPlatform } from "@/lib/platform-api";
@@ -32,6 +33,7 @@ export default async function RootLayout({
           {children}
         </WorkspaceProvider>
         <Toaster richColors position="top-right" />
+        <Analytics />
       </body>
     </html>
   );

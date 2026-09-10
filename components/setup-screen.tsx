@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, CheckCircle, Coffee, ForkKnife, SquaresFour } from "@phosphor-icons/react";
+import { ArrowRight, CheckCircle, Coffee, ForkKnife, SignOut, SquaresFour } from "@phosphor-icons/react";
+import { signOutAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,16 @@ export function SetupScreen({
           <span className="text-xs font-semibold tracking-wide text-muted-foreground">
             WORKSPACE SETUP · STEP 1 OF 2
           </span>
+          <span className="flex-1" />
+          <form action={signOutAction}>
+            <button
+              type="submit"
+              className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <SignOut size={14} weight="bold" />
+              Sign out
+            </button>
+          </form>
         </div>
 
         <div className="rounded-xl border bg-card p-10">

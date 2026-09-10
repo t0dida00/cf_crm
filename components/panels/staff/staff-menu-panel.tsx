@@ -39,8 +39,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
+import { useAsyncAction } from "@/hooks/use-async-action";
 import { TONE_CLASSES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
+import type { Dish, DishStatus } from "@/lib/types";
 
 const CATEGORY_ICONS: Record<string, PhosphorIcon> = {
   Starters: BowlFood,
@@ -52,9 +54,22 @@ const CATEGORY_ICONS: Record<string, PhosphorIcon> = {
   Brunch: BowlFood,
 };
 
+const STATUS_LABEL: Record<DishStatus, string> = {
+  valid: "Available",
+  sold_out: "Sold out",
+  hidden: "Hidden",
+};
+
+const STATUS_TONE: Record<DishStatus, keyof typeof TONE_CLASSES> = {
+  valid: "green",
+  sold_out: "amber",
+  hidden: "gray",
+};
+
 export function StaffMenuPanel() {
-  const { workspace, fmt, placeOrder } = useWorkspace();
+  const { workspace, fmt, placeOrder, saveDish } = useWorkspace();
   const { categories, dishes } = workspace;
+  const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -62,6 +77,9 @@ export function StaffMenuPanel() {
   const [cartOpen, setCartOpen] = useState(false);
   const [tableName, setTableName] = useState("");
   const [placing, setPlacing] = useState(false);
+
+  const changeStatus = (dish: Dish, status: DishStatus) =>
+    run(`dish-status-${dish.id}`, () => saveDish({ ...dish, status }), "Failed to update dish status.");
 
   const filtered = useMemo(
     () => dishes.filter((d) => !query || d.name.toLowerCase().includes(query.toLowerCase())),
@@ -160,6 +178,8 @@ export function StaffMenuPanel() {
                     const noteOpen = noteOpenId === dish.id;
                     const noteText = notes[dish.id] ?? "";
                     const Icon = CATEGORY_ICONS[category.name] ?? ForkKnife;
+                    const effectiveStatus = category.valid ? dish.status : "hidden";
+                    const orderable = effectiveStatus === "valid";
                     return (
                       <div key={dish.id} className="flex gap-3 rounded-xl border bg-card p-3">
                         <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-secondary/50 text-muted-foreground">
@@ -185,9 +205,28 @@ export function StaffMenuPanel() {
                             </p>
                           )}
                           <div className="mt-1.5 flex items-center gap-1.5">
-                            <Badge className={TONE_CLASSES[dish.valid ? "green" : "gray"]}>
-                              {dish.valid ? "Available" : "Off menu"}
-                            </Badge>
+                            <Select
+                              value={dish.status}
+                              disabled={!category.valid || isPending(`dish-status-${dish.id}`)}
+                              onValueChange={(status: DishStatus) => changeStatus(dish, status)}
+                            >
+                              <SelectTrigger
+                                size="sm"
+                                className={cn(
+                                  "h-6 w-auto gap-1 rounded-full border-0 px-2.5 text-xs font-semibold",
+                                  TONE_CLASSES[STATUS_TONE[effectiveStatus]],
+                                )}
+                              >
+                                <SelectValue>
+                                  {category.valid ? STATUS_LABEL[dish.status] : "Off menu"}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="valid">Valid</SelectItem>
+                                <SelectItem value="sold_out">Sold out</SelectItem>
+                                <SelectItem value="hidden">Hidden</SelectItem>
+                              </SelectContent>
+                            </Select>
                             {dish.isVegan && (
                               <Badge className={TONE_CLASSES.green}>Vegan</Badge>
                             )}
@@ -242,7 +281,7 @@ export function StaffMenuPanel() {
                             <button
                               type="button"
                               onClick={() => setNoteOpenId(noteOpen ? null : dish.id)}
-                              disabled={!dish.valid}
+                              disabled={!orderable}
                               className={cn(
                                 "flex size-8 items-center justify-center rounded-full border disabled:cursor-not-allowed disabled:opacity-40",
                                 noteOpen || noteText
@@ -257,7 +296,7 @@ export function StaffMenuPanel() {
                               <button
                                 type="button"
                                 onClick={() => setQty(dish.id, 1)}
-                                disabled={!dish.valid}
+                                disabled={!orderable}
                                 className="flex h-8 items-center gap-1.5 rounded-full bg-brand-500 px-3 text-[13px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
                               >
                                 <Plus size={13} weight="bold" />

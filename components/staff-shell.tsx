@@ -113,6 +113,7 @@ function SidebarBody({
           )}
         </button>
       </div>
+      {!collapsed && <div className="px-2 text-[13px] text-white/55">{clock}</div>}
 
       <nav className="flex flex-col gap-1">
         {!collapsed && (
@@ -156,7 +157,6 @@ function SidebarBody({
       </nav>
 
       <div className="flex-1" />
-      {!collapsed && <div className="px-3 py-2.5 text-[13px] text-white/55">{clock}</div>}
       <form action={signOutAction}>
         <button
           type="submit"
