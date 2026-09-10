@@ -83,6 +83,10 @@ export interface Order {
   status: string;
   /** Checked-out timestamp (ms), or null while still open. */
   closedTs: number | null;
+  /** The dining party this order belongs to — every order placed at a table
+   * between checkouts shares one session, so staff checkout closes them
+   * together. Null for legacy orders placed before sessions existed. */
+  sessionId: string | null;
 }
 
 export interface Booking {

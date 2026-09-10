@@ -118,6 +118,7 @@ interface ApiOrder {
   status: string;
   ts: string;
   closed_ts: string | null;
+  session_id: string | null;
   order_lines: ApiOrderLine[];
 }
 const mapOrderLine = (l: ApiOrderLine): OrderLine => ({
@@ -138,6 +139,7 @@ const mapOrder = (o: ApiOrder): Order => ({
   ts: new Date(o.ts).getTime(),
   status: o.status,
   closedTs: o.closed_ts ? new Date(o.closed_ts).getTime() : null,
+  sessionId: o.session_id,
 });
 
 export function ClientWorkspaceProvider({

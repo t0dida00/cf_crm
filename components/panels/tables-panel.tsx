@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PencilSimple, Plus, Trash, UsersThree } from "@phosphor-icons/react";
+import { ClockCounterClockwise, PencilSimple, Plus, Trash, UsersThree } from "@phosphor-icons/react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -20,18 +21,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SessionDetailDialog } from "@/components/session-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
 import { useAsyncAction } from "@/hooks/use-async-action";
+import { groupOrdersIntoSessions, type OrderSession } from "@/lib/order-math";
+import { formatStamp } from "@/lib/range";
+import { orderTone } from "@/lib/tone";
 import type { TableRec } from "@/lib/types";
 
 const NEW_ZONE = "__new";
 
 export function TablesPanel({ createSignal }: { createSignal: number }) {
-  const { workspace, saveTable, deleteTable } = useWorkspace();
+  const { workspace, flow, fmt, saveTable, deleteTable } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const [editing, setEditing] = useState<TableRec | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", seats: "4", zone: "", newZone: "" });
+  const [historyTable, setHistoryTable] = useState<TableRec | null>(null);
+  const [session, setSession] = useState<OrderSession | null>(null);
+
+  const tableSessions = (table: TableRec) => groupOrdersIntoSessions(workspace.orders, table.name);
 
   const startCreate = () => {
     setEditing(null);
@@ -82,6 +91,14 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
                 {table.seats} seats
               </p>
               <div className="mt-4 flex justify-end gap-3.5 border-t pt-3.5">
+                <button
+                  type="button"
+                  onClick={() => setHistoryTable(table)}
+                  className="mr-auto text-muted-foreground transition-colors hover:text-foreground"
+                  aria-label={`History for ${table.name}`}
+                >
+                  <ClockCounterClockwise size={15} weight="bold" />
+                </button>
                 <button
                   type="button"
                   onClick={() => startEdit(table)}
@@ -193,6 +210,48 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!historyTable} onOpenChange={(o) => !o && setHistoryTable(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{historyTable?.name} — order history</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {historyTable && tableSessions(historyTable).length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                No orders placed at this table yet.
+              </p>
+            ) : (
+              historyTable &&
+              tableSessions(historyTable).map((s) => {
+                const multi = s.orders.length > 1;
+                return (
+                  <button
+                    key={s.orders[0].id}
+                    type="button"
+                    onClick={() => setSession(s)}
+                    className="flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-secondary"
+                  >
+                    <span className="font-semibold">
+                      {multi ? `${s.orders.length} orders` : s.orders[0].code}
+                    </span>
+                    <span className="text-sm text-muted-foreground">{formatStamp(s.ts)}</span>
+                    <span className="flex-1" />
+                    <span className="font-semibold">{fmt(s.total)}</span>
+                    {!multi && (
+                      <Badge className={orderTone(s.orders[0].status, flow)}>
+                        {s.orders[0].status}
+                      </Badge>
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <SessionDetailDialog session={session} onClose={() => setSession(null)} />
     </>
   );
 }

@@ -34,28 +34,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable } from "@/components/data-table";
-import { OrderDetailDialog } from "@/components/order-detail-dialog";
+import { SessionDetailDialog } from "@/components/session-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
 import { useAsyncAction } from "@/hooks/use-async-action";
+import { groupIntoSessions, summariseLines, type OrderSession } from "@/lib/order-math";
+import { orderTone } from "@/lib/tone";
 import { formatStamp } from "@/lib/range";
 import type { Order } from "@/lib/types";
 
-const helper = createColumnHelper<Order>();
-const TONES = [
-  "bg-sky-50 text-sky-700",
-  "bg-amber-50 text-amber-700",
-  "bg-brand-100 text-brand-600",
-  "bg-green-50 text-green-700",
-];
+const helper = createColumnHelper<OrderSession>();
 
-const summarise = (order: Order) =>
-  order.lines.map((l) => `${l.qty}× ${l.name}`).join(", ");
+const summarise = (session: OrderSession) =>
+  summariseLines(session.orders.flatMap((o) => o.lines))
+    .map((l) => `${l.qty}× ${l.name}`)
+    .join(", ");
+
+const sessionRef = (session: OrderSession) =>
+  session.orders.length > 1 ? `${session.orders.length} orders` : session.orders[0].code;
 
 export function OrdersPanel({ createSignal }: { createSignal: number }) {
   const { workspace, flow, fmt, addOrder } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
-  const [detail, setDetail] = useState<Order | null>(null);
+  const [detail, setDetail] = useState<OrderSession | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ tableName: "", itemId: "", qty: "1" });
 
@@ -73,27 +74,44 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
 
   const data = useMemo(() => {
     const q = query.toLowerCase();
-    return workspace.orders.filter(
-      (o) =>
+    // Open orders stay as their own row — they have no checkout time yet, so
+    // grouping them into a session ahead of time would be premature. Closed
+    // orders collapse into their checkout session (possibly several orders
+    // paid together in one go).
+    const open = workspace.orders.filter((o) => !o.closedTs);
+    const closed = workspace.orders.filter((o) => o.closedTs);
+    const sessions = [...open.map((o) => ({ orders: [o], ts: o.ts, closedTs: null, total: o.total })), ...groupIntoSessions(closed)]
+      .sort((a, b) => b.ts - a.ts);
+    return sessions.filter(
+      (s) =>
         !q ||
-        o.code.toLowerCase().includes(q) ||
-        o.tableName.toLowerCase().includes(q),
+        s.orders.some(
+          (o) => o.code.toLowerCase().includes(q) || o.tableName.toLowerCase().includes(q),
+        ),
     );
   }, [workspace.orders, query]);
 
   const columns = useMemo(
     () => [
-      helper.accessor("code", {
+      helper.display({
+        id: "ref",
         header: "#",
-        cell: (c) => <span className="font-bold">{c.getValue()}</span>,
+        cell: ({ row }) => <span className="font-bold">{sessionRef(row.original)}</span>,
         size: 110,
       }),
-      helper.accessor("tableName", { header: "Table", size: 120 }),
+      helper.display({
+        id: "table",
+        header: "Table",
+        cell: ({ row }) => row.original.orders[0].tableName,
+        size: 120,
+      }),
       helper.display({
         id: "items",
         header: "Items",
         cell: ({ row }) => (
-          <span className="text-muted-foreground">{summarise(row.original)}</span>
+          <span className="block max-w-[360px] text-wrap text-muted-foreground">
+            {summarise(row.original)}
+          </span>
         ),
       }),
       helper.accessor("total", {
@@ -101,18 +119,22 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
         cell: (c) => <span className="font-semibold">{fmt(c.getValue())}</span>,
         size: 110,
       }),
-      helper.accessor("ts", {
+      helper.display({
+        id: "checkoutTime",
         header: "Checkout time",
-        cell: (c) => (
-          <span className="text-muted-foreground">{formatStamp(c.getValue())}</span>
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">
+            {row.original.closedTs ? formatStamp(row.original.closedTs) : "—"}
+          </span>
         ),
         size: 160,
       }),
-      helper.accessor("status", {
+      helper.display({
+        id: "status",
         header: "Status",
-        cell: (c) => (
-          <Badge className={TONES[Math.max(0, flow.indexOf(c.getValue()))]}>
-            {c.getValue()}
+        cell: ({ row }) => (
+          <Badge className={orderTone(row.original.orders[0].status, flow)}>
+            {row.original.orders[0].status}
           </Badge>
         ),
         size: 120,
@@ -135,14 +157,14 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
 
   const exportCsv = () => {
     const rows = [
-      ["Ref", "Table", "Items", "Amount", "Checkout time", "Status"],
-      ...data.map((o) => [
-        o.code,
-        o.tableName,
-        summarise(o),
-        o.total.toFixed(2),
-        formatStamp(o.ts),
-        o.status,
+      ["Session", "Table", "Items", "Amount", "Checkout time", "Status"],
+      ...data.map((s) => [
+        sessionRef(s),
+        s.orders[0].tableName,
+        summarise(s),
+        s.total.toFixed(2),
+        s.closedTs ? formatStamp(s.closedTs) : "",
+        s.orders[0].status,
       ]),
     ];
     const csv = rows
@@ -238,7 +260,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
         </CardContent>
       </Card>
 
-      <OrderDetailDialog order={detail} onClose={() => setDetail(null)} />
+      <SessionDetailDialog session={detail} onClose={() => setDetail(null)} />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
