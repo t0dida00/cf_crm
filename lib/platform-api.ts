@@ -13,7 +13,7 @@ export interface PlatformRecord {
   role: string;
 }
 
-interface PlatformApiResponse {
+export interface PlatformApiResponse {
   platform: {
     id: string;
     name: string;
@@ -30,16 +30,7 @@ function toDomain(code: string): Domain {
   return code.toLowerCase() === "cafe" ? "cafe" : "restaurant";
 }
 
-export async function fetchMyPlatform(accessToken: string): Promise<PlatformRecord | null> {
-  const res = await fetch(`${API_URL}/platforms/me`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    cache: "no-store",
-  });
-
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`Failed to fetch platform: ${res.status}`);
-
-  const data = (await res.json()) as PlatformApiResponse;
+export function mapPlatformResponse(data: PlatformApiResponse): PlatformRecord {
   return {
     id: data.platform.id,
     name: data.platform.name,
@@ -50,6 +41,19 @@ export async function fetchMyPlatform(accessToken: string): Promise<PlatformReco
     logoUrl: data.platform.logo_url,
     role: data.role,
   };
+}
+
+export async function fetchMyPlatform(accessToken: string): Promise<PlatformRecord | null> {
+  const res = await fetch(`${API_URL}/platforms/me`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Failed to fetch platform: ${res.status}`);
+
+  const data = (await res.json()) as PlatformApiResponse;
+  return mapPlatformResponse(data);
 }
 
 export async function createPlatform(

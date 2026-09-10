@@ -10,7 +10,7 @@ import {
 } from "react";
 import { apiFetch } from "@/lib/api";
 import { money } from "@/lib/range";
-import type { PlatformRecord } from "@/lib/platform-api";
+import { mapPlatformResponse, type PlatformApiResponse } from "@/lib/platform-api";
 import type {
   Booking,
   Category,
@@ -260,18 +260,18 @@ async function fetchWorkspaceData(id: string, domain: "restaurant" | "cafe", nam
 }
 
 /**
- * `initialPlatform` is the source of truth for workspace identity (name, domain,
- * contact details), fetched server-side from the platforms table. All operational
- * data (tables, menu, orders, bookings, settings) is fetched from CRM_backend on
+ * Platform identity (name, domain, contact details) and all operational data
+ * (tables, menu, orders, bookings, settings) are fetched from CRM_backend on
  * mount and mutated through it directly — nothing is persisted to localStorage.
+ * Fetching client-side (rather than blocking the server-rendered document on
+ * it) keeps the initial HTML response fast for every route, including public
+ * pages that don't need workspace data at all.
  */
 export function WorkspaceProvider({
   children,
-  initialPlatform = null,
   accessToken = null,
 }: {
   children: ReactNode;
-  initialPlatform?: PlatformRecord | null;
   accessToken?: string | null;
 }) {
   const [workspace, setWorkspace] = useState<Workspace>(emptyWorkspace);
@@ -279,20 +279,34 @@ export function WorkspaceProvider({
 
   useEffect(() => {
     let cancelled = false;
-    if (!initialPlatform) {
+    if (!accessToken) {
       setWorkspace(emptyWorkspace);
       setHydrated(true);
       return;
     }
     setHydrated(false);
-    fetchWorkspaceData(initialPlatform.id, initialPlatform.domain, initialPlatform.name, {
-      phone: initialPlatform.phone ?? undefined,
-      email: initialPlatform.email ?? undefined,
-      address: initialPlatform.address ?? undefined,
-      logoUrl: initialPlatform.logoUrl ?? undefined,
-    })
+    (async () => {
+      const res = await fetch("/api/proxy/platforms/me", { cache: "no-store" });
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error(`Failed to fetch platform: ${res.status}`);
+      const data = (await res.json()) as PlatformApiResponse;
+      return mapPlatformResponse(data);
+    })()
+      .then((initialPlatform) => {
+        if (cancelled) return;
+        if (!initialPlatform) {
+          setWorkspace(emptyWorkspace);
+          return null;
+        }
+        return fetchWorkspaceData(initialPlatform.id, initialPlatform.domain, initialPlatform.name, {
+          phone: initialPlatform.phone ?? undefined,
+          email: initialPlatform.email ?? undefined,
+          address: initialPlatform.address ?? undefined,
+          logoUrl: initialPlatform.logoUrl ?? undefined,
+        });
+      })
       .then((data) => {
-        if (!cancelled) setWorkspace(data);
+        if (!cancelled && data) setWorkspace(data);
       })
       .finally(() => {
         if (!cancelled) setHydrated(true);
@@ -300,8 +314,7 @@ export function WorkspaceProvider({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialPlatform?.id]);
+  }, [accessToken]);
 
   const value = useMemo<WorkspaceContextValue>(() => {
     const patch = (fn: (w: Workspace) => Partial<Workspace>) =>

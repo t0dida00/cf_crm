@@ -3,7 +3,6 @@ import { Nunito_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import { auth } from "@/auth";
-import { fetchMyPlatform } from "@/lib/platform-api";
 import { WorkspaceProvider } from "@/components/workspace-provider";
 import "../node_modules/tw-animate-css/dist/tw-animate.css";
 import "./globals.scss";
@@ -29,12 +28,11 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await auth();
   const accessToken = (session as { accessToken?: string } | null)?.accessToken;
-  const initialPlatform = accessToken ? await fetchMyPlatform(accessToken).catch(() => null) : null;
 
   return (
     <html lang="en" className={nunito.variable}>
       <body>
-        <WorkspaceProvider initialPlatform={initialPlatform} accessToken={accessToken ?? null}>
+        <WorkspaceProvider accessToken={accessToken ?? null}>
           {children}
         </WorkspaceProvider>
         <Toaster richColors position="top-right" />
