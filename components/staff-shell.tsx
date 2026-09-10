@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -319,9 +320,8 @@ export function StaffShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-card px-4 md:gap-4 md:px-6">
           <Link href="/" aria-label="Tably home" className="flex shrink-0 items-center gap-2">
-            <span className="flex size-6 items-center justify-center overflow-hidden rounded-md">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/bell_master.png" alt="" className="size-full object-cover" />
+            <span className="relative flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-md">
+              <Image src="/icons/bell_master.png" alt="" fill sizes="24px" className="object-cover" />
             </span>
             <span className="hidden text-sm font-bold tracking-tight sm:inline">Tably</span>
           </Link>

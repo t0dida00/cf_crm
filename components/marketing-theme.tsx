@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
 
 export const LANDING_THEME_VARS: CSSProperties = {
@@ -35,9 +36,8 @@ export function MarketingFooter() {
         style={{ color: "var(--landing-muted)" }}
       >
         <div className="flex items-center gap-2">
-          <span className="flex size-5 items-center justify-center overflow-hidden rounded-md">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/bell_master.png" alt="" className="size-full object-cover" />
+          <span className="relative flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-md">
+            <Image src="/icons/bell_master.png" alt="" fill sizes="20px" className="object-cover" />
           </span>
           <span>Tably · hospitality-grade ordering</span>
         </div>

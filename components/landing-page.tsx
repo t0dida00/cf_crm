@@ -96,9 +96,8 @@ export function LandingPage() {
       <header className="border-b" style={{ borderColor: "var(--landing-border)" }}>
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex size-7 items-center justify-center overflow-hidden rounded-lg">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/bell_master.png" alt="" className="size-full object-cover" />
+            <span className="relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-lg">
+              <Image src="/icons/bell_master.png" alt="" fill sizes="28px" className="object-cover" />
             </span>
             <span className={`${lora.className} text-base font-semibold`}>Tably</span>
           </Link>
