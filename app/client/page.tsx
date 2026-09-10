@@ -60,6 +60,7 @@ function GuestClientPage({
       workspaceName={workspace.name}
       workspaceAddress={workspace.address}
       workspacePhone={workspace.phone}
+      workspaceLogoUrl={workspace.logoUrl}
       categories={workspace.categories}
       dishes={workspace.dishes}
       taxRate={workspace.taxRate}
@@ -92,6 +93,7 @@ function SessionClientPage({ tableParam }: { tableParam: string | null }) {
       workspaceName={workspace.name}
       workspaceAddress={workspace.address}
       workspacePhone={workspace.phone}
+      workspaceLogoUrl={workspace.logoUrl}
       categories={workspace.categories}
       dishes={workspace.dishes}
       taxRate={workspace.settings.taxRate}

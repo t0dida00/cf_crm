@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ImageDropzone } from "@/components/image-dropzone";
 import { useWorkspace } from "@/components/workspace-provider";
 import type { SpecialTax } from "@/lib/types";
 
@@ -29,12 +30,13 @@ export function SettingsPanel() {
   const { workspace, fmt, updateSettings, updateProfile, addSpecialTax, removeSpecialTax } =
     useWorkspace();
   const { taxRate, currency, specialTaxes } = workspace.settings;
-  const { name, phone, address } = workspace;
+  const { name, phone, address, logoUrl } = workspace;
 
   const [profileDraft, setProfileDraft] = useState({
     name,
     phone: phone ?? "",
     address: address ?? "",
+    logoUrl: logoUrl ?? "",
   });
   const [billingDraft, setBillingDraft] = useState({ taxRate: String(taxRate), currency });
   const [taxesDraft, setTaxesDraft] = useState<SpecialTax[]>(specialTaxes);
@@ -43,8 +45,8 @@ export function SettingsPanel() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setProfileDraft({ name, phone: phone ?? "", address: address ?? "" });
-  }, [name, phone, address]);
+    setProfileDraft({ name, phone: phone ?? "", address: address ?? "", logoUrl: logoUrl ?? "" });
+  }, [name, phone, address, logoUrl]);
 
   useEffect(() => {
     setBillingDraft({ taxRate: String(taxRate), currency });
@@ -59,7 +61,8 @@ export function SettingsPanel() {
   const profileDirty =
     profileDraft.name.trim() !== name ||
     profileDraft.phone !== (phone ?? "") ||
-    profileDraft.address !== (address ?? "");
+    profileDraft.address !== (address ?? "") ||
+    profileDraft.logoUrl !== (logoUrl ?? "");
 
   const dirty =
     profileDirty ||
@@ -77,6 +80,7 @@ export function SettingsPanel() {
           name: profileDraft.name.trim(),
           phone: profileDraft.phone.trim(),
           address: profileDraft.address.trim(),
+          logoUrl: profileDraft.logoUrl.trim(),
         });
       }
       if (Number(billingDraft.taxRate) !== taxRate || billingDraft.currency !== currency) {
@@ -106,6 +110,15 @@ export function SettingsPanel() {
         <div>
           <p className="text-lg font-semibold">Restaurant</p>
           <div className="mt-4 space-y-4">
+            <div className="space-y-1.5">
+              <Label>Logo</Label>
+              <ImageDropzone
+                value={profileDraft.logoUrl}
+                onChange={(logoUrl) => setProfileDraft((d) => ({ ...d, logoUrl }))}
+                className="size-24"
+                placeholder="Drop a logo, or click to browse"
+              />
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="restaurant-name">Name</Label>
               <Input

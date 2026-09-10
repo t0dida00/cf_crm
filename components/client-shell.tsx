@@ -55,6 +55,7 @@ export interface ClientShellProps {
   workspaceName: string;
   workspaceAddress?: string | null;
   workspacePhone?: string | null;
+  workspaceLogoUrl?: string | null;
   categories: Category[];
   dishes: Dish[];
   taxRate: number;
@@ -72,6 +73,7 @@ export function ClientShell({
   workspaceName,
   workspaceAddress,
   workspacePhone,
+  workspaceLogoUrl,
   categories,
   dishes,
   taxRate,
@@ -379,8 +381,13 @@ export function ClientShell({
     <div className="flex min-h-screen flex-col bg-secondary/20">
       <header className="sticky top-0 z-10 border-b bg-card px-4 pt-3 pb-3 sm:px-6">
         <div className="mx-auto flex w-full max-w-2xl items-center gap-2.5">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-white">
-            <ForkKnife size={30} weight="bold" />
+          <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-500 text-white">
+            {workspaceLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={workspaceLogoUrl} alt="" className="size-full object-cover" />
+            ) : (
+              <ForkKnife size={30} weight="bold" />
+            )}
           </span>
           <div className="min-w-0 flex-1">
             <div className="truncate text-[15px] font-bold tracking-tight">{workspaceName}</div>

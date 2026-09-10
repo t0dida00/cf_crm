@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ImageSquare, MagnifyingGlass, PencilSimple, Trash } from "@phosphor-icons/react";
+import { ImageDropzone } from "@/components/image-dropzone";
 import {
   Accordion,
   AccordionContent,
@@ -80,9 +81,6 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Dish | null>(null);
-  const [imageError, setImageError] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<DishForm>({
     name: "",
     price: "",
@@ -111,7 +109,6 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
         imageUrl: "",
         isVegan: false,
       });
-      setImageError(false);
       setOpen(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -131,25 +128,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
       imageUrl: dish.imageUrl ?? "",
       isVegan: dish.isVegan ?? false,
     });
-    setImageError(false);
     setOpen(true);
-  };
-
-  const uploadImage = async (file: File) => {
-    await run("upload-image", async () => {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": file.type, "X-Filename": file.name },
-        body: file,
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error || "Failed to upload image.");
-      }
-      const { url } = await res.json();
-      setImageError(false);
-      setForm((f) => ({ ...f, imageUrl: url }));
-    }, "Failed to upload image.");
   };
 
   const filtered = useMemo(
@@ -334,66 +313,11 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex justify-center">
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => fileInputRef.current?.click()}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click();
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragActive(true);
-                }}
-                onDragLeave={() => setDragActive(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setDragActive(false);
-                  const file = e.dataTransfer.files?.[0];
-                  if (file) uploadImage(file);
-                }}
-                className={`relative flex aspect-square w-full max-w-48 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed text-center transition-colors ${
-                  dragActive ? "border-primary bg-primary/5" : "border-input bg-secondary hover:bg-secondary/70"
-                }`}
-              >
-                {form.imageUrl.trim() && !imageError ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={form.imageUrl.trim()}
-                    src={form.imageUrl.trim()}
-                    alt=""
-                    className="absolute inset-0 size-full object-contain"
-                    onError={() => setImageError(true)}
-                  />
-                ) : (
-                  <>
-                    <ImageSquare size={24} className="text-muted-foreground" />
-                    <p className="px-4 text-xs text-muted-foreground">
-                      Drag & drop an image, or click to browse
-                    </p>
-                  </>
-                )}
-                {form.imageUrl.trim() && !isPending("upload-image") && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-opacity hover:bg-black/40 hover:opacity-100">
-                    <span className="text-xs font-medium text-white">Replace image</span>
-                  </div>
-                )}
-                {isPending("upload-image") && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                    <span className="text-xs font-medium text-white">Uploading…</span>
-                  </div>
-                )}
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) uploadImage(file);
-                  e.target.value = "";
-                }}
+              <ImageDropzone
+                key={editing?.id ?? "new"}
+                value={form.imageUrl}
+                onChange={(imageUrl) => setForm((f) => ({ ...f, imageUrl }))}
+                className="aspect-square w-full max-w-48"
               />
             </div>
 

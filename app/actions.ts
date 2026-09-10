@@ -15,6 +15,7 @@ export async function createPlatformAction(input: {
   phone?: string;
   email?: string;
   address?: string;
+  logoUrl?: string;
 }) {
   const session = await auth();
   const accessToken = (session as { accessToken?: string } | null)?.accessToken;

@@ -9,6 +9,7 @@ export interface PlatformRecord {
   phone: string | null;
   email: string | null;
   address: string | null;
+  logoUrl: string | null;
   role: string;
 }
 
@@ -19,6 +20,7 @@ interface PlatformApiResponse {
     phone: string | null;
     email: string | null;
     address: string | null;
+    logo_url: string | null;
     platform_types: { code: string };
   };
   role: string;
@@ -45,13 +47,21 @@ export async function fetchMyPlatform(accessToken: string): Promise<PlatformReco
     phone: data.platform.phone,
     email: data.platform.email,
     address: data.platform.address,
+    logoUrl: data.platform.logo_url,
     role: data.role,
   };
 }
 
 export async function createPlatform(
   accessToken: string,
-  input: { name: string; domain: Domain; phone?: string; email?: string; address?: string },
+  input: {
+    name: string;
+    domain: Domain;
+    phone?: string;
+    email?: string;
+    address?: string;
+    logoUrl?: string;
+  },
 ): Promise<PlatformRecord> {
   const res = await fetch(`${API_URL}/platforms`, {
     method: "POST",
@@ -65,6 +75,7 @@ export async function createPlatform(
       phone: input.phone || undefined,
       email: input.email || undefined,
       address: input.address || undefined,
+      logoUrl: input.logoUrl || undefined,
     }),
   });
 
@@ -73,7 +84,7 @@ export async function createPlatform(
     throw new Error(body?.error || `Failed to create platform: ${res.status}`);
   }
 
-  const data = (await res.json()) as { platform: { id: string; name: string; phone: string | null; email: string | null; address: string | null }; role: string };
+  const data = (await res.json()) as { platform: { id: string; name: string; phone: string | null; email: string | null; address: string | null; logo_url: string | null }; role: string };
   return {
     id: data.platform.id,
     name: data.platform.name,
@@ -81,6 +92,7 @@ export async function createPlatform(
     phone: data.platform.phone,
     email: data.platform.email,
     address: data.platform.address,
+    logoUrl: data.platform.logo_url,
     role: data.role,
   };
 }

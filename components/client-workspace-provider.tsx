@@ -16,6 +16,7 @@ interface ClientWorkspace {
   name: string;
   address: string | null;
   phone: string | null;
+  logoUrl: string | null;
   categories: Category[];
   dishes: Dish[];
   tables: TableRec[];
@@ -47,6 +48,7 @@ const emptyWorkspace: ClientWorkspace = {
   name: "",
   address: null,
   phone: null,
+  logoUrl: null,
   categories: [],
   dishes: [],
   tables: [],
@@ -164,6 +166,7 @@ export function ClientWorkspaceProvider({
           name: string;
           address: string | null;
           phone: string | null;
+          logoUrl: string | null;
           currency: string;
           taxRate: string | number;
         };
@@ -175,6 +178,7 @@ export function ClientWorkspaceProvider({
           name: settingsRes.settings.name,
           address: settingsRes.settings.address,
           phone: settingsRes.settings.phone,
+          logoUrl: settingsRes.settings.logoUrl,
           categories: menuRes.categories.map(mapCategory),
           dishes: menuRes.dishes.map(mapDish),
           tables: tablesRes.tables.map(mapTable),

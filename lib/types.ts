@@ -120,6 +120,7 @@ export interface Workspace {
   phone?: string;
   email?: string;
   address?: string;
+  logoUrl?: string;
   zones: string[];
   tables: TableRec[];
   categories: Category[];

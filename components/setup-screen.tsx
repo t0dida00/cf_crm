@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowRight, CheckCircle, Coffee, ForkKnife, SignOut, SquaresFour } from "@phosphor-icons/react";
 import { signOutAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
+import { ImageDropzone } from "@/components/image-dropzone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LEXICON } from "@/lib/lexicon";
@@ -22,7 +23,7 @@ export function SetupScreen({
   onSubmit: (
     name: string,
     domain: Domain,
-    contact: { phone: string; email: string; address: string },
+    contact: { phone: string; email: string; address: string; logoUrl: string },
   ) => void | Promise<void>;
   error?: string | null;
 }) {
@@ -31,6 +32,7 @@ export function SetupScreen({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   return (
@@ -62,16 +64,29 @@ export function SetupScreen({
             your business.
           </p>
 
-          <Label htmlFor="business-name" className="mb-2 block text-sm font-semibold">
-            Enter your business name
-          </Label>
-          <Input
-            id="business-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Casa Marina"
-            className="h-11 text-base"
-          />
+          <div className="flex items-start gap-5">
+            <div>
+              <Label className="mb-2 block text-sm font-semibold">Logo</Label>
+              <ImageDropzone
+                value={logoUrl}
+                onChange={setLogoUrl}
+                className="size-22"
+                placeholder="Drop a logo"
+              />
+            </div>
+            <div className="flex-1">
+              <Label htmlFor="business-name" className="mb-2 block text-sm font-semibold">
+                Enter your business name
+              </Label>
+              <Input
+                id="business-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Casa Marina"
+                className="h-11 text-base"
+              />
+            </div>
+          </div>
 
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
@@ -166,6 +181,7 @@ export function SetupScreen({
                     phone: phone.trim(),
                     email: email.trim(),
                     address: address.trim(),
+                    logoUrl: logoUrl.trim(),
                   });
                 } finally {
                   setSubmitting(false);

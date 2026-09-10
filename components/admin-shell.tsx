@@ -87,6 +87,7 @@ const isTabId = (value: string | null): value is TabId =>
 function SidebarBody({
   collapsed,
   workspaceName,
+  workspaceLogoUrl,
   tab,
   setTab,
   counts,
@@ -95,6 +96,7 @@ function SidebarBody({
 }: {
   collapsed: boolean;
   workspaceName: string;
+  workspaceLogoUrl?: string | null;
   tab: TabId;
   setTab: (next: TabId) => void;
   counts: Partial<Record<TabId, number>>;
@@ -104,8 +106,13 @@ function SidebarBody({
   return (
     <>
       <div className={cn("flex items-center gap-2.5", collapsed ? "justify-center px-0" : "px-2")}>
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand-500">
-          <SquaresFour size={15} weight="bold" />
+        <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-500">
+          {workspaceLogoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={workspaceLogoUrl} alt="" className="size-full object-cover" />
+          ) : (
+            <SquaresFour size={15} weight="bold" />
+          )}
         </span>
         {!collapsed && (
           <span className="min-w-0 flex-1 truncate text-[15px] font-bold tracking-tight">
@@ -275,6 +282,7 @@ export function AdminShell() {
         <SidebarBody
           collapsed={collapsed}
           workspaceName={workspace.name}
+          workspaceLogoUrl={workspace.logoUrl}
           tab={tab}
           setTab={setTab}
           counts={counts}
@@ -294,6 +302,7 @@ export function AdminShell() {
             <SidebarBody
               collapsed={false}
               workspaceName={workspace.name}
+              workspaceLogoUrl={workspace.logoUrl}
               tab={tab}
               setTab={(next) => {
                 setTab(next);

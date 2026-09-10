@@ -60,7 +60,12 @@ interface WorkspaceContextValue {
   checkoutTable: (id: string) => Promise<void>;
   freeTable: (id: string) => Promise<void>;
   updateSettings: (patch: Partial<Settings>) => Promise<void>;
-  updateProfile: (patch: { name?: string; phone?: string; address?: string }) => Promise<void>;
+  updateProfile: (patch: {
+    name?: string;
+    phone?: string;
+    address?: string;
+    logoUrl?: string;
+  }) => Promise<void>;
   addSpecialTax: (tax: Omit<SpecialTax, "id">) => Promise<void>;
   removeSpecialTax: (id: string) => Promise<void>;
 }
@@ -221,6 +226,7 @@ async function fetchWorkspaceData(id: string, domain: "restaurant" | "cafe", nam
   phone?: string;
   email?: string;
   address?: string;
+  logoUrl?: string;
 }): Promise<Workspace> {
   const [tablesRes, categoriesRes, dishesRes, ordersRes, bookingsRes, settingsRes] = await Promise.all([
     apiFetch<{ tables: ApiTable[] }>("/tables"),
@@ -242,6 +248,7 @@ async function fetchWorkspaceData(id: string, domain: "restaurant" | "cafe", nam
     phone: contact.phone,
     email: contact.email,
     address: contact.address,
+    logoUrl: contact.logoUrl,
     zones,
     tables,
     categories: categoriesRes.categories.map(mapCategory),
@@ -282,6 +289,7 @@ export function WorkspaceProvider({
       phone: initialPlatform.phone ?? undefined,
       email: initialPlatform.email ?? undefined,
       address: initialPlatform.address ?? undefined,
+      logoUrl: initialPlatform.logoUrl ?? undefined,
     })
       .then((data) => {
         if (!cancelled) setWorkspace(data);
