@@ -222,7 +222,7 @@ export function AdminShell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
 
-  useNewOrderNotifications(true, workspace.id, refreshOrders, fmt);
+  useNewOrderNotifications(true, workspace.id, refreshOrders, fmt, workspace.orders);
 
   const initials = (workspace.name || "W")
     .trim()

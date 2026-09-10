@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
+import { useAsyncAction } from "@/hooks/use-async-action";
 import type { Dish, TaxMode } from "@/lib/types";
 
 const COMMON_TAX = "Common tax";
@@ -47,6 +48,7 @@ interface DishForm {
 
 export function MenuPanel({ createSignal }: { createSignal: number }) {
   const { workspace, fmt, saveDish, deleteDish } = useWorkspace();
+  const { run, isPending } = useAsyncAction();
   const { categories, dishes, settings } = workspace;
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -126,22 +128,24 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
         ? `Excl. tax ${dish.taxPct ?? 0}%`
         : null;
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.name.trim()) return;
-    saveDish({
-      id: editing?.id,
-      name: form.name.trim(),
-      price: Number(form.price) || 0,
-      catId: form.catId || categories[0]?.id || "",
-      valid: form.valid,
-      taxMode: form.taxMode,
-      taxName: form.taxMode === "include" ? form.taxName : undefined,
-      taxPct: form.taxMode === "exclude" ? Number(form.taxPct) || 0 : undefined,
-      description: form.description.trim() || undefined,
-      imageUrl: form.imageUrl.trim() || undefined,
-      isVegan: form.isVegan,
-    });
-    setOpen(false);
+    const ok = await run("save-dish", () =>
+      saveDish({
+        id: editing?.id,
+        name: form.name.trim(),
+        price: Number(form.price) || 0,
+        catId: form.catId || categories[0]?.id || "",
+        valid: form.valid,
+        taxMode: form.taxMode,
+        taxName: form.taxMode === "include" ? form.taxName : undefined,
+        taxPct: form.taxMode === "exclude" ? Number(form.taxPct) || 0 : undefined,
+        description: form.description.trim() || undefined,
+        imageUrl: form.imageUrl.trim() || undefined,
+        isVegan: form.isVegan,
+      }),
+    );
+    if (ok) setOpen(false);
   };
 
   const estimated =
@@ -252,8 +256,11 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => deleteDish(dish.id)}
-                        className="text-muted-foreground transition-colors hover:text-destructive"
+                        disabled={isPending(`delete-${dish.id}`)}
+                        onClick={() =>
+                          run(`delete-${dish.id}`, () => deleteDish(dish.id), "Failed to delete dish.")
+                        }
+                        className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
                         aria-label={`Delete ${dish.name}`}
                       >
                         <Trash size={15} weight="bold" />
@@ -413,9 +420,10 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
               <Button
                 variant="ghost"
                 className="mr-auto"
-                onClick={() => {
-                  deleteDish(editing.id);
-                  setOpen(false);
+                loading={isPending(`delete-${editing.id}`)}
+                onClick={async () => {
+                  const ok = await run(`delete-${editing.id}`, () => deleteDish(editing.id), "Failed to delete dish.");
+                  if (ok) setOpen(false);
                 }}
               >
                 Delete
@@ -424,7 +432,9 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={submit}>{editing ? "Save dish" : "Create dish"}</Button>
+            <Button loading={isPending("save-dish")} onClick={submit}>
+              {editing ? "Save dish" : "Create dish"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

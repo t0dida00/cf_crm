@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DataTable } from "@/components/data-table";
 import { useWorkspace } from "@/components/workspace-provider";
+import { useAsyncAction } from "@/hooks/use-async-action";
 import type { Category } from "@/lib/types";
 
 interface Row {
@@ -33,6 +34,7 @@ const helper = createColumnHelper<Row>();
 
 export function CategoriesPanel({ createSignal }: { createSignal: number }) {
   const { workspace, saveCategory, deleteCategory } = useWorkspace();
+  const { run, isPending } = useAsyncAction();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [form, setForm] = useState({ name: "", valid: true });
@@ -108,8 +110,15 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
               </button>
               <button
                 type="button"
-                onClick={() => deleteCategory(row.original.category.id)}
-                className="text-muted-foreground transition-colors hover:text-destructive"
+                disabled={isPending(`delete-${row.original.category.id}`)}
+                onClick={() =>
+                  run(
+                    `delete-${row.original.category.id}`,
+                    () => deleteCategory(row.original.category.id),
+                    "Failed to delete category.",
+                  )
+                }
+                className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
                 aria-label="Delete category"
               >
                 <Trash size={15} weight="bold" />
@@ -119,15 +128,17 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
         }),
       ],
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [deleteCategory],
+      [deleteCategory, run, isPending],
     ),
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.name.trim()) return;
-    saveCategory({ id: editing?.id, name: form.name.trim(), valid: form.valid });
-    setOpen(false);
+    const ok = await run("save-category", () =>
+      saveCategory({ id: editing?.id, name: form.name.trim(), valid: form.valid }),
+    );
+    if (ok) setOpen(false);
   };
 
   return (
@@ -166,9 +177,14 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
               <Button
                 variant="ghost"
                 className="mr-auto"
-                onClick={() => {
-                  deleteCategory(editing.id);
-                  setOpen(false);
+                loading={isPending(`delete-${editing.id}`)}
+                onClick={async () => {
+                  const ok = await run(
+                    `delete-${editing.id}`,
+                    () => deleteCategory(editing.id),
+                    "Failed to delete category.",
+                  );
+                  if (ok) setOpen(false);
                 }}
               >
                 Delete
@@ -177,7 +193,7 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={submit}>
+            <Button loading={isPending("save-category")} onClick={submit}>
               {editing ? "Save category" : "Create category"}
             </Button>
           </DialogFooter>

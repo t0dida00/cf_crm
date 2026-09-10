@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
+import { useAsyncAction } from "@/hooks/use-async-action";
 import { hhmm } from "@/lib/range";
 import { orderTone } from "@/lib/tone";
 import type { Order } from "@/lib/types";
@@ -37,6 +38,7 @@ export function StaffOrdersPanel() {
     setOrderLineQty,
     addOrderLine,
   } = useWorkspace();
+  const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const [addDishId, setAddDishId] = useState(workspace.dishes[0]?.id ?? "");
@@ -168,7 +170,13 @@ export function StaffOrdersPanel() {
 
                   <div className="mt-3 flex flex-wrap items-center gap-2.5">
                     {canAdvance && (
-                      <Button size="sm" onClick={() => advanceOrder(order.id)}>
+                      <Button
+                        size="sm"
+                        loading={isPending(`advance-${order.id}`)}
+                        onClick={() =>
+                          run(`advance-${order.id}`, () => advanceOrder(order.id), "Failed to update order.")
+                        }
+                      >
                         {flow[i + 1]}
                         <ArrowRight size={12} weight="bold" />
                       </Button>
@@ -186,8 +194,11 @@ export function StaffOrdersPanel() {
                     <span className="flex-1" />
                     <button
                       type="button"
-                      onClick={() => deleteOrder(order.id)}
-                      className="text-muted-foreground transition-colors hover:text-destructive"
+                      disabled={isPending(`delete-${order.id}`)}
+                      onClick={() =>
+                        run(`delete-${order.id}`, () => deleteOrder(order.id), "Failed to delete order.")
+                      }
+                      className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
                       aria-label={`Delete ${order.code}`}
                     >
                       <Trash size={15} weight="bold" />
@@ -220,10 +231,13 @@ export function StaffOrdersPanel() {
                     <span className="inline-flex items-center gap-1 rounded-full bg-secondary p-0.75">
                       <button
                         type="button"
+                        disabled={isPending(`qty-${line.itemId}`)}
                         onClick={() =>
-                          setOrderLineQty(editing.id, line.itemId, line.qty - 1)
+                          run(`qty-${line.itemId}`, () =>
+                            setOrderLineQty(editing.id, line.itemId, line.qty - 1),
+                          )
                         }
-                        className="flex size-6.5 items-center justify-center rounded-full bg-white text-foreground"
+                        className="flex size-6.5 items-center justify-center rounded-full bg-white text-foreground disabled:pointer-events-none disabled:opacity-50"
                         aria-label={`Decrease ${line.name}`}
                       >
                         −
@@ -231,10 +245,13 @@ export function StaffOrdersPanel() {
                       <span className="min-w-4.5 text-center text-sm font-bold">{line.qty}</span>
                       <button
                         type="button"
+                        disabled={isPending(`qty-${line.itemId}`)}
                         onClick={() =>
-                          setOrderLineQty(editing.id, line.itemId, line.qty + 1)
+                          run(`qty-${line.itemId}`, () =>
+                            setOrderLineQty(editing.id, line.itemId, line.qty + 1),
+                          )
                         }
-                        className="flex size-6.5 items-center justify-center rounded-full bg-brand-500 text-white"
+                        className="flex size-6.5 items-center justify-center rounded-full bg-brand-500 text-white disabled:pointer-events-none disabled:opacity-50"
                         aria-label={`Increase ${line.name}`}
                       >
                         +
@@ -259,7 +276,10 @@ export function StaffOrdersPanel() {
                 </Select>
                 <Button
                   variant="secondary"
-                  onClick={() => addDishId && addOrderLine(editing.id, addDishId)}
+                  loading={isPending("add-line")}
+                  onClick={() =>
+                    addDishId && run("add-line", () => addOrderLine(editing.id, addDishId))
+                  }
                 >
                   Add item
                 </Button>
@@ -276,9 +296,10 @@ export function StaffOrdersPanel() {
               <Button
                 variant="ghost"
                 className="mr-auto"
-                onClick={() => {
-                  deleteOrder(editing.id);
-                  setEditId(null);
+                loading={isPending(`delete-${editing.id}`)}
+                onClick={async () => {
+                  const ok = await run(`delete-${editing.id}`, () => deleteOrder(editing.id), "Failed to delete order.");
+                  if (ok) setEditId(null);
                 }}
               >
                 Delete order
@@ -346,14 +367,17 @@ export function StaffOrdersPanel() {
               Cancel
             </Button>
             <Button
-              onClick={() => {
+              loading={isPending("create-order")}
+              onClick={async () => {
                 if (!form.tableName || !form.itemId) return;
-                addOrder({
-                  tableName: form.tableName,
-                  itemId: form.itemId,
-                  qty: Number(form.qty) || 1,
-                });
-                setCreateOpen(false);
+                const ok = await run("create-order", () =>
+                  addOrder({
+                    tableName: form.tableName,
+                    itemId: form.itemId,
+                    qty: Number(form.qty) || 1,
+                  }),
+                );
+                if (ok) setCreateOpen(false);
               }}
             >
               Open order

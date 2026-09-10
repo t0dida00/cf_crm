@@ -22,10 +22,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
+import { useAsyncAction } from "@/hooks/use-async-action";
 import { SLOT_TIMES } from "@/lib/lexicon";
 
 export function BookingsPanel({ createSignal }: { createSignal: number }) {
   const { workspace, saveBooking, toggleBooking, deleteBooking } = useWorkspace();
+  const { run, isPending } = useAsyncAction();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -94,15 +96,21 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
                   </Badge>
                   <button
                     type="button"
-                    onClick={() => toggleBooking(booking.id)}
-                    className="text-[13px] font-semibold text-brand-500 hover:text-brand-600"
+                    disabled={isPending(`toggle-${booking.id}`)}
+                    onClick={() =>
+                      run(`toggle-${booking.id}`, () => toggleBooking(booking.id), "Failed to update booking.")
+                    }
+                    className="text-[13px] font-semibold text-brand-500 hover:text-brand-600 disabled:pointer-events-none disabled:opacity-50"
                   >
                     {booking.status === "Arrived" ? "Undo arrival" : "Mark arrived"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => deleteBooking(booking.id)}
-                    className="text-muted-foreground transition-colors hover:text-destructive"
+                    disabled={isPending(`delete-${booking.id}`)}
+                    onClick={() =>
+                      run(`delete-${booking.id}`, () => deleteBooking(booking.id), "Failed to delete booking.")
+                    }
+                    className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
                     aria-label="Delete booking"
                   >
                     <Trash size={15} weight="bold" />
@@ -210,16 +218,19 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
               Cancel
             </Button>
             <Button
-              onClick={() => {
+              loading={isPending("create-booking")}
+              onClick={async () => {
                 if (!form.name.trim()) return;
-                saveBooking({
-                  name: form.name.trim(),
-                  time: form.time,
-                  party: Number(form.party) || 2,
-                  tableName: form.tableName,
-                  status: "Confirmed",
-                });
-                setOpen(false);
+                const ok = await run("create-booking", () =>
+                  saveBooking({
+                    name: form.name.trim(),
+                    time: form.time,
+                    party: Number(form.party) || 2,
+                    tableName: form.tableName,
+                    status: "Confirmed",
+                  }),
+                );
+                if (ok) setOpen(false);
               }}
             >
               Add booking

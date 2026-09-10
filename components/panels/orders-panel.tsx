@@ -36,6 +36,7 @@ import {
 import { DataTable } from "@/components/data-table";
 import { OrderDetailDialog } from "@/components/order-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
+import { useAsyncAction } from "@/hooks/use-async-action";
 import { formatStamp } from "@/lib/range";
 import type { Order } from "@/lib/types";
 
@@ -52,6 +53,7 @@ const summarise = (order: Order) =>
 
 export function OrdersPanel({ createSignal }: { createSignal: number }) {
   const { workspace, flow, fmt, addOrder } = useWorkspace();
+  const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
   const [detail, setDetail] = useState<Order | null>(null);
   const [open, setOpen] = useState(false);
@@ -295,13 +297,16 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
               Cancel
             </Button>
             <Button
-              onClick={() => {
-                addOrder({
-                  tableName: form.tableName,
-                  itemId: form.itemId,
-                  qty: Number(form.qty) || 1,
-                });
-                setOpen(false);
+              loading={isPending("create-order")}
+              onClick={async () => {
+                const ok = await run("create-order", () =>
+                  addOrder({
+                    tableName: form.tableName,
+                    itemId: form.itemId,
+                    qty: Number(form.qty) || 1,
+                  }),
+                );
+                if (ok) setOpen(false);
               }}
             >
               Open order

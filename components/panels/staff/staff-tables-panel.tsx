@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useWorkspace } from "@/components/workspace-provider";
+import { useAsyncAction } from "@/hooks/use-async-action";
 import { formatStamp, hhmm } from "@/lib/range";
 import { tableStateTone, orderTone } from "@/lib/tone";
 import type { Order, TableRec, TableState } from "@/lib/types";
@@ -168,6 +169,7 @@ function BillReceipt({
 
 export function StaffTablesPanel() {
   const { workspace, flow, fmt, seatTable, checkoutTable, freeTable } = useWorkspace();
+  const { run, isPending } = useAsyncAction();
   const [stateFilter, setStateFilter] = useState<TableState | "All">("All");
   const [tableId, setTableId] = useState<string | null>(null);
   const [billOpen, setBillOpen] = useState(false);
@@ -320,9 +322,8 @@ export function StaffTablesPanel() {
               <div className="flex items-center gap-2.5 pt-1">
                 {(table.state === "Free" || table.state === "Booked") && (
                   <Button
-                    onClick={() => {
-                      seatTable(table.id);
-                    }}
+                    loading={isPending(`seat-${table.id}`)}
+                    onClick={() => run(`seat-${table.id}`, () => seatTable(table.id), "Failed to seat table.")}
                   >
                     Seat guests
                   </Button>
@@ -335,9 +336,10 @@ export function StaffTablesPanel() {
                   (table.state === "Seated" && tableOrders.length === 0)) && (
                   <Button
                     variant="secondary"
-                    onClick={() => {
-                      freeTable(table.id);
-                      setTableId(null);
+                    loading={isPending(`free-${table.id}`)}
+                    onClick={async () => {
+                      const ok = await run(`free-${table.id}`, () => freeTable(table.id), "Failed to free table.");
+                      if (ok) setTableId(null);
                     }}
                   >
                     Mark free
@@ -382,10 +384,17 @@ export function StaffTablesPanel() {
                 </Button>
                 <span className="flex-1" />
                 <Button
-                  onClick={() => {
-                    checkoutTable(table.id);
-                    setBillOpen(false);
-                    setTableId(null);
+                  loading={isPending(`checkout-${table.id}`)}
+                  onClick={async () => {
+                    const ok = await run(
+                      `checkout-${table.id}`,
+                      () => checkoutTable(table.id),
+                      "Failed to check out table.",
+                    );
+                    if (ok) {
+                      setBillOpen(false);
+                      setTableId(null);
+                    }
                   }}
                 >
                   Confirm checkout

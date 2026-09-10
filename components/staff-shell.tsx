@@ -215,7 +215,7 @@ export function StaffShell() {
     refreshRequests();
   }, []);
 
-  useNewOrderNotifications(true, workspace.id, refreshOrders, fmt);
+  useNewOrderNotifications(true, workspace.id, refreshOrders, fmt, workspace.orders);
   useTableRequestNotifications(true, workspace.id, () => {
     refreshRequests();
     setRequestsModalOpen(true);

@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DataTable } from "@/components/data-table";
+import { useAsyncAction } from "@/hooks/use-async-action";
 import { apiFetch } from "@/lib/api";
 import { formatStamp } from "@/lib/range";
 import type { StaffAccount } from "@/lib/types";
@@ -49,6 +50,7 @@ const helper = createColumnHelper<StaffAccount>();
 const emptyForm = { fullName: "", email: "", phone: "", password: "" };
 
 export function StaffPanel({ createSignal }: { createSignal: number }) {
+  const { run, isPending } = useAsyncAction();
   const [staff, setStaff] = useState<StaffAccount[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [open, setOpen] = useState(false);
@@ -146,8 +148,11 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
               </button>
               <button
                 type="button"
-                onClick={() => toggleActive(row.original)}
-                className="text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                disabled={isPending(`toggle-${row.original.id}`)}
+                onClick={() =>
+                  run(`toggle-${row.original.id}`, () => toggleActive(row.original), "Failed to update staff account.")
+                }
+                className="text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
               >
                 {row.original.isActive ? "Disable" : "Enable"}
               </button>
@@ -276,7 +281,7 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={submit} disabled={saving}>
+            <Button onClick={submit} loading={saving}>
               {saving ? "Saving…" : editing ? "Save changes" : "Create account"}
             </Button>
           </DialogFooter>

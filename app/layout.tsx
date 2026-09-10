@@ -14,7 +14,7 @@ const nunito = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "CRM Restaurant",
+  title: "Tably",
   description: "Set up a restaurant or café workspace and manage it.",
 };
 

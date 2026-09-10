@@ -21,25 +21,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
+import { useAsyncAction } from "@/hooks/use-async-action";
 import type { TableRec } from "@/lib/types";
 
 const NEW_ZONE = "__new";
 
 export function TablesPanel({ createSignal }: { createSignal: number }) {
   const { workspace, saveTable, deleteTable } = useWorkspace();
+  const { run, isPending } = useAsyncAction();
   const [editing, setEditing] = useState<TableRec | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", seats: "4", zone: "", newZone: "" });
-  const [error, setError] = useState<string | null>(null);
-
-  const handleDelete = async (id: string) => {
-    setError(null);
-    try {
-      await deleteTable(id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete table");
-    }
-  };
 
   const startCreate = () => {
     setEditing(null);
@@ -63,25 +55,22 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
     setOpen(true);
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.name.trim()) return;
     const zone = form.zone === NEW_ZONE ? form.newZone.trim() : form.zone;
-    saveTable({
-      id: editing?.id,
-      name: form.name.trim(),
-      seats: Number(form.seats) || 2,
-      zone: zone || workspace.zones[0] || "—",
-    });
-    setOpen(false);
+    const ok = await run("save-table", () =>
+      saveTable({
+        id: editing?.id,
+        name: form.name.trim(),
+        seats: Number(form.seats) || 2,
+        zone: zone || workspace.zones[0] || "—",
+      }),
+    );
+    if (ok) setOpen(false);
   };
 
   return (
     <>
-      {error && (
-        <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
-          {error}
-        </p>
-      )}
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
         {workspace.tables.map((table) => (
           <Card key={table.id}>
@@ -103,8 +92,11 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDelete(table.id)}
-                  className="text-muted-foreground transition-colors hover:text-destructive"
+                  disabled={isPending(`delete-${table.id}`)}
+                  onClick={() =>
+                    run(`delete-${table.id}`, () => deleteTable(table.id), "Failed to delete table.")
+                  }
+                  className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
                   aria-label={`Delete ${table.name}`}
                 >
                   <Trash size={15} weight="bold" />
@@ -183,9 +175,10 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
               <Button
                 variant="ghost"
                 className="mr-auto"
+                loading={isPending(`delete-${editing.id}`)}
                 onClick={async () => {
-                  await handleDelete(editing.id);
-                  setOpen(false);
+                  const ok = await run(`delete-${editing.id}`, () => deleteTable(editing.id), "Failed to delete table.");
+                  if (ok) setOpen(false);
                 }}
               >
                 Delete
@@ -194,7 +187,9 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={submit}>{editing ? "Save table" : "Create table"}</Button>
+            <Button loading={isPending("save-table")} onClick={submit}>
+              {editing ? "Save table" : "Create table"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

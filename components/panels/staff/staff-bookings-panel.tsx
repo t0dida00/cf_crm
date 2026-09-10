@@ -22,12 +22,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
+import { useAsyncAction } from "@/hooks/use-async-action";
 import { SLOT_TIMES } from "@/lib/lexicon";
 import { bookingTone } from "@/lib/tone";
 import type { Booking } from "@/lib/types";
 
 export function StaffBookingsPanel() {
   const { workspace, saveBooking, assignBooking, unassignBooking } = useWorkspace();
+  const { run, isPending } = useAsyncAction();
   const [assignId, setAssignId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({ name: "", time: "19:00", party: "2" });
@@ -117,11 +119,16 @@ export function StaffBookingsPanel() {
                     <button
                       key={t.id}
                       type="button"
-                      onClick={() => {
-                        assignBooking(assigning.id, t.id);
-                        setAssignId(null);
+                      disabled={isPending(`assign-${assigning.id}`)}
+                      onClick={async () => {
+                        const ok = await run(
+                          `assign-${assigning.id}`,
+                          () => assignBooking(assigning.id, t.id),
+                          "Failed to assign table.",
+                        );
+                        if (ok) setAssignId(null);
                       }}
-                      className="flex w-full items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-colors hover:border-brand-500 hover:bg-brand-50"
+                      className="flex w-full items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition-colors hover:border-brand-500 hover:bg-brand-50 disabled:pointer-events-none disabled:opacity-50"
                     >
                       <SquaresFour size={17} weight="bold" className="text-brand-500" />
                       <span className="flex-1">
@@ -139,9 +146,14 @@ export function StaffBookingsPanel() {
                 <div className="border-t pt-3.5">
                   <Button
                     variant="ghost"
-                    onClick={() => {
-                      unassignBooking(assigning.id);
-                      setAssignId(null);
+                    loading={isPending(`unassign-${assigning.id}`)}
+                    onClick={async () => {
+                      const ok = await run(
+                        `unassign-${assigning.id}`,
+                        () => unassignBooking(assigning.id),
+                        "Failed to release table.",
+                      );
+                      if (ok) setAssignId(null);
                     }}
                   >
                     Release table
@@ -198,16 +210,19 @@ export function StaffBookingsPanel() {
               Cancel
             </Button>
             <Button
-              onClick={() => {
+              loading={isPending("create-booking")}
+              onClick={async () => {
                 if (!form.name.trim()) return;
-                saveBooking({
-                  name: form.name.trim(),
-                  time: form.time,
-                  party: Number(form.party) || 2,
-                  tableName: null,
-                  status: "Confirmed",
-                });
-                setCreateOpen(false);
+                const ok = await run("create-booking", () =>
+                  saveBooking({
+                    name: form.name.trim(),
+                    time: form.time,
+                    party: Number(form.party) || 2,
+                    tableName: null,
+                    status: "Confirmed",
+                  }),
+                );
+                if (ok) setCreateOpen(false);
               }}
             >
               Add booking

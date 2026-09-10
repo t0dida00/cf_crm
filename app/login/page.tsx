@@ -1,11 +1,12 @@
-import { SquaresFour } from "@phosphor-icons/react/ssr";
+import { ArrowLeft, SquaresFour } from "@phosphor-icons/react/ssr";
 import { AuthError } from "next-auth";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
-import { Button } from "@/components/ui/button";
 import { GoogleSignInButton } from "@/components/google-signin-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoginSubmitButton } from "@/components/login-submit-button";
 
 export default async function LoginPage({
   searchParams,
@@ -46,6 +47,14 @@ export default async function LoginPage({
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
+        <Link
+          href="/"
+          className="mb-6 flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft size={15} weight="bold" />
+          Back to home
+        </Link>
+
         <div className="mb-7 flex items-center gap-2.5">
           <span className="flex size-7 items-center justify-center rounded-lg bg-brand-500 text-white">
             <SquaresFour size={15} weight="bold" />
@@ -96,9 +105,7 @@ export default async function LoginPage({
                 placeholder="••••••••"
               />
             </div>
-            <Button type="submit" className="h-11 w-full text-base" size="lg">
-              Sign in
-            </Button>
+            <LoginSubmitButton />
           </form>
 
           <div className="my-6 flex items-center gap-3">

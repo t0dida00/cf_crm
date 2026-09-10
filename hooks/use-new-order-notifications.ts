@@ -18,15 +18,30 @@ interface ApiOrder {
  * status advance (e.g. staff moving a card along the flow) touches the same
  * event but not the total, and shouldn't toast "new order" for that.
  * `onNewOrder` lets the caller refresh its own order list so counts/panels
- * stay in sync with what triggered the toast. */
+ * stay in sync with what triggered the toast.
+ * `knownOrders` seeds the last-known total for orders already on screen when
+ * this mounts — without it, the first order:updated event for any
+ * already-open order (e.g. a plain status advance right after page load)
+ * looks like a total change, since there's nothing to compare against yet,
+ * and wrongly toasts "New order" for an order staff already has open. */
 export function useNewOrderNotifications(
   enabled: boolean,
   platformId: string | null,
   onNewOrder: () => void,
   fmt: (value: number) => string,
+  knownOrders?: { id: string; total: number }[],
 ) {
   const channel = usePlatformSocket(enabled ? platformId : null);
   const lastTotals = useRef(new Map<string, number>());
+
+  useEffect(() => {
+    if (!knownOrders) return;
+    for (const order of knownOrders) {
+      if (!lastTotals.current.has(order.id)) {
+        lastTotals.current.set(order.id, order.total);
+      }
+    }
+  }, [knownOrders]);
 
   useEffect(() => {
     if (!channel) return;

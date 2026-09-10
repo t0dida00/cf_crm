@@ -252,6 +252,7 @@ export function SettingsPanel() {
         <div className="flex justify-end border-t pt-5">
           <Button
             onClick={handleSave}
+            loading={saving}
             disabled={!dirty || saving || !profileDraft.name.trim()}
           >
             {saving ? "Saving…" : "Save"}

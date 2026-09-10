@@ -1,20 +1,46 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Lora } from "next/font/google";
 import {
   ArrowRight,
   BellRinging,
   ChartLineUp,
   CheckCircle,
   Coffee,
+  Envelope,
   ForkKnife,
   QrCode,
   SquaresFour,
   Table,
 } from "@phosphor-icons/react/ssr";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { LEXICON } from "@/lib/lexicon";
+import { ContactForm } from "@/components/contact-form";
+import { MarketingShell, MarketingFooter } from "@/components/marketing-theme";
+
+const lora = Lora({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-lora",
+});
+
+const DEMO_CREDENTIALS = {
+  email: "admin@example.com",
+  password: "password123",
+};
+
+const AUTHOR = {
+  name: "Khoa Dinh",
+  email: "khoadinh.work@gmail.com",
+};
+
+const NAV_LINKS = [
+  { href: "#features", label: "Features" },
+  { href: "#products", label: "Menu" },
+  { href: "#demo", label: "Demo" },
+  { href: "#contact", label: "Contact" },
+];
 
 const FEATURES = [
   {
@@ -66,53 +92,80 @@ export function LandingPage() {
   const cafe = LEXICON.cafe;
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b">
+    <MarketingShell fontVariable={lora.variable}>
+      <header className="border-b" style={{ borderColor: "var(--landing-border)" }}>
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-brand-500 text-white">
-              <SquaresFour size={15} weight="bold" />
+          <Link href="/" className="flex items-center gap-2.5">
+            <span
+              className="flex size-7 items-center justify-center rounded-lg text-sm font-bold text-white"
+              style={{ backgroundColor: "var(--landing-ink)" }}
+            >
+              T
             </span>
-            <span className="text-sm font-bold">CRM Restaurant</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button asChild variant="ghost">
-              <Link href="/login">Sign in</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/login">
-                Get started
-                <ArrowRight size={16} weight="bold" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <section className="mx-auto max-w-6xl px-6 py-20 text-center sm:py-28">
-        <Badge variant="secondary" className="mx-auto bg-brand-50 text-brand-700">
-          Built for restaurants &amp; cafés
-        </Badge>
-        <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-bold text-balance sm:text-5xl">
-          Run your floor, not your spreadsheets
-        </h1>
-        <p className="mx-auto mt-5 max-w-xl text-lg text-muted-foreground text-pretty">
-          QR ordering, live tables, and a kitchen that always knows what&apos;s next —
-          one workspace for your whole team.
-        </p>
-        <div className="mt-8 flex items-center justify-center gap-3">
-          <Button asChild size="lg" className="h-11 text-base">
+            <span className={`${lora.className} text-base font-semibold`}>Tably</span>
+          </Link>
+          <nav className="hidden items-center gap-7 md:flex">
+            {NAV_LINKS.map(({ href, label }) => (
+              <a
+                key={href}
+                href={href}
+                className="text-sm font-medium transition-colors hover:opacity-70"
+                style={{ color: "var(--landing-muted)" }}
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+          <Button
+            asChild
+            className="rounded-full border-0 text-white hover:opacity-90"
+            style={{ backgroundColor: "var(--landing-ink)" }}
+          >
             <Link href="/login">
-              Get started
+              Open the floor
               <ArrowRight size={16} weight="bold" />
             </Link>
           </Button>
-          <Button asChild size="lg" variant="outline" className="h-11 text-base">
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-4xl px-6 py-16 text-center sm:py-20">
+        <p
+          className="text-xs font-semibold tracking-[0.25em] uppercase"
+          style={{ color: "var(--landing-accent)" }}
+        >
+          Service, kept in order
+        </p>
+        <h1 className={`${lora.className} mx-auto mt-5 max-w-3xl text-4xl font-semibold text-balance sm:text-5xl`}>
+          Run the floor like{" "}
+          <em style={{ color: "var(--landing-accent)" }}>service</em>{" "}
+          ran itself.
+        </h1>
+        <p className="mx-auto mt-5 max-w-xl text-lg text-pretty" style={{ color: "var(--landing-muted)" }}>
+          Tably keeps every table accounted for and every ticket in line — QR ordering, live
+          kitchen updates, and bookings, all in one calm room.
+        </p>
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <Button
+            asChild
+            size="lg"
+            className="rounded-full border-0 text-base text-white hover:opacity-90"
+            style={{ backgroundColor: "var(--landing-accent)" }}
+          >
+            <Link href="/login">Get started</Link>
+          </Button>
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="rounded-full border-0 text-base"
+            style={{ backgroundColor: "var(--landing-card)", color: "var(--landing-ink)" }}
+          >
             <Link href="#products">See the menu builder</Link>
           </Button>
         </div>
 
-        <div className="mx-auto mt-16 max-w-4xl">
+        <div className="mx-auto mt-14 max-w-4xl">
           <Image
             src="/landing/hero.svg"
             alt="A guest scans a table QR code to order; the order appears live on the kitchen's screen"
@@ -124,66 +177,179 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="border-t bg-secondary/40 py-20">
+      <section id="demo" className="border-t py-14" style={{ borderColor: "var(--landing-border)" }}>
+        <div className="mx-auto max-w-3xl px-6">
+          <div
+            className="rounded-2xl border p-6 sm:p-8"
+            style={{ borderColor: "var(--landing-border)", backgroundColor: "var(--landing-card)" }}
+          >
+            <p
+              className="text-xs font-semibold tracking-[0.2em] uppercase"
+              style={{ color: "var(--landing-accent)" }}
+            >
+              Demo instructions
+            </p>
+            <h2 className={`${lora.className} mt-3 text-2xl font-semibold text-balance sm:text-3xl`}>
+              This is a live demo app
+            </h2>
+            <p className="mt-2.5 text-pretty" style={{ color: "var(--landing-muted)" }}>
+              Tably is a portfolio project — feel free to explore the admin dashboard with a
+              read/write demo account. Sign in with the credentials below to see the tables,
+              menu builder, live orders, and reporting in action.
+            </p>
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="rounded-lg border px-4 py-3" style={{ borderColor: "var(--landing-border)" }}>
+                <p
+                  className="text-xs font-semibold tracking-wide uppercase"
+                  style={{ color: "var(--landing-muted)" }}
+                >
+                  Email
+                </p>
+                <p className="mt-1 font-mono text-sm">{DEMO_CREDENTIALS.email}</p>
+              </div>
+              <div className="rounded-lg border px-4 py-3" style={{ borderColor: "var(--landing-border)" }}>
+                <p
+                  className="text-xs font-semibold tracking-wide uppercase"
+                  style={{ color: "var(--landing-muted)" }}
+                >
+                  Password
+                </p>
+                <p className="mt-1 font-mono text-sm">{DEMO_CREDENTIALS.password}</p>
+              </div>
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full border-0 text-base text-white hover:opacity-90"
+                style={{ backgroundColor: "var(--landing-accent)" }}
+              >
+                <Link href="/login">
+                  Sign in to the demo
+                  <ArrowRight size={16} weight="bold" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="rounded-full border-0 text-base"
+                style={{ backgroundColor: "var(--landing-bg-alt)", color: "var(--landing-ink)" }}
+              >
+                <Link href="/instruction">See what each role can do</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="features"
+        className="border-t py-14"
+        style={{ borderColor: "var(--landing-border)", backgroundColor: "var(--landing-bg-alt)" }}
+      >
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-xl text-center">
-            <h2 className="text-3xl font-bold text-balance">Everything the floor needs</h2>
-            <p className="mt-3 text-muted-foreground text-pretty">
-              From the QR scan to the closing report, it&apos;s all one connected system.
+            <p
+              className="text-xs font-semibold tracking-[0.2em] uppercase"
+              style={{ color: "var(--landing-accent)" }}
+            >
+              Everything the floor needs
+            </p>
+            <h2 className={`${lora.className} mt-3 text-3xl font-semibold text-balance`}>
+              One connected system
+            </h2>
+            <p className="mt-2.5 text-pretty" style={{ color: "var(--landing-muted)" }}>
+              From the QR scan to the closing report, it&apos;s all in one place.
             </p>
           </div>
-          <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
             {FEATURES.map(({ icon: Icon, title, description }) => (
-              <Card key={title} className="p-7">
-                <span className="flex size-10 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+              <div
+                key={title}
+                className="rounded-2xl border p-7"
+                style={{ borderColor: "var(--landing-border)", backgroundColor: "var(--landing-card)" }}
+              >
+                <span
+                  className="flex size-10 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: "var(--landing-bg-alt)", color: "var(--landing-accent)" }}
+                >
                   <Icon size={20} weight="bold" />
                 </span>
                 <h3 className="mt-4 text-base font-semibold">{title}</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground text-pretty">{description}</p>
-              </Card>
+                <p className="mt-1.5 text-sm text-pretty" style={{ color: "var(--landing-muted)" }}>
+                  {description}
+                </p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="products" className="py-20">
+      <section id="products" className="py-14">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-xl text-center">
-            <h2 className="text-3xl font-bold text-balance">Build a menu guests actually enjoy</h2>
-            <p className="mt-3 text-muted-foreground text-pretty">
+            <p
+              className="text-xs font-semibold tracking-[0.2em] uppercase"
+              style={{ color: "var(--landing-accent)" }}
+            >
+              Menu builder
+            </p>
+            <h2 className={`${lora.className} mt-3 text-3xl font-semibold text-balance`}>
+              Build a menu guests actually enjoy
+            </h2>
+            <p className="mt-2.5 text-pretty" style={{ color: "var(--landing-muted)" }}>
               Group products by category, set prices and descriptions, and publish updates
               instantly to every table.
             </p>
           </div>
 
-          <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
             {[
               { icon: ForkKnife, domain: restaurant },
               { icon: Coffee, domain: cafe },
             ].map(({ icon: Icon, domain }) => (
-              <Card key={domain.label} className="p-7">
+              <div
+                key={domain.label}
+                className="rounded-2xl border p-7"
+                style={{ borderColor: "var(--landing-border)", backgroundColor: "var(--landing-card)" }}
+              >
                 <div className="flex items-center gap-2.5">
-                  <span className="flex size-9 items-center justify-center rounded-lg bg-brand-500 text-white">
+                  <span
+                    className="flex size-9 items-center justify-center rounded-lg text-white"
+                    style={{ backgroundColor: "var(--landing-ink)" }}
+                  >
                     <Icon size={18} weight="bold" />
                   </span>
                   <div>
                     <h3 className="text-base font-semibold">{domain.label}</h3>
-                    <p className="text-xs text-muted-foreground">{domain.blurb}</p>
+                    <p className="text-xs" style={{ color: "var(--landing-muted)" }}>
+                      {domain.blurb}
+                    </p>
                   </div>
                 </div>
 
                 <div className="mt-5 space-y-5">
                   {domain.categories.map((category) => (
                     <div key={category.name}>
-                      <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                      <p
+                        className="text-xs font-semibold tracking-wide uppercase"
+                        style={{ color: "var(--landing-muted)" }}
+                      >
                         {category.name}
                       </p>
                       <ul className="mt-2.5 space-y-2.5">
                         {category.dishes.map(([name, price, note]) => (
-                          <li key={name} className="flex items-start justify-between gap-4 border-t pt-2.5 first:border-t-0 first:pt-0">
+                          <li
+                            key={name}
+                            className="flex items-start justify-between gap-4 border-t pt-2.5 first:border-t-0 first:pt-0"
+                            style={{ borderColor: "var(--landing-border)" }}
+                          >
                             <div>
                               <p className="text-sm font-medium">{name}</p>
-                              <p className="text-xs text-muted-foreground text-pretty">{note}</p>
+                              <p className="text-xs text-pretty" style={{ color: "var(--landing-muted)" }}>
+                                {note}
+                              </p>
                             </div>
                             <span className="shrink-0 text-sm font-semibold">
                               {"€" + price.toFixed(2)}
@@ -194,47 +360,72 @@ export function LandingPage() {
                     </div>
                   ))}
                 </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t bg-secondary/40 py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mx-auto max-w-xl text-center">
-            <h2 className="text-3xl font-bold text-balance">Up and running in three steps</h2>
-          </div>
-          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3">
-            {STEPS.map(({ step, title, description }) => (
-              <div key={step}>
-                <span className="text-sm font-bold text-brand-500">{step}</span>
-                <h3 className="mt-2 text-base font-semibold">{title}</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground text-pretty">{description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-20">
+      <section
+        className="border-t py-14"
+        style={{ borderColor: "var(--landing-border)", backgroundColor: "var(--landing-bg-alt)" }}
+      >
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mx-auto max-w-xl text-center">
+            <p
+              className="text-xs font-semibold tracking-[0.2em] uppercase"
+              style={{ color: "var(--landing-accent)" }}
+            >
+              How it works
+            </p>
+            <h2 className={`${lora.className} mt-3 text-3xl font-semibold text-balance`}>
+              Three steps to a calm service
+            </h2>
+          </div>
+          <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-3">
+            {STEPS.map(({ step, title, description }) => (
+              <div key={step}>
+                <span className={`${lora.className} text-2xl font-semibold`} style={{ color: "var(--landing-accent)" }}>
+                  {step}
+                </span>
+                <h3 className="mt-2 text-base font-semibold">{title}</h3>
+                <p className="mt-1.5 text-sm text-pretty" style={{ color: "var(--landing-muted)" }}>
+                  {description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-14">
         <div className="mx-auto max-w-2xl px-6 text-center">
-          <h2 className="text-3xl font-bold text-balance">Ready to set up your workspace?</h2>
-          <p className="mt-3 text-muted-foreground text-pretty">
+          <h2 className={`${lora.className} text-3xl font-semibold text-balance`}>
+            Your next service, already seated.
+          </h2>
+          <p className="mt-2.5 text-pretty" style={{ color: "var(--landing-muted)" }}>
             Create your account and build your first menu in minutes.
           </p>
-          <div className="mt-7 flex items-center justify-center">
-            <Button asChild size="lg" className="h-11 text-base">
+          <div className="mt-6 flex items-center justify-center">
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full border-0 text-base text-white hover:opacity-90"
+              style={{ backgroundColor: "var(--landing-accent)" }}
+            >
               <Link href="/login">
                 Get started
                 <ArrowRight size={16} weight="bold" />
               </Link>
             </Button>
           </div>
-          <ul className="mx-auto mt-8 flex max-w-md flex-col gap-2 text-left text-sm text-muted-foreground sm:mx-auto sm:w-fit">
+          <ul
+            className="mx-auto mt-6 flex max-w-md flex-col gap-2 text-left text-sm sm:mx-auto sm:w-fit"
+            style={{ color: "var(--landing-muted)" }}
+          >
             {["No credit card required", "Works on any phone, no app install", "Free to try"].map((item) => (
               <li key={item} className="flex items-center gap-2">
-                <CheckCircle size={16} weight="fill" className="text-brand-500" />
+                <CheckCircle size={16} weight="fill" style={{ color: "var(--landing-accent)" }} />
                 {item}
               </li>
             ))}
@@ -242,11 +433,77 @@ export function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t py-8">
-        <div className="mx-auto max-w-6xl px-6 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} CRM Restaurant. All rights reserved.
+      <section id="contact" className="border-t py-14" style={{ borderColor: "var(--landing-border)" }}>
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mx-auto max-w-xl text-center">
+            <p
+              className="text-xs font-semibold tracking-[0.2em] uppercase"
+              style={{ color: "var(--landing-accent)" }}
+            >
+              Contact
+            </p>
+            <h2 className={`${lora.className} mt-3 text-3xl font-semibold text-balance`}>Get in touch</h2>
+            <p className="mt-2.5 text-pretty" style={{ color: "var(--landing-muted)" }}>
+              Questions, feedback, or want to talk about the project? Send a message and
+              I&apos;ll get back to you.
+            </p>
+          </div>
+
+          <div
+            className="mt-8 overflow-hidden rounded-2xl border shadow-sm lg:grid lg:grid-cols-5"
+            style={{ borderColor: "var(--landing-border)" }}
+          >
+            <div
+              className="relative flex flex-col justify-between gap-8 overflow-hidden p-7 text-white sm:p-8 lg:col-span-2"
+              style={{ backgroundColor: "var(--landing-ink)" }}
+            >
+              <div
+                className="pointer-events-none absolute inset-0 opacity-15"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle at 1.5px 1.5px, white 1.5px, transparent 0)",
+                  backgroundSize: "24px 24px",
+                }}
+              />
+              <div className="relative">
+                <span
+                  className="flex size-11 items-center justify-center rounded-xl"
+                  style={{ backgroundColor: "var(--landing-accent)" }}
+                >
+                  <Envelope size={20} weight="bold" />
+                </span>
+                <p className={`${lora.className} mt-5 text-xl font-semibold text-balance`}>
+                  Let&apos;s talk about your project
+                </p>
+                <p className="mt-2 text-sm text-white/70 text-pretty">
+                  Whether it&apos;s a question about Tably or a project you have in mind,
+                  I usually reply within a day.
+                </p>
+              </div>
+              <div className="relative">
+                <p className="text-xs font-semibold tracking-wide text-white/50 uppercase">Built by</p>
+                <p className="mt-1.5 text-lg font-semibold">{AUTHOR.name}</p>
+                <a
+                  href={`mailto:${AUTHOR.email}`}
+                  className="mt-2 inline-flex items-center gap-2 text-sm text-white/90 hover:text-white hover:underline"
+                >
+                  <Envelope size={15} weight="bold" />
+                  {AUTHOR.email}
+                </a>
+              </div>
+            </div>
+
+            <div className="p-7 sm:p-8 lg:col-span-3" style={{ backgroundColor: "var(--landing-card)" }}>
+              <ContactForm
+                buttonClassName="w-full rounded-full border-0 text-white hover:opacity-90 sm:w-auto"
+                buttonStyle={{ backgroundColor: "var(--landing-accent)" }}
+              />
+            </div>
+          </div>
         </div>
-      </footer>
-    </div>
+      </section>
+
+      <MarketingFooter />
+    </MarketingShell>
   );
 }
