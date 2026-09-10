@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
@@ -67,8 +69,14 @@ function Button({
       aria-busy={loading || undefined}
       {...props}
     >
-      {!asChild && loading && <CircleNotch className="animate-spin" />}
-      {children}
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {loading && <CircleNotch className="animate-spin" />}
+          {children}
+        </>
+      )}
     </Comp>
   )
 }
