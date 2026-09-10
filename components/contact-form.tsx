@@ -7,13 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 export function ContactForm({
   buttonClassName,
   buttonStyle,
+  stacked = false,
 }: {
   buttonClassName?: string;
   buttonStyle?: React.CSSProperties;
+  /** Name and Email each take their own full-width row instead of sitting
+   * side by side — for narrow contexts like the login card. */
+  stacked?: boolean;
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -46,7 +51,7 @@ export function ContactForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className={cn("grid grid-cols-1 gap-4", !stacked && "sm:grid-cols-2")}>
         <div className="space-y-1.5">
           <Label htmlFor="contact-name">Name</Label>
           <Input
@@ -83,7 +88,7 @@ export function ContactForm({
       <Button
         type="submit"
         disabled={submitting}
-        className={buttonClassName ?? "w-full sm:w-auto"}
+        className={buttonClassName ?? (stacked ? "w-full" : "w-full sm:w-auto")}
         style={buttonStyle}
       >
         {submitting ? "Sending…" : (

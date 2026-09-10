@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   BellRinging,
@@ -312,8 +313,16 @@ export function StaffShell() {
         </>
       )}
 
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-card px-4 md:gap-4 md:px-6">
+          <Link href="/" className="flex shrink-0 items-center gap-2">
+            <span className="flex size-6 items-center justify-center overflow-hidden rounded-md">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/bell_master.png" alt="" className="size-full object-cover" />
+            </span>
+            <span className="hidden text-sm font-bold tracking-tight sm:inline">Tably</span>
+          </Link>
+          <div className="h-5 w-px shrink-0 bg-border" />
           <h1 className="min-w-0 flex-1 truncate text-xl font-bold sm:flex-initial">
             {TITLES[tab]}
           </h1>
@@ -336,13 +345,22 @@ export function StaffShell() {
           </span>
         </header>
 
-        <div className="w-full p-4 md:p-6">
+        <div className="w-full flex-1 p-4 md:p-6">
           {tab === "menu" && <StaffMenuPanel />}
           {tab === "orders" && <StaffOrdersPanel />}
           {tab === "bookings" && <StaffBookingsPanel />}
           {tab === "tables" && <StaffTablesPanel />}
           {tab === "history" && <StaffHistoryPanel />}
         </div>
+
+        <footer className="border-t bg-card px-4 py-4 text-xs text-muted-foreground md:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>© {new Date().getFullYear()} Tably. All rights reserved.</span>
+            <Link href="/instruction" className="hover:text-foreground hover:underline">
+              How Tably works
+            </Link>
+          </div>
+        </footer>
       </div>
 
       <TableRequestsModal
