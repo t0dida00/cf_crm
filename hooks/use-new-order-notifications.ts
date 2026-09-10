@@ -30,6 +30,7 @@ export function useNewOrderNotifications(
   onNewOrder: () => void,
   fmt: (value: number) => string,
   knownOrders?: { id: string; total: number }[],
+  onToastClick?: () => void,
 ) {
   const channel = usePlatformSocket(enabled ? platformId : null);
   const lastTotals = useRef(new Map<string, number>());
@@ -49,6 +50,9 @@ export function useNewOrderNotifications(
     const notify = (order: ApiOrder) => {
       toast(`New order ${order.code}`, {
         description: `${order.table_name} · ${fmt(Number(order.total))}`,
+        ...(onToastClick
+          ? { action: { label: "View", onClick: onToastClick } }
+          : {}),
       });
       playNotificationSound();
       onNewOrder();

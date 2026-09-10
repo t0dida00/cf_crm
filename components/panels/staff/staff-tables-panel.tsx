@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CalendarCheck, CheckCircle, Clock, ClockCounterClockwise, Printer, Receipt } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ const STATES: (TableState | "All")[] = ["All", "Free", "Booked", "Seated", "Fini
 const STATE_ICON = { Seated: Clock, Booked: CalendarCheck, Finished: Receipt, Free: CheckCircle };
 
 export function StaffTablesPanel() {
+  const router = useRouter();
   const { workspace, flow, fmt, seatTable, checkoutTable, freeTable } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const [stateFilter, setStateFilter] = useState<TableState | "All">("All");
@@ -132,9 +134,16 @@ export function StaffTablesPanel() {
               </div>
 
               {tableOrders.length === 0 ? (
-                <p className="py-7 text-center text-sm text-muted-foreground">
-                  Nothing ordered yet.
-                </p>
+                <div className="py-7 text-center">
+                  <p className="text-sm text-muted-foreground">Nothing ordered yet.</p>
+                  <Button
+                    size="sm"
+                    className="mt-3"
+                    onClick={() => router.push("/staff?tab=menu")}
+                  >
+                    Order now
+                  </Button>
+                </div>
               ) : (
                 <div>
                   {tableOrders.map((o) => (

@@ -126,10 +126,10 @@ export function StaffOrdersPanel() {
           />
         </div>
         <div className="hidden flex-1 sm:block" />
-        <Button size="sm" onClick={startCreate}>
+        {/* <Button size="sm" onClick={startCreate}>
           <Plus size={14} weight="bold" />
           New order
-        </Button>
+        </Button> */}
       </div>
 
       {open.length === 0 ? (

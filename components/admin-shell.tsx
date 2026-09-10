@@ -72,7 +72,7 @@ const ACTION_LABELS: Partial<Record<TabId, string>> = {
   tables: "Add table",
   categories: "Add category",
   menu: "Add dish",
-  orders: "New order",
+  // orders: "New order",
   bookings: "New booking",
   staff: "Add staff",
 };

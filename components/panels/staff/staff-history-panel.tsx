@@ -9,7 +9,7 @@ import { SessionDetailDialog } from "@/components/session-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
 import { groupIntoSessions, summariseLines, type OrderSession } from "@/lib/order-math";
 import { orderTone } from "@/lib/tone";
-import { hhmm } from "@/lib/range";
+import { formatStamp } from "@/lib/range";
 
 const sessionLabel = (s: OrderSession) =>
   s.orders.length > 1 ? `${s.orders.length} orders` : s.orders[0].code;
@@ -49,8 +49,8 @@ export function StaffHistoryPanel() {
 
       <Card className="overflow-hidden">
         <CardContent className="overflow-x-auto px-0">
-          <div className="min-w-[650px]">
-            <div className="grid grid-cols-[140px_120px_minmax(200px,1fr)_110px_150px_110px] items-center gap-3 border-b bg-secondary py-3 pr-5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+          <div className="min-w-[670px]">
+            <div className="grid grid-cols-[140px_120px_minmax(200px,1fr)_110px_170px_110px] items-center gap-3 border-b bg-secondary py-3 pr-5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               <span className="sticky left-0 -my-3 bg-secondary py-3 pl-5">Session</span>
               <span className="bg-secondary">Table</span>
               <span className="bg-secondary">Items</span>
@@ -68,7 +68,7 @@ export function StaffHistoryPanel() {
                   key={s.orders[0].sessionId ?? s.orders[0].id}
                   type="button"
                   onClick={() => setSession(s)}
-                  className="group grid w-full grid-cols-[140px_120px_minmax(200px,1fr)_110px_150px_110px] items-start gap-3 border-b py-3 pr-5 text-left text-sm transition-colors last:border-0 hover:bg-secondary"
+                  className="group grid w-full grid-cols-[140px_120px_minmax(200px,1fr)_110px_170px_110px] items-start gap-3 border-b py-3 pr-5 text-left text-sm transition-colors last:border-0 hover:bg-secondary"
                 >
                   <span className="sticky left-0 -my-3 bg-card py-3 pl-5 font-bold group-hover:bg-secondary">
                     {sessionLabel(s)}
@@ -81,7 +81,7 @@ export function StaffHistoryPanel() {
                   </span>
                   <span className="font-semibold">{fmt(s.total)}</span>
                   <span className="text-muted-foreground">
-                    {s.closedTs ? hhmm(s.closedTs) : "—"}
+                    {s.closedTs ? formatStamp(s.closedTs) : "—"}
                   </span>
                   <Badge className={orderTone(s.orders[0].status, flow)}>
                     {s.orders[0].status}
