@@ -64,28 +64,27 @@ export function SetupScreen({
             your business.
           </p>
 
-          <div className="flex items-start gap-5">
-            <div>
-              <Label className="mb-2 block text-sm font-semibold">Logo</Label>
-              <ImageDropzone
-                value={logoUrl}
-                onChange={setLogoUrl}
-                className="size-22"
-                placeholder="Drop a logo"
-              />
-            </div>
-            <div className="flex-1">
-              <Label htmlFor="business-name" className="mb-2 block text-sm font-semibold">
-                Enter your business name
-              </Label>
-              <Input
-                id="business-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Casa Marina"
-                className="h-11 text-base"
-              />
-            </div>
+          <div className="space-y-1.5">
+            <Label className="block text-sm font-semibold">Logo</Label>
+            <ImageDropzone
+              value={logoUrl}
+              onChange={setLogoUrl}
+              className="size-[200px] max-w-full"
+              placeholder="Drop a logo, or click to browse"
+            />
+          </div>
+
+          <div className="mt-6">
+            <Label htmlFor="business-name" className="mb-2 block text-sm font-semibold">
+              Enter your business name
+            </Label>
+            <Input
+              id="business-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Casa Marina"
+              className="h-11 text-base"
+            />
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">

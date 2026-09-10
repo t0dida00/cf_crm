@@ -115,7 +115,7 @@ export function SettingsPanel() {
               <ImageDropzone
                 value={profileDraft.logoUrl}
                 onChange={(logoUrl) => setProfileDraft((d) => ({ ...d, logoUrl }))}
-                className="size-24"
+                className="size-[300px]"
                 placeholder="Drop a logo, or click to browse"
               />
             </div>

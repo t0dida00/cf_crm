@@ -17,6 +17,11 @@ const nunito = Nunito_Sans({
 export const metadata: Metadata = {
   title: "Tably",
   description: "Set up a restaurant or café workspace and manage it.",
+  icons: {
+    icon: "/icons/favicon.ico",
+    shortcut: "/icons/favicon.ico",
+    apple: "/icons/bell_master.png",
+  },
 };
 
 export default async function RootLayout({

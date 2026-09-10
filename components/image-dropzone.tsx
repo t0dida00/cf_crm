@@ -14,12 +14,16 @@ export function ImageDropzone({
   className,
   imageClassName,
   placeholder = "Drag & drop an image, or click to browse",
+  compact = false,
 }: {
   value: string;
   onChange: (url: string) => void;
   className?: string;
   imageClassName?: string;
   placeholder?: string;
+  /** Icon-only, no placeholder text — for small inline pickers where a full
+   * sentence would overflow (e.g. a 44px badge next to a form field). */
+  compact?: boolean;
 }) {
   const { run, isPending } = useAsyncAction();
   const [dragActive, setDragActive] = useState(false);
@@ -80,6 +84,8 @@ export function ImageDropzone({
             className={cn("absolute inset-0 size-full object-contain", imageClassName)}
             onError={() => setImageError(true)}
           />
+        ) : compact ? (
+          <ImageSquare size={16} className="text-muted-foreground" />
         ) : (
           <>
             <ImageSquare size={24} className="text-muted-foreground" />
@@ -87,13 +93,13 @@ export function ImageDropzone({
           </>
         )}
         {trimmed && !isPending("upload-image") && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-opacity hover:bg-black/40 hover:opacity-100">
-            <span className="text-xs font-medium text-white">Replace image</span>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 p-1 text-center opacity-0 transition-opacity hover:bg-black/40 hover:opacity-100">
+            <span className="text-xs font-medium text-white">{compact ? "Edit" : "Replace image"}</span>
           </div>
         )}
         {isPending("upload-image") && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-            <span className="text-xs font-medium text-white">Uploading…</span>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 p-1 text-center">
+            <span className="text-xs font-medium text-white">{compact ? "…" : "Uploading…"}</span>
           </div>
         )}
       </div>

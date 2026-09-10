@@ -35,11 +35,9 @@ export function MarketingFooter() {
         style={{ color: "var(--landing-muted)" }}
       >
         <div className="flex items-center gap-2">
-          <span
-            className="flex size-5 items-center justify-center rounded-md text-[10px] font-bold text-white"
-            style={{ backgroundColor: "var(--landing-ink)" }}
-          >
-            T
+          <span className="flex size-5 items-center justify-center overflow-hidden rounded-md">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icons/bell_master.png" alt="" className="size-full object-cover" />
           </span>
           <span>Tably · hospitality-grade ordering</span>
         </div>
