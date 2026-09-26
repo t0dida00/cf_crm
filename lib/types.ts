@@ -120,6 +120,12 @@ export interface Settings {
   specialTaxes: SpecialTax[];
 }
 
+/** A Pusher app's public key and cluster, used by browsers to subscribe. */
+export interface PusherConfig {
+  key: string;
+  cluster: string;
+}
+
 export interface Workspace {
   id: string | null;
   name: string;
@@ -135,6 +141,8 @@ export interface Workspace {
   orders: Order[];
   bookings: Booking[];
   settings: Settings;
+  /** The business's own Pusher app; null/absent = the shared app from env. */
+  pusher?: PusherConfig | null;
 }
 
 export type RangeId = "today" | "week" | "month" | "year" | "all" | "custom";

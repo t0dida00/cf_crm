@@ -6,6 +6,8 @@ import { AdminShell } from "@/components/admin-shell";
 import { BuildingScreen } from "@/components/building-screen";
 import { useWorkspace } from "@/components/workspace-provider";
 import { ErrorState, LoadingState } from "@/components/request-state";
+import { ConnectionsStep } from "@/components/connections-step";
+import { DATABASE_NOT_CONNECTED } from "@/lib/request-status";
 
 const BUILDING_SEEN_KEY = "tably:building-seen";
 
@@ -22,6 +24,10 @@ export default function AdminPage() {
     if (status === "success" && !workspace.name) router.replace("/");
   }, [status, workspace.name, router]);
 
+  // The shared database is off and this business hasn't connected its own yet.
+  if (status === "error" && error === DATABASE_NOT_CONNECTED) {
+    return <ConnectionsStep onContinue={reload} />;
+  }
   if (status === "error") {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">

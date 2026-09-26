@@ -5,13 +5,15 @@ import { useRouter } from "next/navigation";
 import { createPlatformAction } from "@/app/actions";
 import { SetupScreen } from "@/components/setup-screen";
 import { BuildingScreen } from "@/components/building-screen";
+import { ConnectionsStep } from "@/components/connections-step";
 import { useWorkspace } from "@/components/workspace-provider";
 import type { Domain } from "@/lib/types";
 
 export function WorkspaceSetupFlow() {
   const router = useRouter();
   const { workspace, hydrated } = useWorkspace();
-  const [building, setBuilding] = useState<{ name: string; domain: Domain } | null>(null);
+  const [created, setCreated] = useState<{ name: string; domain: Domain } | null>(null);
+  const [building, setBuilding] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -20,11 +22,15 @@ export function WorkspaceSetupFlow() {
 
   if (!hydrated || workspace.name) return null;
 
-  if (building) {
+  if (created && !building) {
+    return <ConnectionsStep onContinue={() => setBuilding(true)} />;
+  }
+
+  if (created) {
     return (
       <BuildingScreen
-        name={building.name}
-        domain={building.domain}
+        name={created.name}
+        domain={created.domain}
         onDone={() => {
           sessionStorage.setItem("tably:building-seen", "1");
           router.refresh();
@@ -41,7 +47,7 @@ export function WorkspaceSetupFlow() {
         setError(null);
         try {
           await createPlatformAction({ name, domain, ...contact });
-          setBuilding({ name, domain });
+          setCreated({ name, domain });
         } catch (err) {
           setError(err instanceof Error ? err.message : "Failed to create workspace");
         }

@@ -4,7 +4,13 @@ import { useFormStatus } from "react-dom";
 import { CircleNotch } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 
-export function LoginSubmitButton() {
+export function LoginSubmitButton({
+  label = "Sign in",
+  pendingLabel = "Signing in…",
+}: {
+  label?: string;
+  pendingLabel?: string;
+}) {
   const { pending } = useFormStatus();
 
   return (
@@ -12,10 +18,10 @@ export function LoginSubmitButton() {
       {pending ? (
         <>
           <CircleNotch size={18} weight="bold" className="animate-spin" />
-          Signing in…
+          {pendingLabel}
         </>
       ) : (
-        "Sign in"
+        label
       )}
     </Button>
   );

@@ -336,7 +336,7 @@ export function WorkspaceProvider({
           email: initialPlatform.email ?? undefined,
           address: initialPlatform.address ?? undefined,
           logoUrl: initialPlatform.logoUrl ?? undefined,
-        }, controller.signal);
+        }, controller.signal).then((data) => ({ ...data, pusher: initialPlatform.pusher }));
       })
       .then((data) => {
         if (cancelled()) return;

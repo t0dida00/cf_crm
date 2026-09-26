@@ -36,7 +36,7 @@ Both gitignored; `.env.development.local.example` /
 |---|---|
 | `AUTH_SECRET` | NextAuth session encryption (`openssl rand -base64 32`). The "Google" button is a demo login in `auth.ts`, so no Google credentials are needed |
 | `API_URL` | Backend origin, used **server-side only** (the `/api/proxy*` routes attach the JWT and forward here — the browser never talks to the backend directly for authenticated staff calls) |
-| `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER` | Public Pusher app key/cluster for the real-time subscription (see Real-time below) — same values as the backend's `PUSHER_KEY`/`PUSHER_CLUSTER`, safe to expose client-side (unlike `PUSHER_SECRET`, which stays backend-only) |
+| `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER` | The **shared** Pusher app's public key/cluster (see Real-time below), used by businesses that haven't connected their own. Same values as the backend's `PUSHER_KEY`/`PUSHER_CLUSTER`, safe to expose client-side (unlike `PUSHER_SECRET`, which stays backend-only) |
 | `RESEND_API_KEY` | Sends the contact form on the landing and login pages (`app/api/contact`) |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob uploads for dish photos and logos (`app/api/upload`); kept in `.env.local` so dev and production builds both load it |
 
@@ -45,12 +45,22 @@ same variables in the Vercel dashboard (Settings → Environment Variables).
 Same gotcha as the backend: a newly-added var sometimes needs a remove +
 re-add + redeploy cycle before it actually reaches the running function.
 
+## Business connections
+
+Each business can run on its own PostgreSQL database and Pusher app. The
+owner connects them during onboarding or in **Settings → Connections**. The
+backend checks each one before saving it, stores the secrets encrypted, and
+never sends them back: the page shows only the database's `host/database` and
+the Pusher app id and cluster. Connecting a different database later doesn't
+move existing data. See the backend README for how it works.
+
 ## Routing
 
 | Route | Who | What |
 |---|---|---|
 | `/login` | anyone | credentials sign-in |
-| `/` | signed-in, no platform yet | workspace setup form → build animation → `/admin` |
+| `/signup` | anyone | create an owner account, then continue to `/` |
+| `/` | signed-in, no platform yet | step 1: business details → step 2: connect the business's own database and Pusher app (skippable while the backend allows the shared service) → build animation → `/admin` |
 | `/admin` | signed-in staff (owner) | full admin panel: Dashboard, Tables, Categories, Menu, Orders, Bookings, Settings |
 | `/staff` | signed-in staff | day-to-day floor app: Orders, Tables, Bookings, Menu, History |
 | `/qr-generation` | signed-in staff | generates one QR code per table, linking to `/client?t=<signed token>` |
@@ -95,9 +105,11 @@ Three different ways this app reaches the backend, by trust level:
 
 ## Real-time
 
-`usePlatformSocket(platformId)` subscribes to a public Pusher channel
+`usePlatformSocket(platformId, pusher)` subscribes to a public Pusher channel
 (`platform-{platformId}`) and returns the channel for `.bind(event,
-handler)` calls. Three consumers:
+handler)` calls. `pusher` is the business's own Pusher app (`{ key, cluster }`
+from `GET /platforms/me` or the guest settings); without one it uses the
+shared app from `NEXT_PUBLIC_PUSHER_*`. Three consumers:
 
 - `hooks/use-new-order-notifications.ts` — staff shells toast + refresh on
   `order:created` / `order:updated` (only toasts on updates that changed the

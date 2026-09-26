@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ArrowLeft, PaperPlaneTilt } from "@phosphor-icons/react";
 import { ContactForm } from "@/components/contact-form";
 import { Input } from "@/components/ui/input";
@@ -86,15 +87,21 @@ export function LoginCard({
       </form>
 
       <p className="mt-6 text-center text-xs text-muted-foreground">
-        No account?{" "}
+        Setting up a new business?{" "}
+        <Link href="/signup" className="font-semibold text-foreground underline-offset-2 hover:underline">
+          Create an account
+        </Link>
+      </p>
+      <p className="mt-2 text-center text-xs text-muted-foreground">
+        Staff: ask your owner for an account, or{" "}
         <button
           type="button"
           onClick={() => setView("contact")}
           className="font-semibold text-foreground underline-offset-2 hover:underline"
         >
-          Contact the administrator
-        </button>{" "}
-        to create a new account.
+          contact us
+        </button>
+        .
       </p>
     </div>
   );
