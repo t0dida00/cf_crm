@@ -3,12 +3,15 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { publicApiFetch } from "@/lib/public-api";
+import { isAbortError } from "@/lib/http";
 import { errorMessage, toRequestStatus, type RequestStatus } from "@/lib/request-status";
 import { money } from "@/lib/range";
 import type { Category, Dish, Order, OrderLine, TableRec, TableRequestType } from "@/lib/types";
@@ -157,13 +160,16 @@ export function ClientWorkspaceProvider({
   children: ReactNode;
 }) {
   const [tableOrders, setTableOrders] = useState<Order[]>([]);
+  // Latest-wins: each table-orders refresh aborts the one still in flight.
+  const ordersRefresh = useRef<AbortController | null>(null);
+  useEffect(() => () => ordersRefresh.current?.abort(), []);
 
   const workspaceQuery = useQuery({
     queryKey: ["public", platformId, "workspace"],
-    queryFn: async (): Promise<ClientWorkspace> => {
+    queryFn: async ({ signal }): Promise<ClientWorkspace> => {
       const [menuRes, tablesRes, settingsRes] = await Promise.all([
-        publicApiFetch<{ categories: ApiCategory[]; dishes: ApiDish[] }>(platformId, "/menu"),
-        publicApiFetch<{ tables: ApiTable[] }>(platformId, "/tables"),
+        publicApiFetch<{ categories: ApiCategory[]; dishes: ApiDish[] }>(platformId, "/menu", { signal }),
+        publicApiFetch<{ tables: ApiTable[] }>(platformId, "/tables", { signal }),
         publicApiFetch<{
           settings: {
             name: string;
@@ -173,7 +179,7 @@ export function ClientWorkspaceProvider({
             currency: string;
             taxRate: string | number;
           };
-        }>(platformId, "/settings"),
+        }>(platformId, "/settings", { signal }),
       ]);
       return {
         name: settingsRes.settings.name,
@@ -207,11 +213,19 @@ export function ClientWorkspaceProvider({
       fmt: (v: number) => money(v, workspace.currency),
       tableOrders,
       refreshTableOrders: async (tableName) => {
-        const res = await publicApiFetch<{ orders: ApiOrder[] }>(
-          platformId,
-          `/orders?table=${encodeURIComponent(tableName)}`,
-        );
-        setTableOrders(res.orders.map(mapOrder));
+        ordersRefresh.current?.abort();
+        const controller = new AbortController();
+        ordersRefresh.current = controller;
+        try {
+          const res = await publicApiFetch<{ orders: ApiOrder[] }>(
+            platformId,
+            `/orders?table=${encodeURIComponent(tableName)}`,
+            { signal: controller.signal },
+          );
+          setTableOrders(res.orders.map(mapOrder));
+        } catch (err) {
+          if (!isAbortError(err)) throw err; // superseded by a newer refresh
+        }
       },
       placeOrder: async (tableName, lines) => {
         if (!lines.length) throw new Error("placeOrder called with no lines");

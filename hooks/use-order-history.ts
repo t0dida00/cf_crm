@@ -24,7 +24,7 @@ interface OrderHistoryParams {
 export function useOrderHistory({ status, query, page, pageSize }: OrderHistoryParams) {
   const result = useQuery({
     queryKey: ["orders", "history", { status, query, page, pageSize }],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const params = new URLSearchParams({
         status,
         page: String(page),
@@ -33,6 +33,7 @@ export function useOrderHistory({ status, query, page, pageSize }: OrderHistoryP
       });
       const res = await apiFetch<{ sessions: ApiOrder[][]; total: number }>(
         `/orders/history?${params}`,
+        { signal },
       );
       return {
         sessions: res.sessions.map((orders) => toSession(orders.map(mapOrder))),

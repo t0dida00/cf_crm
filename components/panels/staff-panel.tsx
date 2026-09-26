@@ -65,8 +65,8 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
   const queryClient = useQueryClient();
   const staffQuery = useQuery({
     queryKey: STAFF_KEY,
-    queryFn: async (): Promise<StaffList> => {
-      const res = await apiFetch<{ staff: ApiStaffAccount[]; limit?: number }>("/staff");
+    queryFn: async ({ signal }): Promise<StaffList> => {
+      const res = await apiFetch<{ staff: ApiStaffAccount[]; limit?: number }>("/staff", { signal });
       return {
         staff: res.staff.map(mapStaff),
         limit: typeof res.limit === "number" ? res.limit : DEFAULT_STAFF_LIMIT,

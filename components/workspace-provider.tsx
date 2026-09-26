@@ -5,11 +5,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
+import { isAbortError } from "@/lib/http";
 import { money } from "@/lib/range";
 import { dayKey, parseDayKey } from "@/lib/booking-slots";
 import { errorMessage, type RequestStatus } from "@/lib/request-status";
@@ -243,14 +245,14 @@ async function fetchWorkspaceData(id: string, domain: "restaurant" | "cafe", nam
   email?: string;
   address?: string;
   logoUrl?: string;
-}): Promise<Workspace> {
+}, signal?: AbortSignal): Promise<Workspace> {
   const [tablesRes, categoriesRes, dishesRes, ordersRes, bookingsRes, settingsRes] = await Promise.all([
-    apiFetch<{ tables: ApiTable[] }>("/tables"),
-    apiFetch<{ categories: ApiCategory[] }>("/categories"),
-    apiFetch<{ dishes: ApiDish[] }>("/dishes"),
-    apiFetch<{ orders: ApiOrder[] }>("/orders"),
-    apiFetch<{ bookings: ApiBookingRaw[] }>("/bookings"),
-    apiFetch<{ settings: ApiSettings }>("/settings"),
+    apiFetch<{ tables: ApiTable[] }>("/tables", { signal }),
+    apiFetch<{ categories: ApiCategory[] }>("/categories", { signal }),
+    apiFetch<{ dishes: ApiDish[] }>("/dishes", { signal }),
+    apiFetch<{ orders: ApiOrder[] }>("/orders", { signal }),
+    apiFetch<{ bookings: ApiBookingRaw[] }>("/bookings", { signal }),
+    apiFetch<{ settings: ApiSettings }>("/settings", { signal }),
   ]);
 
   const tables = tablesRes.tables.map(mapTable);
@@ -304,7 +306,9 @@ export function WorkspaceProvider({
   }, [workspace.orders, queryClient]);
 
   useEffect(() => {
-    let cancelled = false;
+    // Aborted on sign-out, reload or unmount, so a stale load never lands.
+    const controller = new AbortController();
+    const cancelled = () => controller.signal.aborted;
     if (!accessToken) {
       setWorkspace(emptyWorkspace);
       setStatus("idle");
@@ -313,14 +317,14 @@ export function WorkspaceProvider({
     setStatus("loading");
     setError(null);
     (async () => {
-      const res = await fetch("/api/proxy/platforms/me", { cache: "no-store" });
+      const res = await fetch("/api/proxy/platforms/me", { cache: "no-store", signal: controller.signal });
       if (res.status === 404) return null;
       if (!res.ok) throw new Error(`Failed to fetch platform: ${res.status}`);
       const data = (await res.json()) as PlatformApiResponse;
       return mapPlatformResponse(data);
     })()
       .then((initialPlatform) => {
-        if (cancelled) return;
+        if (cancelled()) return;
         if (!initialPlatform) {
           setWorkspace(emptyWorkspace);
           return null;
@@ -330,22 +334,32 @@ export function WorkspaceProvider({
           email: initialPlatform.email ?? undefined,
           address: initialPlatform.address ?? undefined,
           logoUrl: initialPlatform.logoUrl ?? undefined,
-        });
+        }, controller.signal);
       })
       .then((data) => {
-        if (cancelled) return;
+        if (cancelled()) return;
         if (data) setWorkspace(data);
         setStatus("success");
       })
       .catch((err) => {
-        if (cancelled) return;
+        if (cancelled() || isAbortError(err)) return;
         setError(errorMessage(err, "Couldn't load your workspace."));
         setStatus("error");
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [accessToken, reloadKey]);
+
+  // Real-time refetches: a newer refetch aborts the one still in flight, so a
+  // burst of order events results in one up-to-date response, not a queue.
+  const ordersRefetch = useRef<AbortController | null>(null);
+  const bookingsRefetch = useRef<AbortController | null>(null);
+  useEffect(
+    () => () => {
+      ordersRefetch.current?.abort();
+      bookingsRefetch.current?.abort();
+    },
+    [],
+  );
 
   const value = useMemo<WorkspaceContextValue>(() => {
     const patch = (fn: (w: Workspace) => Partial<Workspace>) =>
@@ -353,18 +367,38 @@ export function WorkspaceProvider({
     const flow = LEXICON[workspace.domain].flow;
     const currency = workspace.settings.currency;
 
+    /** Starts a latest-wins refetch: aborts the previous one held in `ref`. */
+    const restart = (ref: { current: AbortController | null }) => {
+      ref.current?.abort();
+      const controller = new AbortController();
+      ref.current = controller;
+      return controller.signal;
+    };
     const refetchOrdersAndTables = async () => {
-      const [ordersRes, tablesRes] = await Promise.all([
-        apiFetch<{ orders: ApiOrder[] }>("/orders"),
-        apiFetch<{ tables: ApiTable[] }>("/tables"),
-      ]);
-      patch(() => ({ orders: ordersRes.orders.map(mapOrder), tables: tablesRes.tables.map(mapTable) }));
+      const signal = restart(ordersRefetch);
+      try {
+        const [ordersRes, tablesRes] = await Promise.all([
+          apiFetch<{ orders: ApiOrder[] }>("/orders", { signal }),
+          apiFetch<{ tables: ApiTable[] }>("/tables", { signal }),
+        ]);
+        patch(() => ({ orders: ordersRes.orders.map(mapOrder), tables: tablesRes.tables.map(mapTable) }));
+      } catch (err) {
+        if (!isAbortError(err)) throw err; // superseded by a newer refetch
+      }
     };
     const refetchTablesAndBookings = async () => {
-      const [tablesRes, bookingsRes] = await Promise.all([
-        apiFetch<{ tables: ApiTable[] }>("/tables"),
-        apiFetch<{ bookings: ApiBookingRaw[] }>("/bookings"),
-      ]);
+      const signal = restart(bookingsRefetch);
+      let tablesRes: { tables: ApiTable[] };
+      let bookingsRes: { bookings: ApiBookingRaw[] };
+      try {
+        [tablesRes, bookingsRes] = await Promise.all([
+          apiFetch<{ tables: ApiTable[] }>("/tables", { signal }),
+          apiFetch<{ bookings: ApiBookingRaw[] }>("/bookings", { signal }),
+        ]);
+      } catch (err) {
+        if (isAbortError(err)) return; // superseded by a newer refetch
+        throw err;
+      }
       const tables = tablesRes.tables.map(mapTable);
       const tableNameById = new Map(tables.map((t) => [t.id, t.name]));
       patch(() => ({

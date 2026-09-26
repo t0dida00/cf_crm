@@ -7,6 +7,7 @@ import { useWorkspace } from "@/components/workspace-provider";
 import { ErrorState, LoadingState } from "@/components/request-state";
 import { useQuery } from "@tanstack/react-query";
 import { errorMessage } from "@/lib/request-status";
+import { fetchJson } from "@/lib/http";
 import {
   ClientWorkspaceProvider,
   useClientWorkspace,
@@ -147,10 +148,11 @@ interface ResolvedToken {
 function TokenClientPage({ token }: { token: string }) {
   const tokenQuery = useQuery({
     queryKey: ["public", "token", token],
-    queryFn: async (): Promise<ResolvedToken> => {
-      const res = await fetch(`/api/token-resolve/${encodeURIComponent(token)}`);
-      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || "Invalid QR code");
-      const data = (await res.json()) as { platformId: string; tableName: string };
+    queryFn: async ({ signal }): Promise<ResolvedToken> => {
+      const data = await fetchJson<{ platformId: string; tableName: string }>(
+        `/api/token-resolve/${encodeURIComponent(token)}`,
+        { signal },
+      );
       return { platformId: data.platformId, tableName: data.tableName };
     },
     staleTime: Infinity,

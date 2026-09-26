@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   BellRinging,
   CalendarCheck,
@@ -192,7 +192,6 @@ function SidebarBody({
 
 export function StaffShell() {
   const { workspace, fmt, refreshOrders } = useWorkspace();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const tab: StaffTab = isStaffTab(tabParam) ? tabParam : "orders";
@@ -204,14 +203,16 @@ export function StaffShell() {
   const setTab = (next: StaffTab) => {
     const params = new URLSearchParams(searchParams);
     params.set("tab", next);
-    router.replace(`/staff?${params.toString()}`, { scroll: false });
+    // Tabs are the same page: update the URL without a server round-trip
+    // (router.replace would wait on the server before the tab changes).
+    window.history.replaceState(null, "", `/staff?${params.toString()}`);
   };
 
   useEffect(() => {
     if (!isStaffTab(tabParam)) {
       const params = new URLSearchParams(searchParams);
       params.set("tab", "orders");
-      router.replace(`/staff?${params.toString()}`, { scroll: false });
+      window.history.replaceState(null, "", `/staff?${params.toString()}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
@@ -224,8 +225,8 @@ export function StaffShell() {
   const queryClient = useQueryClient();
   const requestsQuery = useQuery({
     queryKey: PENDING_REQUESTS_KEY,
-    queryFn: async () => {
-      const res = await apiFetch<{ requests: ApiTableRequest[] }>("/table-requests?status=pending");
+    queryFn: async ({ signal }) => {
+      const res = await apiFetch<{ requests: ApiTableRequest[] }>("/table-requests?status=pending", { signal });
       return res.requests.map(mapRequest);
     },
   });

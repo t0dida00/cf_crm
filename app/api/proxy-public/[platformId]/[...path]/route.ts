@@ -8,12 +8,20 @@ async function proxy(req: NextRequest, platformId: string, path: string[]) {
   const targetUrl = `${API_URL}/public/platforms/${platformId}/${path.join("/")}${req.nextUrl.search}`;
   const hasBody = req.method !== "GET" && req.method !== "HEAD";
 
-  const res = await fetch(targetUrl, {
-    method: req.method,
-    headers: { "Content-Type": "application/json" },
-    body: hasBody ? await req.text() : undefined,
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(targetUrl, {
+      method: req.method,
+      headers: { "Content-Type": "application/json" },
+      body: hasBody ? await req.text() : undefined,
+      cache: "no-store",
+      // A cancelled browser request cancels the backend call too.
+      signal: req.signal,
+    });
+  } catch (err) {
+    if (req.signal.aborted) return new NextResponse(null, { status: 499 }); // client went away
+    throw err;
+  }
 
   if (res.status === 204) {
     return new NextResponse(null, { status: 204 });

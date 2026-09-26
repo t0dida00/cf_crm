@@ -23,14 +23,14 @@ export function useOrderStats(lo: number, hi: number) {
   const to = Number.isFinite(hi) ? hi : null;
   const result = useQuery({
     queryKey: ["orders", "stats", { from, to }],
-    queryFn: async (): Promise<OrderStats> => {
+    queryFn: async ({ signal }): Promise<OrderStats> => {
       const params = new URLSearchParams({
         ...(from !== null ? { from: String(from) } : {}),
         ...(to !== null ? { to: String(to) } : {}),
       });
       const res = await apiFetch<
         Omit<OrderStats, "recent" | "oldestTs"> & { recent: ApiOrder[]; oldestTs: string | null }
-      >(`/orders/stats?${params}`);
+      >(`/orders/stats?${params}`, { signal });
       return {
         ...res,
         recent: res.recent.map(mapOrder),

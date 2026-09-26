@@ -11,14 +11,14 @@ export function useOrderSeries(plan: ChartPlan | null) {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const result = useQuery({
     queryKey: ["orders", "series", { bucket: plan?.bucket, from: plan?.from, to: plan?.to, tz }],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const params = new URLSearchParams({
         bucket: plan!.bucket,
         from: String(plan!.from),
         to: String(plan!.to),
         tz,
       });
-      const res = await apiFetch<{ series: SeriesPoint[] }>(`/orders/stats/series?${params}`);
+      const res = await apiFetch<{ series: SeriesPoint[] }>(`/orders/stats/series?${params}`, { signal });
       return res.series;
     },
     enabled: plan !== null,

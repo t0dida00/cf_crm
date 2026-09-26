@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
+import { fetchJson } from "@/lib/http";
 import { useWorkspace } from "@/components/workspace-provider";
 import { ErrorState, LoadingState } from "@/components/request-state";
 import { errorMessage, toRequestStatus } from "@/lib/request-status";
@@ -35,11 +36,8 @@ export function QrPanel() {
 
   const originQuery = useQuery({
     queryKey: ["qr-origin"],
-    queryFn: async () => {
-      const res = await fetch("/api/qr-origin");
-      if (!res.ok) throw new Error(`Failed to detect address: ${res.status}`);
-      return ((await res.json()) as { origin: string }).origin;
-    },
+    queryFn: async ({ signal }) =>
+      (await fetchJson<{ origin: string }>("/api/qr-origin", { signal })).origin,
     staleTime: Infinity,
     retry: false,
   });
@@ -54,8 +52,8 @@ export function QrPanel() {
   const tableIds = workspace.tables.map((t) => t.id).join(",");
   const tokensQuery = useQuery({
     queryKey: ["tables", "qr-tokens", tableIds],
-    queryFn: async () => {
-      const res = await apiFetch<{ tokens: TableQrToken[] }>("/tables/qr-tokens");
+    queryFn: async ({ signal }) => {
+      const res = await apiFetch<{ tokens: TableQrToken[] }>("/tables/qr-tokens", { signal });
       return Object.fromEntries(res.tokens.map((t) => [t.tableId, t.token])) as Record<string, string>;
     },
     enabled: hydrated,

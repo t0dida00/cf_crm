@@ -1,12 +1,7 @@
-export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`/api/proxy${path}`, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...options?.headers },
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body?.error || `Request failed: ${res.status}`);
-  }
-  if (res.status === 204) return undefined as T;
-  return res.json();
+import { fetchJson, type JsonRequestInit } from "./http";
+
+/** Staff API call through the authenticated proxy. Pass `signal` to make it
+ * cancellable (TanStack Query supplies one to every queryFn). */
+export function apiFetch<T>(path: string, options?: JsonRequestInit): Promise<T> {
+  return fetchJson<T>(`/api/proxy${path}`, options);
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   CalendarCheck,
   CaretLineLeft,
@@ -221,7 +221,6 @@ function SidebarBody({
 
 export function AdminShell() {
   const { workspace, fmt, refreshOrders } = useWorkspace();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const tab: TabId = isTabId(tabParam) ? tabParam : "dash";
@@ -234,14 +233,16 @@ export function AdminShell() {
     setCreateSignal(0);
     const params = new URLSearchParams(searchParams);
     params.set("tab", next);
-    router.replace(`/admin?${params.toString()}`, { scroll: false });
+    // Tabs are the same page: update the URL without a server round-trip
+    // (router.replace would wait on the server before the tab changes).
+    window.history.replaceState(null, "", `/admin?${params.toString()}`);
   };
 
   useEffect(() => {
     if (!isTabId(tabParam)) {
       const params = new URLSearchParams(searchParams);
       params.set("tab", "dash");
-      router.replace(`/admin?${params.toString()}`, { scroll: false });
+      window.history.replaceState(null, "", `/admin?${params.toString()}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
