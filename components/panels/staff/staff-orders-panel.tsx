@@ -265,7 +265,7 @@ export function StaffOrdersPanel() {
                             setOrderLineQty(editing.id, line.itemId, line.qty + 1),
                           )
                         }
-                        className="flex size-6.5 items-center justify-center rounded-full bg-brand-500 text-white disabled:pointer-events-none disabled:opacity-50"
+                        className="flex size-6.5 items-center justify-center rounded-full bg-brand-700 text-white disabled:pointer-events-none disabled:opacity-50"
                         aria-label={`Increase ${line.name}`}
                       >
                         +

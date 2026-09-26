@@ -36,6 +36,7 @@ import type { TabId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useNewOrderNotifications } from "@/hooks/use-new-order-notifications";
 import { useSidebarCollapse } from "@/hooks/use-sidebar-collapse";
+import { MobileNavDrawer, SkipToContent } from "@/components/mobile-nav-drawer";
 
 const NAV: { id: TabId; label: string; Icon: PhosphorIcon }[] = [
   { id: "dash", label: "Dashboard", Icon: ChartBar },
@@ -142,7 +143,7 @@ function SidebarBody({
 
       <nav className="flex flex-col gap-1">
         {!collapsed && (
-          <p className="px-2 pb-1.5 text-[11px] font-semibold tracking-widest text-white/40">
+          <p className="px-2 pb-1.5 text-[11px] font-semibold tracking-widest text-white/60">
             ADMIN
           </p>
         )}
@@ -171,7 +172,7 @@ function SidebarBody({
                     <span
                       className={cn(
                         "min-w-5.5 rounded-full px-1.5 text-[11px] font-bold",
-                        active ? "bg-brand-500" : "bg-white/12",
+                        active ? "bg-brand-700" : "bg-white/12",
                       )}
                     >
                       {counts[id]}
@@ -287,6 +288,7 @@ export function AdminShell() {
 
   return (
     <div className="flex min-h-screen">
+      <SkipToContent />
       <aside
         className={cn(
           "sticky top-0 flex h-screen shrink-0 flex-col gap-7 bg-ink p-3.5 text-white transition-[width] duration-200",
@@ -305,30 +307,21 @@ export function AdminShell() {
         />
       </aside>
 
-      {isNarrow && mobileOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/40"
-            onClick={closeMobile}
-            aria-hidden="true"
-          />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-58 flex-col gap-7 bg-ink p-3.5 text-white">
-            <SidebarBody
-              collapsed={false}
-              workspaceName={workspace.name}
-              workspaceLogoUrl={workspace.logoUrl}
-              tab={tab}
-              setTab={(next) => {
-                setTab(next);
-                closeMobile();
-              }}
-              counts={counts}
-              clock={clock}
-              onToggle={closeMobile}
-            />
-          </aside>
-        </>
-      )}
+      <MobileNavDrawer open={isNarrow && mobileOpen} onClose={closeMobile}>
+        <SidebarBody
+          collapsed={false}
+          workspaceName={workspace.name}
+          workspaceLogoUrl={workspace.logoUrl}
+          tab={tab}
+          setTab={(next) => {
+            setTab(next);
+            closeMobile();
+          }}
+          counts={counts}
+          clock={clock}
+          onToggle={closeMobile}
+        />
+      </MobileNavDrawer>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-card px-4 md:gap-4 md:px-6">
@@ -359,7 +352,7 @@ export function AdminShell() {
           </span>
         </header>
 
-        <div className="w-full flex-1 p-4 md:p-6">
+        <div id="main-content" role="main" tabIndex={-1} className="w-full flex-1 p-4 outline-none md:p-6">
           <p className="mb-5 text-sm text-muted-foreground">{SUBTITLES[tab]}</p>
           {tab === "dash" && <DashboardPanel />}
           {tab === "tables" && <TablesPanel createSignal={createSignal} />}

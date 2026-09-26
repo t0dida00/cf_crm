@@ -104,7 +104,7 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
                 type="button"
                 onClick={() => startEdit(row.original.category)}
                 className="text-muted-foreground transition-colors hover:text-foreground"
-                aria-label="Edit category"
+                aria-label={`Edit category ${row.original.category.name}`}
               >
                 <PencilSimple size={15} weight="bold" />
               </button>
@@ -119,7 +119,7 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
                   )
                 }
                 className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
-                aria-label="Delete category"
+                aria-label={`Delete category ${row.original.category.name}`}
               >
                 <Trash size={15} weight="bold" />
               </button>

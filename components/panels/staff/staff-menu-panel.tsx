@@ -216,6 +216,7 @@ export function StaffMenuPanel() {
                             >
                               <SelectTrigger
                                 size="sm"
+                                aria-label={`Status of ${dish.name}`}
                                 className={cn(
                                   "h-6 w-auto gap-1 rounded-full border-0 px-2.5 text-xs font-semibold",
                                   TONE_CLASSES[STATUS_TONE[effectiveStatus]],
@@ -265,7 +266,7 @@ export function StaffMenuPanel() {
                                 <button
                                   type="button"
                                   onClick={() => setNoteOpenId(null)}
-                                  className="text-[12px] font-bold text-brand-500"
+                                  className="text-[12px] font-bold text-brand-700"
                                 >
                                   Done
                                 </button>
@@ -273,7 +274,7 @@ export function StaffMenuPanel() {
                             </div>
                           ) : (
                             noteText && (
-                              <div className="mt-2 flex items-start gap-1.5 rounded-md bg-brand-50 px-2 py-1.5 text-xs text-brand-600">
+                              <div className="mt-2 flex items-start gap-1.5 rounded-md bg-brand-50 px-2 py-1.5 text-xs text-brand-700">
                                 <NotePencil size={12} weight="bold" className="mt-px shrink-0" />
                                 {noteText}
                               </div>
@@ -289,10 +290,11 @@ export function StaffMenuPanel() {
                               className={cn(
                                 "flex size-8 items-center justify-center rounded-full border disabled:cursor-not-allowed disabled:opacity-40",
                                 noteOpen || noteText
-                                  ? "border-brand-500 bg-brand-50 text-brand-600"
+                                  ? "border-brand-500 bg-brand-50 text-brand-700"
                                   : "border-border text-muted-foreground",
                               )}
                               aria-label={`Note for ${dish.name}`}
+                              aria-expanded={noteOpen}
                             >
                               <NotePencil size={14} weight="bold" />
                             </button>
@@ -301,7 +303,7 @@ export function StaffMenuPanel() {
                                 type="button"
                                 onClick={() => setQty(dish.id, 1)}
                                 disabled={!orderable}
-                                className="flex h-8 items-center gap-1.5 rounded-full bg-brand-500 px-3 text-[13px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                                className="flex h-8 items-center gap-1.5 rounded-full bg-brand-700 px-3 text-[13px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
                               >
                                 <Plus size={13} weight="bold" />
                                 Add
@@ -311,18 +313,18 @@ export function StaffMenuPanel() {
                                 <button
                                   type="button"
                                   onClick={() => setQty(dish.id, qty - 1)}
-                                  className="flex size-6.5 items-center justify-center rounded-full bg-background text-brand-600"
+                                  className="flex size-6.5 items-center justify-center rounded-full bg-background text-brand-700"
                                   aria-label={`Decrease ${dish.name}`}
                                 >
                                   <Minus size={12} weight="bold" />
                                 </button>
-                                <span className="min-w-4.5 text-center text-sm font-bold text-brand-600">
+                                <span className="min-w-4.5 text-center text-sm font-bold text-brand-700">
                                   {qty}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => setQty(dish.id, qty + 1)}
-                                  className="flex size-6.5 items-center justify-center rounded-full bg-brand-500 text-white"
+                                  className="flex size-6.5 items-center justify-center rounded-full bg-brand-700 text-white"
                                   aria-label={`Increase ${dish.name}`}
                                 >
                                   <Plus size={12} weight="bold" />
@@ -345,7 +347,7 @@ export function StaffMenuPanel() {
         <button
           type="button"
           onClick={() => setCartOpen(true)}
-          className="fixed right-6 bottom-6 flex h-13 items-center gap-3 rounded-2xl bg-brand-500 px-5 text-white shadow-lg"
+          className="fixed right-6 bottom-6 flex h-13 items-center gap-3 rounded-2xl bg-brand-700 px-5 text-white shadow-lg"
         >
           <ShoppingCart size={18} weight="bold" />
           <span className="font-bold">{cartCount} {cartCount === 1 ? "item" : "items"}</span>
@@ -384,7 +386,7 @@ export function StaffMenuPanel() {
                     <button
                       type="button"
                       onClick={() => setQty(line.itemId, line.qty + 1)}
-                      className="flex size-6.5 items-center justify-center rounded-full bg-brand-500 text-white"
+                      className="flex size-6.5 items-center justify-center rounded-full bg-brand-700 text-white"
                       aria-label={`Increase ${line.name}`}
                     >
                       <Plus size={12} weight="bold" />

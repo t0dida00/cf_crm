@@ -86,7 +86,23 @@ export function DataTable<T>({
               <TableRow
                 key={row.id}
                 onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-                className={cn(onRowClick && "cursor-pointer", refetching && "opacity-60")}
+                // Clickable rows are keyboard-reachable too: Tab to focus, Enter/Space to open.
+                tabIndex={onRowClick ? 0 : undefined}
+                onKeyDown={
+                  onRowClick
+                    ? (e) => {
+                        // Only when the row itself has focus, so buttons inside it keep working.
+                        if (e.target !== e.currentTarget || (e.key !== "Enter" && e.key !== " ")) return;
+                        e.preventDefault();
+                        onRowClick(row.original);
+                      }
+                    : undefined
+                }
+                className={cn(
+                  onRowClick &&
+                    "cursor-pointer outline-none focus-visible:bg-secondary focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-inset",
+                  refetching && "opacity-60",
+                )}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className="py-2.5 text-sm first:pl-4 last:pr-4">

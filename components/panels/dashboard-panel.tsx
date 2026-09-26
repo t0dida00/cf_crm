@@ -191,7 +191,7 @@ export function DashboardPanel() {
             className={cn(
               "rounded-full border px-3.5 py-1.5 text-[13px] transition-colors",
               range.id === r.id
-                ? "border-brand-500 bg-brand-500 font-bold text-white"
+                ? "border-brand-700 bg-brand-700 font-bold text-white"
                 : "bg-card font-medium text-muted-foreground hover:bg-secondary",
             )}
           >

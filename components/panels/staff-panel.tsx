@@ -169,7 +169,7 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
                 type="button"
                 onClick={() => startEdit(row.original)}
                 className="text-muted-foreground transition-colors hover:text-foreground"
-                aria-label="Edit staff account"
+                aria-label={`Edit staff account ${row.original.fullName}`}
               >
                 <PencilSimple size={15} weight="bold" />
               </button>

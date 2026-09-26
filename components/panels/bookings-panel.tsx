@@ -154,22 +154,25 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
                     className={cn(
                       "flex h-14 flex-col items-center justify-start gap-0.5 rounded-lg border pt-1.5 text-sm transition-colors",
                       // Days with bookings are solid tiles; the selected day gets a single,
-                      // thicker border (dark on a solid tile, brand on an empty day).
-                      info
-                        ? "border-brand-500 bg-brand-500 font-bold text-white hover:bg-brand-600"
-                        : isSelected
-                          ? "bg-brand-50 font-bold text-brand-700"
-                          : "border-transparent hover:bg-secondary",
-                      isSelected && (info ? "border-2 border-brand-700" : "border-2 border-brand-500"),
-                      info && !inMonth && "opacity-50",
-                      !info && !inMonth && !isSelected && "text-muted-foreground/50",
+                      // thicker border (near-black on a solid tile, brand on an empty day).
+                      // Out-of-month booked days use a light tile: fading a solid one would
+                      // drop its white text below readable contrast.
+                      info && inMonth
+                        ? "border-brand-700 bg-brand-700 font-bold text-white hover:bg-brand-800"
+                        : info
+                          ? "border-brand-700/40 bg-brand-50 font-bold text-brand-700 hover:bg-brand-100"
+                          : isSelected
+                            ? "bg-brand-50 font-bold text-brand-700"
+                            : "border-transparent hover:bg-secondary",
+                      isSelected && (info && inMonth ? "border-2 border-foreground" : "border-2 border-brand-700"),
+                      !info && !inMonth && !isSelected && "text-muted-foreground",
                       isToday && !info && !isSelected && "border-brand-500 font-bold",
                     )}
                   >
                     {d.getDate()}
                     {info && (
                       <span
-                        className="text-[11px] leading-4 font-semibold text-white/90"
+                        className={cn("text-[11px] leading-4 font-semibold", inMonth ? "text-white" : "text-brand-700")}
                       >
                         {info.bookings}
                       </span>
@@ -217,7 +220,7 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
                     onClick={() =>
                       run(`toggle-${booking.id}`, () => toggleBooking(booking.id), "Failed to update booking.")
                     }
-                    className="text-[13px] font-semibold text-brand-500 hover:text-brand-600 disabled:pointer-events-none disabled:opacity-50"
+                    className="text-[13px] font-semibold text-brand-700 hover:text-brand-800 disabled:pointer-events-none disabled:opacity-50"
                   >
                     {booking.status === "Arrived" ? "Undo arrival" : "Mark arrived"}
                   </button>
@@ -228,7 +231,7 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
                       run(`delete-${booking.id}`, () => deleteBooking(booking.id), "Failed to delete booking.")
                     }
                     className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
-                    aria-label="Delete booking"
+                    aria-label={`Delete booking for ${booking.name} at ${booking.time}`}
                   >
                     <Trash size={15} weight="bold" />
                   </button>

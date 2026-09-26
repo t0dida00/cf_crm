@@ -9,6 +9,7 @@
   --brand-500: #2da8e5;
   --brand-600: #1e90cc;
   --brand-700: #1b75a6;
+  --brand-800: #15618b;
   --ink: #232f3f;
 
   --background: #f7f7f7;
@@ -17,7 +18,8 @@
   --card-foreground: #111827;
   --popover: #ffffff;
   --popover-foreground: #111827;
-  --primary: var(--brand-500);
+  /* brand-700, not 500: white on brand-500 is 2.7:1 (fails WCAG AA); on 700 it's 5.1:1. */
+  --primary: var(--brand-700);
   --primary-foreground: #ffffff;
   --secondary: #f9fafb;
   --secondary-foreground: #374151;
@@ -56,6 +58,7 @@
   --color-brand-500: var(--brand-500);
   --color-brand-600: var(--brand-600);
   --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

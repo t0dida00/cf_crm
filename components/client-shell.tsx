@@ -181,7 +181,7 @@ export function ClientShell({
     return (
       <div className="flex min-h-screen flex-col items-center bg-secondary/30 px-4 py-10 sm:py-16">
         <div className="flex w-full max-w-md flex-1 flex-col items-center justify-center text-center sm:flex-none">
-          <div className="flex size-16 items-center rounded-full bg-brand-50 text-brand-500 sm:size-19">
+          <div className="flex size-16 items-center rounded-full bg-brand-50 text-brand-700 sm:size-19">
             <CheckCircle size={100} weight="fill" />
           </div>
           <h1 className="mt-6 text-xl font-bold sm:text-2xl">Thanks for your order</h1>
@@ -232,7 +232,7 @@ export function ClientShell({
               setPlaced(null);
               setScreen("menu");
             }}
-            className="mt-5 text-sm font-bold text-brand-500"
+            className="mt-5 text-sm font-bold text-brand-700"
           >
             Order something else
           </button>
@@ -249,6 +249,7 @@ export function ClientShell({
             <button
               type="button"
               onClick={() => setScreen("menu")}
+              aria-label="Back to menu"
               className="flex size-8 shrink-0 items-center justify-center rounded-full border text-muted-foreground"
             >
               <ArrowLeft size={16} weight="bold" />
@@ -271,7 +272,7 @@ export function ClientShell({
               const Icon = CATEGORY_ICONS[category?.name ?? ""] ?? ForkKnife;
               return (
                 <div key={line.itemId} className="flex gap-3 rounded-xl border bg-card p-3">
-                  <div className="hidden w-6 shrink-0 pt-0.5 text-[13px] font-bold text-muted-foreground/40 sm:block">
+                  <div aria-hidden="true" className="hidden w-6 shrink-0 pt-0.5 text-[13px] font-bold text-muted-foreground sm:block">
                     {String(i + 1).padStart(2, "0")}
                   </div>
                   <div className="flex size-20 shrink-0 items-center justify-center rounded-lg border bg-secondary/50 text-muted-foreground sm:size-[100px]">
@@ -287,7 +288,7 @@ export function ClientShell({
                           )}
                         </div>
                         {line.note && (
-                          <div className="mt-1 flex items-center gap-1.5 text-xs text-brand-600">
+                          <div className="mt-1 flex items-center gap-1.5 text-xs text-brand-700">
                             <NotePencil size={12} weight="bold" />
                             {line.note}
                           </div>
@@ -311,17 +312,20 @@ export function ClientShell({
                         <button
                           type="button"
                           onClick={() => setQty(line.itemId, line.qty - 1)}
-                          className="flex size-7 items-center justify-center rounded-full bg-background text-brand-600"
+                          aria-label={`Remove one ${line.name}`}
+                          className="flex size-7 items-center justify-center rounded-full bg-background text-brand-700"
                         >
                           <Minus size={13} weight="bold" />
                         </button>
-                        <span className="min-w-5 text-center text-sm font-bold text-brand-600">
+                        <span aria-live="polite" className="min-w-5 text-center text-sm font-bold text-brand-700">
                           {line.qty}
+                          <span className="sr-only"> × {line.name}</span>
                         </span>
                         <button
                           type="button"
                           onClick={() => setQty(line.itemId, line.qty + 1)}
-                          className="flex size-7 items-center justify-center rounded-full bg-brand-500 text-white"
+                          aria-label={`Add one ${line.name}`}
+                          className="flex size-7 items-center justify-center rounded-full bg-brand-700 text-white"
                         >
                           <Plus size={13} weight="bold" />
                         </button>
@@ -365,7 +369,7 @@ export function ClientShell({
                 className={cn(
                   "flex h-13 flex-1 items-center justify-center rounded-2xl px-5 text-base font-bold text-white transition-colors",
                   cartCount && canOrder && !submitting
-                    ? "bg-brand-500"
+                    ? "bg-brand-700"
                     : "cursor-not-allowed bg-muted-foreground/30",
                 )}
               >
@@ -413,7 +417,7 @@ export function ClientShell({
               </div>
             )}
           </div>
-          <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-[13px] font-bold text-brand-600">
+          <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-[13px] font-bold text-brand-700">
             <QrCode size={14} weight="bold" />
             {tableName}
           </span>
@@ -430,9 +434,9 @@ export function ClientShell({
               )
             }
             className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-[13px] font-semibold transition-colors active:bg-brand-500 active:text-white active:border-brand-500",
+              "flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-[13px] font-semibold transition-colors active:bg-brand-700 active:text-white active:border-brand-700",
               activeAction === "staff"
-                ? "border-brand-500 bg-brand-500 text-white"
+                ? "border-brand-700 bg-brand-700 text-white"
                 : "border-border text-foreground",
             )}
           >
@@ -449,9 +453,9 @@ export function ClientShell({
               )
             }
             className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-[13px] font-semibold transition-colors active:bg-brand-500 active:text-white active:border-brand-500",
+              "flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-[13px] font-semibold transition-colors active:bg-brand-700 active:text-white active:border-brand-700",
               activeAction === "checkout"
-                ? "border-brand-500 bg-brand-500 text-white"
+                ? "border-brand-700 bg-brand-700 text-white"
                 : "border-border text-foreground",
             )}
           >
@@ -512,7 +516,8 @@ export function ClientShell({
               key={dish.id}
               className={cn(
                 "relative flex gap-3 rounded-xl border bg-card p-3",
-                soldOut && "opacity-60",
+                // Tinted rather than faded: opacity would drop the text below readable contrast.
+                soldOut && "bg-secondary",
               )}
             >
               {qty > 0 && (
@@ -525,7 +530,7 @@ export function ClientShell({
                   <Trash size={15} weight="bold" />
                 </button>
               )}
-              <div className="hidden w-6 shrink-0 pt-0.5 text-[13px] font-bold text-muted-foreground/40 sm:block">
+              <div aria-hidden="true" className="hidden w-6 shrink-0 pt-0.5 text-[13px] font-bold text-muted-foreground sm:block">
                 {String(i + 1).padStart(2, "0")}
               </div>
               <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-secondary/50 text-muted-foreground sm:size-[100px]">
@@ -585,7 +590,7 @@ export function ClientShell({
                       <button
                         type="button"
                         onClick={() => setNoteOpenId(null)}
-                        className="text-[13px] font-bold text-brand-500"
+                        className="text-[13px] font-bold text-brand-700"
                       >
                         Done
                       </button>
@@ -593,7 +598,7 @@ export function ClientShell({
                   </div>
                 ) : (
                   noteText && (
-                    <div className="mt-2 flex items-start gap-1.5 rounded-md bg-brand-50 px-2.5 py-1.5 text-xs text-brand-600">
+                    <div className="mt-2 flex items-start gap-1.5 rounded-md bg-brand-50 px-2.5 py-1.5 text-xs text-brand-700">
                       <NotePencil size={13} weight="bold" className="mt-px shrink-0" />
                       {noteText}
                     </div>
@@ -606,10 +611,12 @@ export function ClientShell({
                   <button
                     type="button"
                     onClick={() => setNoteOpenId(noteOpen ? null : dish.id)}
+                    aria-label={noteText ? `Edit note for ${dish.name}` : `Add a note for ${dish.name}`}
+                    aria-expanded={noteOpen}
                     className={cn(
                       "flex size-[34px] items-center justify-center rounded-full border",
                       noteOpen || noteText
-                        ? "border-brand-500 bg-brand-50 text-brand-600"
+                        ? "border-brand-500 bg-brand-50 text-brand-700"
                         : "border-border text-muted-foreground",
                     )}
                   >
@@ -623,7 +630,8 @@ export function ClientShell({
                     <button
                       type="button"
                       onClick={() => setQty(dish.id, 1)}
-                      className="flex h-[34px] items-center gap-1.5 rounded-full bg-brand-500 px-3.5 text-[13px] font-bold text-white"
+                      aria-label={`Add ${dish.name}`}
+                      className="flex h-[34px] items-center gap-1.5 rounded-full bg-brand-700 px-3.5 text-[13px] font-bold text-white"
                     >
                       <Plus size={13} weight="bold" />
                       Add
@@ -633,17 +641,20 @@ export function ClientShell({
                       <button
                         type="button"
                         onClick={() => setQty(dish.id, qty - 1)}
-                        className="flex size-7 items-center justify-center rounded-full bg-background text-brand-600"
+                        aria-label={`Remove one ${dish.name}`}
+                        className="flex size-7 items-center justify-center rounded-full bg-background text-brand-700"
                       >
                         <Minus size={13} weight="bold" />
                       </button>
-                      <span className="min-w-5 text-center text-sm font-bold text-brand-600">
+                      <span aria-live="polite" className="min-w-5 text-center text-sm font-bold text-brand-700">
                         {qty}
+                        <span className="sr-only"> × {dish.name}</span>
                       </span>
                       <button
                         type="button"
                         onClick={() => setQty(dish.id, qty + 1)}
-                        className="flex size-7 items-center justify-center rounded-full bg-brand-500 text-white"
+                        aria-label={`Add one ${dish.name}`}
+                        className="flex size-7 items-center justify-center rounded-full bg-brand-700 text-white"
                       >
                         <Plus size={13} weight="bold" />
                       </button>
@@ -664,7 +675,7 @@ export function ClientShell({
             onClick={() => setScreen("review")}
             className={cn(
               "flex h-13 w-full items-center rounded-2xl px-5 text-base font-bold text-white transition-colors",
-              cartCount ? "bg-brand-500" : "cursor-not-allowed bg-muted-foreground/30",
+              cartCount ? "bg-brand-700" : "cursor-not-allowed bg-muted-foreground/30",
             )}
           >
             <span>
@@ -681,7 +692,7 @@ export function ClientShell({
       <Dialog open={!!notice} onOpenChange={(open) => !open && closeNotice()}>
         <DialogContent className="w-[90%] rounded-2xl">
           <DialogHeader>
-            <div className="flex size-11 items-center justify-center rounded-full bg-brand-50 text-brand-500">
+            <div className="flex size-11 items-center justify-center rounded-full bg-brand-50 text-brand-700">
               {activeAction === "checkout" ? (
                 <Receipt size={20} weight="fill" />
               ) : (

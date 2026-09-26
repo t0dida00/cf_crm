@@ -2,7 +2,7 @@
 export const TONE_CLASSES: Record<string, string> = {
   sky: "bg-sky-50 text-sky-700",
   amber: "bg-amber-50 text-amber-700",
-  brand: "bg-brand-100 text-brand-600",
+  brand: "bg-brand-50 text-brand-700",
   green: "bg-green-50 text-green-700",
   gray: "bg-secondary text-muted-foreground",
 };

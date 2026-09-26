@@ -173,14 +173,14 @@ export function SettingsPanel() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Currency</Label>
+              <Label htmlFor="settings-currency">Currency</Label>
               <Select
                 value={billingDraft.currency}
                 onValueChange={(value) =>
                   setBillingDraft((d) => ({ ...d, currency: value }))
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="settings-currency" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

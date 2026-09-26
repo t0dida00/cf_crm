@@ -135,7 +135,7 @@ export function QrPanel() {
                     </p>
                   </div>
                   <div className="flex size-[186px] items-center justify-center rounded-xl border bg-white p-3">
-                    {url && <QRCodeSVG id={`qr-${table.name}`} value={url} size={160} level="M" />}
+                    {url && <QRCodeSVG id={`qr-${table.name}`} value={url} size={160} level="M" title={`QR code for ${table.name}`} />}
                   </div>
                   <Button
                     variant="outline"
