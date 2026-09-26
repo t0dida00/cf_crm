@@ -237,13 +237,24 @@ export function StaffShell() {
   const pendingRequests = requestsQuery.data ?? [];
   const refreshRequests = () => void requestsQuery.refetch();
 
-  useNewOrderNotifications(true, workspace.id, refreshOrders, fmt, workspace.orders, () =>
-    setTab("orders"),
+  useNewOrderNotifications(
+    true,
+    workspace.id,
+    refreshOrders,
+    fmt,
+    workspace.orders,
+    () => setTab("orders"),
+    workspace.pusher,
   );
-  useTableRequestNotifications(true, workspace.id, () => {
-    refreshRequests();
-    setRequestsModalOpen(true);
-  });
+  useTableRequestNotifications(
+    true,
+    workspace.id,
+    () => {
+      refreshRequests();
+      setRequestsModalOpen(true);
+    },
+    workspace.pusher,
+  );
 
   const handleResolveRequest = async (id: string) => {
     await apiFetch(`/table-requests/${id}/resolve`, { method: "POST" });

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { usePlatformSocket } from "@/hooks/use-platform-socket";
+import type { PusherConfig } from "@/lib/types";
 
 interface ApiTableRequest {
   id: string;
@@ -24,8 +25,9 @@ export function useTableRequestNotifications(
   enabled: boolean,
   platformId: string | null,
   onNewRequest: () => void,
+  pusher?: PusherConfig | null,
 ) {
-  const channel = usePlatformSocket(enabled ? platformId : null);
+  const channel = usePlatformSocket(enabled ? platformId : null, pusher);
 
   useEffect(() => {
     if (!channel) return;

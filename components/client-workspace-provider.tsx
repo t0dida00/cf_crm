@@ -14,7 +14,7 @@ import { publicApiFetch } from "@/lib/public-api";
 import { isAbortError } from "@/lib/http";
 import { errorMessage, toRequestStatus, type RequestStatus } from "@/lib/request-status";
 import { money } from "@/lib/range";
-import type { Category, Dish, Order, OrderLine, TableRec, TableRequestType } from "@/lib/types";
+import type { Category, Dish, Order, OrderLine, PusherConfig, TableRec, TableRequestType } from "@/lib/types";
 
 interface ClientWorkspace {
   name: string;
@@ -26,6 +26,8 @@ interface ClientWorkspace {
   tables: TableRec[];
   currency: string;
   taxRate: number;
+  /** The business's own Pusher app; null = the shared app from env. */
+  pusher: PusherConfig | null;
 }
 
 interface ClientWorkspaceContextValue {
@@ -62,6 +64,7 @@ const emptyWorkspace: ClientWorkspace = {
   tables: [],
   currency: "€",
   taxRate: 0,
+  pusher: null,
 };
 
 interface ApiCategory {
@@ -180,6 +183,7 @@ export function ClientWorkspaceProvider({
             logoUrl: string | null;
             currency: string;
             taxRate: string | number;
+            pusher?: PusherConfig | null;
           };
         }>(platformId, "/settings", { signal }),
       ]);
@@ -193,6 +197,7 @@ export function ClientWorkspaceProvider({
         tables: tablesRes.tables.map(mapTable),
         currency: settingsRes.settings.currency,
         taxRate: Number(settingsRes.settings.taxRate),
+        pusher: settingsRes.settings.pusher ?? null,
       };
     },
   });

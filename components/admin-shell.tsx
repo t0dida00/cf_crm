@@ -31,6 +31,7 @@ import { OrdersPanel } from "@/components/panels/orders-panel";
 import { BookingsPanel } from "@/components/panels/bookings-panel";
 import { StaffPanel } from "@/components/panels/staff-panel";
 import { SettingsPanel } from "@/components/panels/settings-panel";
+import { ConnectionsPanel } from "@/components/panels/connections-panel";
 import { QrPanel } from "@/components/panels/qr-panel";
 import type { TabId } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -253,7 +254,7 @@ export function AdminShell() {
     return () => clearInterval(i);
   }, []);
 
-  useNewOrderNotifications(true, workspace.id, refreshOrders, fmt, workspace.orders);
+  useNewOrderNotifications(true, workspace.id, refreshOrders, fmt, workspace.orders, undefined, workspace.pusher);
 
   const initials = (workspace.name || "W")
     .trim()
@@ -361,7 +362,12 @@ export function AdminShell() {
           {tab === "orders" && <OrdersPanel createSignal={createSignal} />}
           {tab === "bookings" && <BookingsPanel createSignal={createSignal} />}
           {tab === "staff" && <StaffPanel createSignal={createSignal} />}
-          {tab === "settings" && <SettingsPanel />}
+          {tab === "settings" && (
+            <div className="space-y-4">
+              <SettingsPanel />
+              <ConnectionsPanel />
+            </div>
+          )}
           {tab === "qr" && <QrPanel />}
         </div>
 

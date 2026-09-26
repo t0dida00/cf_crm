@@ -6,6 +6,7 @@ import { StaffShell } from "@/components/staff-shell";
 import { BuildingScreen } from "@/components/building-screen";
 import { useWorkspace } from "@/components/workspace-provider";
 import { ErrorState, LoadingState } from "@/components/request-state";
+import { DATABASE_NOT_CONNECTED } from "@/lib/request-status";
 
 const BUILDING_SEEN_KEY = "tably:building-seen";
 
@@ -25,7 +26,14 @@ export default function StaffPage() {
   if (status === "error") {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
-        <ErrorState message={error ?? "Couldn't load your workspace."} onRetry={reload} />
+        <ErrorState
+          message={
+            error === DATABASE_NOT_CONNECTED
+              ? "Your owner needs to connect the business's database before the app can be used."
+              : (error ?? "Couldn't load your workspace.")
+          }
+          onRetry={reload}
+        />
       </div>
     );
   }

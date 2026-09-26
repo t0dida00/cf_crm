@@ -46,7 +46,7 @@ function GuestClientPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, tableName]);
 
-  const channel = usePlatformSocket(hydrated ? platformId : null);
+  const channel = usePlatformSocket(hydrated ? platformId : null, workspace.pusher);
 
   useEffect(() => {
     if (!channel) return;

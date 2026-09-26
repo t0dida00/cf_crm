@@ -1,4 +1,4 @@
-import type { Domain } from "@/lib/types";
+import type { Domain, PusherConfig } from "@/lib/types";
 
 const API_URL = process.env.API_URL || "http://localhost:3000";
 
@@ -11,6 +11,7 @@ export interface PlatformRecord {
   address: string | null;
   logoUrl: string | null;
   role: string;
+  pusher: PusherConfig | null;
 }
 
 export interface PlatformApiResponse {
@@ -24,6 +25,7 @@ export interface PlatformApiResponse {
     platform_types: { code: string };
   };
   role: string;
+  pusher?: PusherConfig | null;
 }
 
 function toDomain(code: string): Domain {
@@ -40,6 +42,7 @@ export function mapPlatformResponse(data: PlatformApiResponse): PlatformRecord {
     address: data.platform.address,
     logoUrl: data.platform.logo_url,
     role: data.role,
+    pusher: data.pusher ?? null,
   };
 }
 
@@ -98,5 +101,7 @@ export async function createPlatform(
     address: data.platform.address,
     logoUrl: data.platform.logo_url,
     role: data.role,
+    // A brand-new business hasn't connected its own Pusher app yet.
+    pusher: null,
   };
 }
