@@ -24,6 +24,7 @@ import {
 import { useWorkspace } from "@/components/workspace-provider";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { PaginationBar } from "@/components/pagination-bar";
+import { BookingAssignDialog } from "@/components/booking-assign-dialog";
 import {
   availableTimes,
   dayKey,
@@ -44,7 +45,14 @@ const pickTime = (date: string, preferred = "19:00") => {
   return times.includes(preferred) ? preferred : (times[0] ?? "");
 };
 
-export function BookingsPanel({ createSignal }: { createSignal: number }) {
+export function BookingsPanel({
+  createSignal,
+  allowTableAssign = false,
+}: {
+  createSignal: number;
+  /** Staff seat bookings: adds an action to assign (or release) a free table. */
+  allowTableAssign?: boolean;
+}) {
   const { workspace, saveBooking, toggleBooking, deleteBooking } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const todayKey = dayKey(new Date());
@@ -55,6 +63,7 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
   });
   const [historyPage, setHistoryPage] = useState(1);
   const [open, setOpen] = useState(false);
+  const [assignId, setAssignId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     date: todayKey,
@@ -214,6 +223,15 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
                   <Badge className={booking.status === "Arrived" ? TONE_CLASSES.green : TONE_CLASSES.sky}>
                     {booking.status}
                   </Badge>
+                  {allowTableAssign && (
+                    <button
+                      type="button"
+                      onClick={() => setAssignId(booking.id)}
+                      className="text-[13px] font-semibold text-brand-700 hover:text-brand-800"
+                    >
+                      {booking.tableName ? "Change table" : "Assign table"}
+                    </button>
+                  )}
                   <button
                     type="button"
                     disabled={isPending(`toggle-${booking.id}`)}
@@ -290,6 +308,13 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
           )}
         </CardContent>
       </Card>
+
+      {allowTableAssign && (
+        <BookingAssignDialog
+          booking={workspace.bookings.find((b) => b.id === assignId) ?? null}
+          onClose={() => setAssignId(null)}
+        />
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">

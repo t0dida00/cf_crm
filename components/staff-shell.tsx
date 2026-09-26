@@ -12,6 +12,7 @@ import {
   CaretLineRight,
   ClockCounterClockwise,
   ForkKnife,
+  Plus,
   Receipt,
   SignOut,
   SquaresFour,
@@ -20,7 +21,8 @@ import {
 import { useWorkspace } from "@/components/workspace-provider";
 import { StaffMenuPanel } from "@/components/panels/staff/staff-menu-panel";
 import { StaffOrdersPanel } from "@/components/panels/staff/staff-orders-panel";
-import { StaffBookingsPanel } from "@/components/panels/staff/staff-bookings-panel";
+import { BookingsPanel } from "@/components/panels/bookings-panel";
+import { Button } from "@/components/ui/button";
 import { StaffTablesPanel } from "@/components/panels/staff/staff-tables-panel";
 import { StaffHistoryPanel } from "@/components/panels/staff/staff-history-panel";
 import { TableRequestsModal } from "@/components/panels/staff/table-requests-modal";
@@ -224,6 +226,7 @@ export function StaffShell() {
   }, []);
 
   const queryClient = useQueryClient();
+  const [createSignal, setCreateSignal] = useState(0);
   const requestsQuery = useQuery({
     queryKey: PENDING_REQUESTS_KEY,
     queryFn: async ({ signal }) => {
@@ -331,6 +334,17 @@ export function StaffShell() {
             {TITLES[tab]}
           </h1>
           <div className="hidden flex-1 sm:block" />
+          {tab === "bookings" && (
+            <Button
+              size="sm"
+              onClick={() => setCreateSignal((n) => n + 1)}
+              aria-label="New booking"
+              className="shrink-0"
+            >
+              <Plus size={14} weight="bold" />
+              <span className="hidden sm:inline">New booking</span>
+            </Button>
+          )}
           <button
             type="button"
             onClick={() => setRequestsModalOpen(true)}
@@ -352,7 +366,7 @@ export function StaffShell() {
         <div id="main-content" role="main" tabIndex={-1} className="w-full flex-1 p-4 outline-none md:p-6">
           {tab === "menu" && <StaffMenuPanel />}
           {tab === "orders" && <StaffOrdersPanel />}
-          {tab === "bookings" && <StaffBookingsPanel />}
+          {tab === "bookings" && <BookingsPanel createSignal={createSignal} allowTableAssign />}
           {tab === "tables" && <StaffTablesPanel />}
           {tab === "history" && <StaffHistoryPanel />}
         </div>
