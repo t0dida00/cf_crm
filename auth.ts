@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { fetchRole } from "@/lib/session-role";
 
 const API_URL = process.env.API_URL || "http://localhost:3000";
 
@@ -8,7 +9,7 @@ class AccountDisabledError extends CredentialsSignin {
   code = "account_disabled";
 }
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
   providers: [
     Credentials({
       id: "google",
@@ -63,12 +64,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
   },
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user && "accessToken" in user) {
         token.accessToken = (user as { accessToken?: string }).accessToken;
       }
       if (user && "role" in user) {
         token.role = (user as { role?: string | null }).role;
+      }
+      // A session update (e.g. right after creating a business) re-reads the
+      // role from the backend. Whatever the caller passed is ignored, so a
+      // client can't promote itself to OWNER.
+      if (trigger === "update" && typeof token.accessToken === "string") {
+        const role = await fetchRole(token.accessToken);
+        if (role !== undefined) token.role = role;
       }
       return token;
     },
