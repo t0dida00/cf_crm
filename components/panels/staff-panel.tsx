@@ -7,6 +7,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { PencilSimple } from "@phosphor-icons/react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -49,9 +50,12 @@ const helper = createColumnHelper<StaffAccount>();
 
 const emptyForm = { fullName: "", email: "", phone: "", password: "" };
 
+const DEFAULT_STAFF_LIMIT = 5;
+
 export function StaffPanel({ createSignal }: { createSignal: number }) {
   const { run, isPending } = useAsyncAction();
   const [staff, setStaff] = useState<StaffAccount[]>([]);
+  const [limit, setLimit] = useState(DEFAULT_STAFF_LIMIT);
   const [loaded, setLoaded] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<StaffAccount | null>(null);
@@ -59,9 +63,12 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const atCapacity = staff.length >= limit;
+
   const refresh = async () => {
-    const res = await apiFetch<{ staff: ApiStaffAccount[] }>("/staff");
+    const res = await apiFetch<{ staff: ApiStaffAccount[]; limit?: number }>("/staff");
     setStaff(res.staff.map(mapStaff));
+    if (typeof res.limit === "number") setLimit(res.limit);
   };
 
   useEffect(() => {
@@ -70,11 +77,16 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
 
   useEffect(() => {
     if (createSignal > 0) {
+      if (atCapacity) {
+        toast.error(`Maximum of ${limit} staff accounts reached. Remove an existing account to add a new one.`);
+        return;
+      }
       setEditing(null);
       setForm(emptyForm);
       setError(null);
       setOpen(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createSignal]);
 
   const startEdit = (account: StaffAccount) => {
@@ -213,6 +225,12 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
 
   return (
     <>
+      {loaded && (
+        <p className="mb-3.5 text-xs text-muted-foreground">
+          {staff.length} / {limit} staff accounts used
+          {atCapacity && " — maximum reached. Remove an account to add a new one."}
+        </p>
+      )}
       <Card className="overflow-hidden">
         <CardContent className="px-0">
           <DataTable
