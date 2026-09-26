@@ -44,6 +44,7 @@ import { TONE_CLASSES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import type { Dish, DishStatus } from "@/lib/types";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { DishImage } from "@/components/dish-image";
 
 const CATEGORY_ICONS: Record<string, PhosphorIcon> = {
   Starters: BowlFood,
@@ -185,13 +186,13 @@ export function StaffMenuPanel() {
                     const orderable = effectiveStatus === "valid";
                     return (
                       <div key={dish.id} className="flex gap-3 rounded-xl border bg-card p-3">
-                        <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-secondary/50 text-muted-foreground">
+                        <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-secondary/50 text-muted-foreground">
                           {dish.imageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
+                            <DishImage
                               src={dish.imageUrl}
                               alt={dish.name}
-                              className="size-full object-cover"
+                              sizes="80px"
+                              fallback={<Icon size={28} weight="fill" />}
                             />
                           ) : (
                             <Icon size={28} weight="fill" />

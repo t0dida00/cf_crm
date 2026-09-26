@@ -34,6 +34,7 @@ import { useAsyncAction } from "@/hooks/use-async-action";
 import type { Dish, DishStatus, TaxMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { DishImage } from "@/components/dish-image";
 
 const COMMON_TAX = "Common tax";
 
@@ -253,10 +254,14 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                     className="grid min-w-[450px] grid-cols-[minmax(160px,1fr)_110px_100px_80px] items-center gap-3 px-5 py-3"
                   >
                     <span className="flex items-center gap-2.5">
-                      <span className="flex size-[108px] shrink-0 items-center justify-center overflow-hidden rounded-md border bg-secondary/50 text-muted-foreground">
+                      <span className="relative flex size-[108px] shrink-0 items-center justify-center overflow-hidden rounded-md border bg-secondary/50 text-muted-foreground">
                         {dish.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={dish.imageUrl} alt={dish.name} className="size-full object-cover" />
+                          <DishImage
+                            src={dish.imageUrl}
+                            alt={dish.name}
+                            sizes="108px"
+                            fallback={<ImageSquare size={48} />}
+                          />
                         ) : (
                           <ImageSquare size={48} />
                         )}

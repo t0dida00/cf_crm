@@ -33,6 +33,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { DishImage } from "@/components/dish-image";
 
 const CATEGORY_ICONS: Record<string, PhosphorIcon> = {
   Starters: BowlFood,
@@ -527,24 +528,18 @@ export function ClientShell({
               <div className="hidden w-6 shrink-0 pt-0.5 text-[13px] font-bold text-muted-foreground/40 sm:block">
                 {String(i + 1).padStart(2, "0")}
               </div>
-              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-secondary/50 text-muted-foreground sm:size-[100px]">
+              <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-secondary/50 text-muted-foreground sm:size-[100px]">
                 {dish.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <DishImage
                     src={dish.imageUrl}
                     alt={dish.name}
-                    className="size-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                      e.currentTarget.nextElementSibling?.classList.remove("hidden");
-                    }}
+                    sizes="(min-width: 640px) 100px, 80px"
+                    priority={i < 4}
+                    fallback={<Icon size={28} weight="fill" className="sm:size-[30px]" />}
                   />
-                ) : null}
-                <Icon
-                  size={28}
-                  weight="fill"
-                  className={cn("sm:size-[30px]", dish.imageUrl && "hidden")}
-                />
+                ) : (
+                  <Icon size={28} weight="fill" className="sm:size-[30px]" />
+                )}
               </div>
               <div className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-center gap-1.5 pr-8">
