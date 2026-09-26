@@ -147,7 +147,10 @@ components/
   order-detail-dialog.tsx    line items + net/tax breakdown for one order
   qr-generation-view.tsx      QR code grid + downloadable SVGs
   panels/                     one file per admin/staff tab
-    staff/                    staff-specific panel variants (simpler than admin's)
+    staff/                    staff-specific panel variants (simpler than admin's);
+                              Bookings has none: staff reuse the admin
+                              bookings-panel.tsx with allowTableAssign
+  booking-assign-dialog.tsx   staff-only: assign or release a table for a booking
 hooks/
   use-platform-socket.ts      Pusher subscription
   use-new-order-notifications.ts / use-table-request-notifications.ts
@@ -160,6 +163,8 @@ lib/
   lexicon.ts                  per-domain (restaurant/cafe) copy and flow steps
   range.ts                    date formatting, currency formatting
   order-math.ts               shared line-total math
+  best-sellers.ts             bestSellerIds(): the top 5 dishes by soldCount
+                             (mirrors the backend's rule for the guest menu)
   tone.ts                     status/state -> badge color mapping
   utils.ts                    cn()
 ```
@@ -183,6 +188,14 @@ lib/
   scoped to still-open orders only (`closed_ts: null` on the backend) — a
   newly-seated guest never sees a previous party's order history at the
   same table, and a staff-side checkout clears it from the guest's view.
+- `Dish.soldCount` is how many of a dish have been ordered, counted by the
+  backend. Only the admin Menu shows the number. The staff and guest menus
+  instead tag the top 5 sellers "Best seller":
+  - staff compute the top 5 with `bestSellerIds()`;
+  - guests get `Dish.isBestSeller` from the public menu API and never see
+    the count.
+- The staff History tab shows only sessions checked out today or yesterday
+  (`GET /orders/history?from=`). The admin Orders tab keeps the full history.
 
 ## Deployment
 
