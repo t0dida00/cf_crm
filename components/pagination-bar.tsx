@@ -2,6 +2,7 @@
 
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { formatNumber as fmt } from "@/lib/format";
 
 /** "Showing 21–40 of 1,000 orders" with previous/next buttons, for lists paged
  * by the server (`page` is 1-based). */
@@ -19,7 +20,6 @@ export function PaginationBar({
   noun?: string;
 }) {
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
-  const fmt = (n: number) => n.toLocaleString("en-GB");
   return (
     <div className="flex items-center justify-between gap-3 px-5 py-3.5">
       <span className="text-[13px] text-muted-foreground">

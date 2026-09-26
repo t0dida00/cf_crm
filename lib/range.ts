@@ -62,5 +62,5 @@ export function rangeCaption(range: RangeState, oldestTs: number): string {
   return `${formatDate(rangeBounds(range)[0])} – ${formatDate(today)}`;
 }
 
-export const money = (value: number, currency: string) =>
-  `${currency}${(Math.round(value * 100) / 100).toFixed(2)}`;
+// Kept here for existing imports; formatting helpers live in lib/format.ts.
+export { money } from "./format";

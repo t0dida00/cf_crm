@@ -16,6 +16,7 @@ import { toSession, type OrderSession } from "@/lib/order-math";
 import { RANGES, rangeBounds, rangeCaption, formatStamp, type RangeState } from "@/lib/range";
 import type { Order } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { formatNumber } from "@/lib/format";
 import { useOrderStats } from "@/hooks/use-order-stats";
 import { ErrorState } from "@/components/request-state";
 
@@ -122,7 +123,7 @@ export function DashboardPanel() {
         bestHelper.accessor("name", { header: "Name" }),
         bestHelper.accessor("qty", {
           header: () => <span className="block text-right">Orders</span>,
-          cell: (c) => <span className="block text-right">{c.getValue()}</span>,
+          cell: (c) => <span className="block text-right">{formatNumber(c.getValue())}</span>,
           size: 80,
         }),
         bestHelper.accessor("takings", {
@@ -139,12 +140,12 @@ export function DashboardPanel() {
   });
 
   const stats = [
-    { Icon: Receipt, label: "ORDERS", value: figure(orderCount.toLocaleString("en-GB")), hint: rangeLabel },
+    { Icon: Receipt, label: "ORDERS", value: figure(formatNumber(orderCount)), hint: rangeLabel },
     {
       Icon: CalendarCheck,
       label: "BOOKINGS",
-      value: String(bookingsInRange.length),
-      hint: `${bookingsInRange.reduce((a, b) => a + b.party, 0)} guests · ${rangeLabel.toLowerCase()}`,
+      value: formatNumber(bookingsInRange.length),
+      hint: `${formatNumber(bookingsInRange.reduce((a, b) => a + b.party, 0))} guests · ${rangeLabel.toLowerCase()}`,
     },
     {
       Icon: CurrencyCircleDollar,
