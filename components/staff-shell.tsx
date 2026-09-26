@@ -11,6 +11,7 @@ import {
   CaretLineLeft,
   CaretLineRight,
   ClockCounterClockwise,
+  Database,
   ForkKnife,
   Plus,
   Receipt,
@@ -84,6 +85,7 @@ const mapRequest = (r: ApiTableRequest): TableRequest => ({
 function SidebarBody({
   collapsed,
   workspaceName,
+  databaseName,
   workspaceLogoUrl,
   tab,
   setTab,
@@ -93,6 +95,8 @@ function SidebarBody({
 }: {
   collapsed: boolean;
   workspaceName: string;
+  /** The business's own database name; null = the shared database. */
+  databaseName: string | null;
   workspaceLogoUrl?: string | null;
   tab: StaffTab;
   setTab: (next: StaffTab) => void;
@@ -139,6 +143,18 @@ function SidebarBody({
             STAFF
           </p>
         )}
+        {/* The business's database, styled like a tab row but not clickable. */}
+        {/* <div
+          title={databaseName ? `Database: ${databaseName}` : "Using the shared database"}
+          aria-label={collapsed ? (databaseName ? `Database: ${databaseName}` : "Using the shared database") : undefined}
+          className={cn(
+            "flex items-center gap-2.5 rounded-lg py-2.5 text-sm font-bold text-white/65",
+            collapsed ? "justify-center px-0" : "px-3",
+          )}
+        >
+          <Database size={17} weight="bold" className="shrink-0" />
+          {!collapsed && <span className="min-w-0 flex-1 [overflow-wrap:anywhere] text-white">{databaseName ?? "Shared database"}</span>}
+        </div> */}
         {NAV.map(({ id, label, Icon }) => {
           const active = tab === id;
           return (
@@ -264,13 +280,6 @@ export function StaffShell() {
     );
   };
 
-  const initials = (workspace.name || "W")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
 
   const startOfToday = new Date().setHours(0, 0, 0, 0);
   const openOrders = workspace.orders.filter((o) => !o.closedTs);
@@ -308,6 +317,7 @@ export function StaffShell() {
         <SidebarBody
           collapsed={collapsed}
           workspaceName={workspace.name}
+          databaseName={workspace.databaseName ?? null}
           workspaceLogoUrl={workspace.logoUrl}
           tab={tab}
           setTab={setTab}
@@ -321,6 +331,7 @@ export function StaffShell() {
         <SidebarBody
           collapsed={false}
           workspaceName={workspace.name}
+          databaseName={workspace.databaseName ?? null}
           workspaceLogoUrl={workspace.logoUrl}
           tab={tab}
           setTab={(next) => {
@@ -370,9 +381,6 @@ export function StaffShell() {
               </span>
             )}
           </button>
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">
-            {initials}
-          </span>
         </header>
 
         <div id="main-content" role="main" tabIndex={-1} className="w-full flex-1 p-4 outline-none md:p-6">

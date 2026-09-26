@@ -143,6 +143,8 @@ export interface Workspace {
   settings: Settings;
   /** The business's own Pusher app; null/absent = the shared app from env. */
   pusher?: PusherConfig | null;
+  /** Name of the business's own database; null/absent = the shared one. */
+  databaseName?: string | null;
 }
 
 export type RangeId = "today" | "week" | "month" | "year" | "all" | "custom";

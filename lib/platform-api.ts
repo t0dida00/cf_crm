@@ -12,6 +12,7 @@ export interface PlatformRecord {
   logoUrl: string | null;
   role: string;
   pusher: PusherConfig | null;
+  databaseName: string | null;
 }
 
 export interface PlatformApiResponse {
@@ -26,6 +27,7 @@ export interface PlatformApiResponse {
   };
   role: string;
   pusher?: PusherConfig | null;
+  databaseName?: string | null;
 }
 
 function toDomain(code: string): Domain {
@@ -43,6 +45,7 @@ export function mapPlatformResponse(data: PlatformApiResponse): PlatformRecord {
     logoUrl: data.platform.logo_url,
     role: data.role,
     pusher: data.pusher ?? null,
+    databaseName: data.databaseName ?? null,
   };
 }
 
@@ -101,8 +104,9 @@ export async function createPlatform(
     address: data.platform.address,
     logoUrl: data.platform.logo_url,
     role: data.role,
-    // A brand-new business hasn't connected its own Pusher app yet.
+    // A brand-new business hasn't connected its own Pusher app or database yet.
     pusher: null,
+    databaseName: null,
   };
 }
 

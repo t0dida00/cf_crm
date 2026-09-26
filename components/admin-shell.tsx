@@ -13,6 +13,7 @@ import {
   ForkKnife,
   Gear,
   Plus,
+  Database,
   QrCode,
   Receipt,
   SignOut,
@@ -47,6 +48,7 @@ const NAV: { id: TabId; label: string; Icon: PhosphorIcon }[] = [
   { id: "orders", label: "Orders", Icon: Receipt },
   { id: "bookings", label: "Bookings", Icon: CalendarCheck },
   { id: "staff", label: "Staffs", Icon: Users },
+  { id: "qr", label: "Table QR codes", Icon: QrCode },
   { id: "settings", label: "Settings", Icon: Gear },
 ];
 
@@ -83,8 +85,7 @@ const ACTION_LABELS: Partial<Record<TabId, string>> = {
   staff: "Add staff",
 };
 
-// "qr" isn't in NAV — it sits at the bottom of the sidebar — but is a tab all the same.
-const TAB_IDS: TabId[] = [...NAV.map((n) => n.id), "qr"];
+const TAB_IDS: TabId[] = NAV.map((n) => n.id);
 const isTabId = (value: string | null): value is TabId =>
   value !== null && (TAB_IDS as string[]).includes(value);
 
@@ -94,6 +95,7 @@ const isTabId = (value: string | null): value is TabId =>
 function SidebarBody({
   collapsed,
   workspaceName,
+  databaseName,
   workspaceLogoUrl,
   tab,
   setTab,
@@ -103,6 +105,8 @@ function SidebarBody({
 }: {
   collapsed: boolean;
   workspaceName: string;
+  /** The business's own database name; null = the shared database. */
+  databaseName: string | null;
   workspaceLogoUrl?: string | null;
   tab: TabId;
   setTab: (next: TabId) => void;
@@ -149,6 +153,18 @@ function SidebarBody({
             ADMIN
           </p>
         )}
+        {/* The business's database, styled like a tab row but not clickable. */}
+        <div
+          title={databaseName ? `Database: ${databaseName}` : "Using the shared database"}
+          aria-label={collapsed ? (databaseName ? `Database: ${databaseName}` : "Using the shared database") : undefined}
+          className={cn(
+            "flex items-center gap-2.5 rounded-lg py-2.5 text-sm font-bold text-white/65",
+            collapsed ? "justify-center px-0" : "px-3",
+          )}
+        >
+          <Database size={17} weight="bold" className="shrink-0" />
+          {!collapsed && <span className="min-w-0 flex-1 [overflow-wrap:anywhere] text-white">{databaseName ?? "Shared database"}</span>}
+        </div>
         {NAV.map(({ id, label, Icon }) => {
           const active = tab === id;
           return (
@@ -188,22 +204,6 @@ function SidebarBody({
       </nav>
 
       <div className="flex-1" />
-      <button
-        type="button"
-        onClick={() => setTab("qr")}
-        title={collapsed ? "Table QR codes" : undefined}
-        aria-label={collapsed ? "Table QR codes" : undefined}
-        className={cn(
-          "flex items-center gap-2.5 rounded-lg py-2.5 text-sm transition-colors",
-          collapsed ? "justify-center px-0" : "px-3",
-          tab === "qr"
-            ? "bg-white/12 font-semibold text-white"
-            : "font-medium text-white/55 hover:text-white",
-        )}
-      >
-        <QrCode size={15} weight="bold" />
-        {!collapsed && "Table QR codes"}
-      </button>
       <form action={signOutAction}>
         <button
           type="submit"
@@ -257,13 +257,6 @@ export function AdminShell() {
 
   useNewOrderNotifications(true, workspace.id, refreshOrders, fmt, workspace.orders, undefined, workspace.pusher);
 
-  const initials = (workspace.name || "W")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
 
   const startOfToday = new Date().setHours(0, 0, 0, 0);
   const counts: Partial<Record<TabId, number>> = {
@@ -300,6 +293,7 @@ export function AdminShell() {
         <SidebarBody
           collapsed={collapsed}
           workspaceName={workspace.name}
+          databaseName={workspace.databaseName ?? null}
           workspaceLogoUrl={workspace.logoUrl}
           tab={tab}
           setTab={setTab}
@@ -313,6 +307,7 @@ export function AdminShell() {
         <SidebarBody
           collapsed={false}
           workspaceName={workspace.name}
+          databaseName={workspace.databaseName ?? null}
           workspaceLogoUrl={workspace.logoUrl}
           tab={tab}
           setTab={(next) => {
@@ -349,9 +344,6 @@ export function AdminShell() {
               <span className="hidden sm:inline">{actionLabel}</span>
             </Button>
           )}
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white">
-            {initials}
-          </span>
         </header>
 
         <div id="main-content" role="main" tabIndex={-1} className="w-full flex-1 p-4 outline-none md:p-6">
