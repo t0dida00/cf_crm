@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, PaperPlaneTilt } from "@phosphor-icons/react";
 import { ContactForm } from "@/components/contact-form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/required-label";
 import { LoginSubmitButton } from "@/components/login-submit-button";
 
 export function LoginCard({
@@ -62,7 +62,7 @@ export function LoginCard({
 
       <form action={loginWithCredentials} className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
+          <RequiredLabel htmlFor="email">Email</RequiredLabel>
           <Input
             id="email"
             name="email"
@@ -73,7 +73,7 @@ export function LoginCard({
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
+          <RequiredLabel htmlFor="password">Password</RequiredLabel>
           <Input
             id="password"
             name="password"

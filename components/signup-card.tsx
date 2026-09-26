@@ -1,8 +1,11 @@
 "use client";
 
+import { useState, type FocusEvent, type FormEvent } from "react";
 import Link from "next/link";
+import { FieldError, fieldErrorProps } from "@/components/field-error";
+import { validateSignup, withFieldError, type FieldErrors } from "@/lib/validation";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/required-label";
 import { LoginSubmitButton } from "@/components/login-submit-button";
 
 export const MIN_PASSWORD_LENGTH = 8;
@@ -25,6 +28,32 @@ export function SignupCard({
   message?: string;
 }) {
   const errorText = signupErrorMessage(error, message);
+  const [errors, setErrors] = useState<FieldErrors<"fullName" | "email" | "password">>({});
+
+  const validateForm = (form: HTMLFormElement) => {
+    const data = new FormData(form);
+    return validateSignup({
+      fullName: String(data.get("fullName") ?? ""),
+      email: String(data.get("email") ?? ""),
+      password: String(data.get("password") ?? ""),
+    });
+  };
+
+  // Checked here first; the backend re-checks the same rules.
+  const check = (e: FormEvent<HTMLFormElement>) => {
+    const found = validateForm(e.currentTarget);
+    setErrors(found);
+    if (Object.keys(found).length) e.preventDefault();
+  };
+
+  // Leaving a field shows its error straight away.
+  const blur = (field: "fullName" | "email" | "password") => (e: FocusEvent<HTMLInputElement>) => {
+    // Read the form now: React clears currentTarget once the handler returns.
+    const form = e.currentTarget.form;
+    if (!form) return;
+    const message = validateForm(form)[field];
+    setErrors((prev) => withFieldError(prev, field, message));
+  };
 
   return (
     <div className="rounded-xl border bg-card p-10">
@@ -42,17 +71,36 @@ export function SignupCard({
         </p>
       )}
 
-      <form action={signUp} className="space-y-4">
+      <form action={signUp} onSubmit={check} noValidate className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="fullName">Full name</Label>
-          <Input id="fullName" name="fullName" autoComplete="name" required placeholder="Ana Ruiz" />
+          <RequiredLabel htmlFor="fullName">Full name</RequiredLabel>
+          <Input
+            id="fullName"
+            name="fullName"
+            autoComplete="name"
+            required
+            placeholder="Ana Ruiz"
+            {...fieldErrorProps("fullName", errors.fullName)}
+            onBlur={blur("fullName")}
+          />
+          <FieldError id="fullName" message={errors.fullName} />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" autoComplete="email" required placeholder="you@example.com" />
+          <RequiredLabel htmlFor="email">Email</RequiredLabel>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            placeholder="you@example.com"
+            {...fieldErrorProps("email", errors.email)}
+            onBlur={blur("email")}
+          />
+          <FieldError id="email" message={errors.email} />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
+          <RequiredLabel htmlFor="password">Password</RequiredLabel>
           <Input
             id="password"
             name="password"
@@ -60,8 +108,11 @@ export function SignupCard({
             autoComplete="new-password"
             required
             minLength={MIN_PASSWORD_LENGTH}
-            aria-describedby="password-hint"
+            aria-describedby={errors.password ? "password-error" : "password-hint"}
+            aria-invalid={errors.password ? true : undefined}
+            onBlur={blur("password")}
           />
+          <FieldError id="password" message={errors.password} />
           <p id="password-hint" className="text-xs text-muted-foreground">
             At least {MIN_PASSWORD_LENGTH} characters.
           </p>

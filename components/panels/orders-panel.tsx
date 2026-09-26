@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/required-label";
+import { FieldError, fieldErrorProps } from "@/components/field-error";
+import { blockInvalidNumberKeys, countError } from "@/lib/validation";
 import {
   Select,
   SelectContent,
@@ -26,7 +29,7 @@ import { DataTable } from "@/components/data-table";
 import { PaginationBar } from "@/components/pagination-bar";
 import { SessionDetailDialog } from "@/components/session-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
-import { useAsyncAction } from "@/hooks/use-async-action";
+import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/use-async-action";
 import { summariseLines, type OrderSession } from "@/lib/order-math";
 import { orderTone } from "@/lib/tone";
 import { formatStamp } from "@/lib/range";
@@ -53,6 +56,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
   const [detail, setDetail] = useState<OrderSession | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ tableName: "", itemId: "", qty: "1" });
+  const [qtyError, setQtyError] = useState<string | undefined>();
 
   useEffect(() => {
     if (createSignal > 0) {
@@ -266,13 +270,20 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="order-qty">Quantity</Label>
+              <RequiredLabel htmlFor="order-qty">Quantity</RequiredLabel>
               <Input
                 id="order-qty"
                 type="number"
+                min={1}
+                step={1}
+                required
                 value={form.qty}
+                onKeyDown={blockInvalidNumberKeys({ whole: true })}
                 onChange={(e) => setForm((f) => ({ ...f, qty: e.target.value }))}
+                {...fieldErrorProps("order-qty", qtyError)}
+                onBlur={() => setQtyError(countError(form.qty, "Quantity"))}
               />
+              <FieldError id="order-qty" message={qtyError} />
             </div>
           </div>
           <DialogFooter>
@@ -282,12 +293,15 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
             <Button
               loading={isPending("create-order")}
               onClick={async () => {
+                const qtyProblem = countError(form.qty, "Quantity");
+                setQtyError(qtyProblem);
+                if (qtyProblem) return;
                 const ok = await run("create-order", () =>
                   addOrder({
                     tableName: form.tableName,
                     itemId: form.itemId,
-                    qty: Number(form.qty) || 1,
-                  }),
+                    qty: Number(form.qty),
+                  }), undefined, SAVED_MESSAGE
                 );
                 if (ok) setOpen(false);
               }}

@@ -32,14 +32,10 @@ export function useConnections() {
   });
   const onSaved = (data: Connections) => queryClient.setQueryData(CONNECTIONS_KEY, data);
 
-  const saveDatabase = useMutation({
-    mutationFn: (url: string) =>
-      apiFetch<Connections>("/platforms/me/connections/database", { method: "PUT", body: JSON.stringify({ url }) }),
-    onSuccess: onSaved,
-  });
-  const savePusher = useMutation({
-    mutationFn: (input: PusherInput) =>
-      apiFetch<Connections>("/platforms/me/connections/pusher", { method: "PUT", body: JSON.stringify(input) }),
+  // Both are checked by the backend before either is saved.
+  const saveConnections = useMutation({
+    mutationFn: (input: { databaseUrl: string; pusher: PusherInput }) =>
+      apiFetch<Connections>("/platforms/me/connections", { method: "PUT", body: JSON.stringify(input) }),
     onSuccess: onSaved,
   });
 
@@ -48,7 +44,6 @@ export function useConnections() {
     status: toRequestStatus(query),
     error: query.isError ? errorMessage(query.error, "Couldn't load connections.") : null,
     retry: () => void query.refetch(),
-    saveDatabase,
-    savePusher,
+    saveConnections,
   };
 }

@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/required-label";
+import { FieldError, fieldErrorProps } from "@/components/field-error";
+import { blockInvalidNumberKeys, validateBooking, type FieldErrors, withFieldError } from "@/lib/validation";
 import {
   Select,
   SelectContent,
@@ -22,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
-import { useAsyncAction } from "@/hooks/use-async-action";
+import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/use-async-action";
 import { PaginationBar } from "@/components/pagination-bar";
 import { BookingAssignDialog } from "@/components/booking-assign-dialog";
 import {
@@ -64,6 +67,7 @@ export function BookingsPanel({
   const [historyPage, setHistoryPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [assignId, setAssignId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FieldErrors<"name" | "party">>({});
   const [form, setForm] = useState({
     name: "",
     date: todayKey,
@@ -83,6 +87,7 @@ export function BookingsPanel({
         party: "2",
         tableName: workspace.tables[0]?.name ?? "",
       });
+      setErrors({});
       setOpen(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -323,19 +328,24 @@ export function BookingsPanel({
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="booking-name">Guest name</Label>
+              <RequiredLabel htmlFor="booking-name">Guest name</RequiredLabel>
               <Input
                 id="booking-name"
+                required
                 value={form.name}
                 placeholder="Name on the booking"
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                {...fieldErrorProps("booking-name", errors.name)}
+                onBlur={() => setErrors((e) => withFieldError(e, "name", validateBooking(form).name))}
               />
+              <FieldError id="booking-name" message={errors.name} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="booking-date">Date</Label>
+                <RequiredLabel htmlFor="booking-date">Date</RequiredLabel>
                 <Input
                   id="booking-date"
+                required
                   type="date"
                   value={form.date}
                   min={todayKey}
@@ -351,13 +361,13 @@ export function BookingsPanel({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Time</Label>
+                <RequiredLabel htmlFor="booking-time">Time</RequiredLabel>
                 <Select
                   value={form.time}
                   onValueChange={(time) => setForm((f) => ({ ...f, time }))}
                   disabled={formTimes.length === 0}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id="booking-time" className="w-full">
                     <SelectValue placeholder="No times left" />
                   </SelectTrigger>
                   <SelectContent className="max-h-72">
@@ -374,13 +384,20 @@ export function BookingsPanel({
               <p className="-mt-2 text-xs text-destructive">No start times left today — pick a later date.</p>
             )}
             <div className="space-y-1.5">
-              <Label htmlFor="booking-party">Party size</Label>
+              <RequiredLabel htmlFor="booking-party">Party size</RequiredLabel>
               <Input
                 id="booking-party"
+                required
                 type="number"
+                min={1}
+                step={1}
                 value={form.party}
+                onKeyDown={blockInvalidNumberKeys({ whole: true })}
                 onChange={(e) => setForm((f) => ({ ...f, party: e.target.value }))}
+                {...fieldErrorProps("booking-party", errors.party)}
+                onBlur={() => setErrors((e) => withFieldError(e, "party", validateBooking(form).party))}
               />
+              <FieldError id="booking-party" message={errors.party} />
             </div>
             <div className="space-y-1.5">
               <Label>Table</Label>
@@ -406,16 +423,18 @@ export function BookingsPanel({
               loading={isPending("create-booking")}
               disabled={!form.time || form.date < todayKey}
               onClick={async () => {
-                if (!form.name.trim() || !form.time || form.date < todayKey) return;
+                const found = validateBooking(form);
+                setErrors(found);
+                if (Object.keys(found).length || !form.time || form.date < todayKey) return;
                 const ok = await run("create-booking", () =>
                   saveBooking({
                     name: form.name.trim(),
                     date: form.date,
                     time: form.time,
-                    party: Number(form.party) || 2,
+                    party: Number(form.party),
                     tableName: form.tableName,
                     status: "Confirmed",
-                  }),
+                  }), undefined, SAVED_MESSAGE
                 );
                 if (ok) {
                   setOpen(false);

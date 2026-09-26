@@ -20,9 +20,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldError, fieldErrorProps } from "@/components/field-error";
+import { RequiredLabel } from "@/components/required-label";
+import { validateCategory, type FieldErrors, withFieldError } from "@/lib/validation";
 import { DataTable } from "@/components/data-table";
 import { useWorkspace } from "@/components/workspace-provider";
-import { useAsyncAction } from "@/hooks/use-async-action";
+import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/use-async-action";
 import type { Category } from "@/lib/types";
 
 interface Row {
@@ -38,10 +41,12 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [form, setForm] = useState({ name: "", valid: true });
+  const [errors, setErrors] = useState<FieldErrors<"name">>({});
 
   useEffect(() => {
     if (createSignal > 0) {
       setEditing(null);
+      setErrors({});
       setForm({ name: "", valid: true });
       setOpen(true);
     }
@@ -49,6 +54,7 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
 
   const startEdit = (category: Category) => {
     setEditing(category);
+    setErrors({});
     setForm({ name: category.name, valid: category.valid });
     setOpen(true);
   };
@@ -134,9 +140,11 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
   });
 
   const submit = async () => {
-    if (!form.name.trim()) return;
+    const found = validateCategory(form);
+    setErrors(found);
+    if (Object.keys(found).length) return;
     const ok = await run("save-category", () =>
-      saveCategory({ id: editing?.id, name: form.name.trim(), valid: form.valid }),
+      saveCategory({ id: editing?.id, name: form.name.trim(), valid: form.valid }), undefined, SAVED_MESSAGE
     );
     if (ok) setOpen(false);
   };
@@ -156,13 +164,17 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="category-name">Name</Label>
+              <RequiredLabel htmlFor="category-name">Name</RequiredLabel>
               <Input
                 id="category-name"
+                required
                 value={form.name}
                 placeholder="e.g. Drinks"
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                {...fieldErrorProps("category-name", errors.name)}
+                onBlur={() => setErrors((e) => withFieldError(e, "name", validateCategory(form).name))}
               />
+              <FieldError id="category-name" message={errors.name} />
             </div>
             <Label className="flex items-center gap-2 font-normal">
               <Checkbox

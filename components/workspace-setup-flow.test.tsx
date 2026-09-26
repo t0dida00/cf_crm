@@ -4,20 +4,36 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 const replace = vi.fn();
 const reload = vi.fn();
 const createPlatformAction = vi.fn(async () => {});
+const updatePlatformAction = vi.fn(async () => {});
 let workspace = { name: "" };
 let hydrated = true;
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push: vi.fn(), refresh: vi.fn() }) }));
-vi.mock("@/app/actions", () => ({ createPlatformAction: (...args: unknown[]) => createPlatformAction(...(args as [])) }));
+vi.mock("@/app/actions", () => ({
+  createPlatformAction: (...args: unknown[]) => createPlatformAction(...(args as [])),
+  updatePlatformAction: (...args: unknown[]) => updatePlatformAction(...(args as [])),
+}));
 vi.mock("@/components/workspace-provider", () => ({ useWorkspace: () => ({ workspace, hydrated, reload }) }));
 vi.mock("@/components/setup-screen", () => ({
-  SetupScreen: ({ onSubmit }: { onSubmit: (n: string, d: string, c: object) => Promise<void> }) => (
-    <button onClick={() => onSubmit("Casa", "cafe", {})}>Build my workspace</button>
+  SetupScreen: ({
+    onSubmit,
+    initial,
+  }: {
+    onSubmit: (n: string, d: string, c: object) => Promise<void>;
+    initial?: { name: string } | null;
+  }) => (
+    <div>
+      <span data-testid="initial-name">{initial?.name ?? ""}</span>
+      <button onClick={() => onSubmit(initial ? "Casa Nova" : "Casa", "cafe", { phone: "1" })}>Build my workspace</button>
+    </div>
   ),
 }));
 vi.mock("@/components/connections-step", () => ({
-  ConnectionsStep: ({ onContinue }: { onContinue: () => void }) => (
-    <button onClick={onContinue}>Use the shared service for now</button>
+  ConnectionsStep: ({ onContinue, onBack }: { onContinue: () => void; onBack?: () => void }) => (
+    <div>
+      <button onClick={onBack}>Back</button>
+      <button onClick={onContinue}>Use the shared service for now</button>
+    </div>
   ),
 }));
 vi.mock("@/components/building-screen", () => ({
@@ -37,7 +53,7 @@ describe("WorkspaceSetupFlow", () => {
   test("creates the business, then shows the connections step without leaving setup", async () => {
     render(<WorkspaceSetupFlow />);
     await act(async () => fireEvent.click(screen.getByText("Build my workspace")));
-    expect(createPlatformAction).toHaveBeenCalledWith({ name: "Casa", domain: "cafe" });
+    expect(createPlatformAction).toHaveBeenCalledWith({ name: "Casa", domain: "cafe", phone: "1" });
     expect(screen.getByText("Use the shared service for now")).toBeTruthy();
     expect(reload).not.toHaveBeenCalled();
     expect(replace).not.toHaveBeenCalled();
@@ -62,6 +78,19 @@ describe("WorkspaceSetupFlow", () => {
     workspace = { name: "Casa" };
     rerender(<WorkspaceSetupFlow />);
     expect(replace).toHaveBeenCalledWith("/admin");
+  });
+
+  test("Back returns to step 1 with the saved details, and resubmitting updates instead of creating", async () => {
+    render(<WorkspaceSetupFlow />);
+    await act(async () => fireEvent.click(screen.getByText("Build my workspace")));
+    fireEvent.click(screen.getByText("Back"));
+
+    expect(screen.getByTestId("initial-name").textContent).toBe("Casa");
+    await act(async () => fireEvent.click(screen.getByText("Build my workspace")));
+
+    expect(createPlatformAction).toHaveBeenCalledTimes(1);
+    expect(updatePlatformAction).toHaveBeenCalledWith({ name: "Casa Nova", domain: "cafe", phone: "1" });
+    expect(screen.getByText("Use the shared service for now")).toBeTruthy();
   });
 
   test("an owner who already has a business goes straight to /admin", () => {

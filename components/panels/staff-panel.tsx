@@ -21,12 +21,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/required-label";
 import { DataTable } from "@/components/data-table";
-import { useAsyncAction } from "@/hooks/use-async-action";
+import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/use-async-action";
 import { apiFetch } from "@/lib/api";
 import { formatStamp } from "@/lib/range";
 import { errorMessage, toRequestStatus } from "@/lib/request-status";
 import type { StaffAccount } from "@/lib/types";
+import { FieldError, fieldErrorProps } from "@/components/field-error";
+import { sanitizePhone, validateStaff, type FieldErrors, withFieldError } from "@/lib/validation";
 
 interface ApiStaffAccount {
   id: string;
@@ -87,6 +90,7 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FieldErrors<"fullName" | "email" | "phone" | "password">>({});
 
   const atCapacity = staff.length >= limit;
 
@@ -99,6 +103,7 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
       setEditing(null);
       setForm(emptyForm);
       setError(null);
+      setErrors({});
       setOpen(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -113,6 +118,7 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
       password: "",
     });
     setError(null);
+    setErrors({});
     setOpen(true);
   };
 
@@ -194,15 +200,9 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
   });
 
   const submit = async () => {
-    if (!form.fullName.trim() || !form.email.trim()) return;
-    if (!editing && form.password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
-    if (editing && form.password && form.password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
+    const found = validateStaff(form, { editing: !!editing });
+    setErrors(found);
+    if (Object.keys(found).length) return;
 
     setSaving(true);
     setError(null);
@@ -230,6 +230,7 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
         });
         setStaff((prev) => [...prev, mapStaff(created.staff)]);
       }
+      toast.success(SAVED_MESSAGE);
       setOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save staff account");
@@ -267,45 +268,64 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="staff-name">Full name</Label>
+              <RequiredLabel htmlFor="staff-name">Full name</RequiredLabel>
               <Input
                 id="staff-name"
+                required
                 value={form.fullName}
                 placeholder="e.g. Jamie Rivera"
                 onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
+                {...fieldErrorProps("staff-name", errors.fullName)}
+                onBlur={() => setErrors((e) => withFieldError(e, "fullName", validateStaff(form, { editing: !!editing }).fullName))}
               />
+              <FieldError id="staff-name" message={errors.fullName} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="staff-email">Email</Label>
+              <RequiredLabel htmlFor="staff-email">Email</RequiredLabel>
               <Input
                 id="staff-email"
                 type="email"
+                required
                 value={form.email}
                 placeholder="e.g. jamie@example.com"
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                {...fieldErrorProps("staff-email", errors.email)}
+                onBlur={() => setErrors((e) => withFieldError(e, "email", validateStaff(form, { editing: !!editing }).email))}
               />
+              <FieldError id="staff-email" message={errors.email} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="staff-phone">Phone</Label>
+              <RequiredLabel htmlFor="staff-phone">Phone</RequiredLabel>
               <Input
                 id="staff-phone"
                 type="tel"
+                inputMode="tel"
+                required
                 value={form.phone}
                 placeholder="e.g. +34 600 000 000"
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, phone: sanitizePhone(e.target.value) }))}
+                {...fieldErrorProps("staff-phone", errors.phone)}
+                onBlur={() => setErrors((e) => withFieldError(e, "phone", validateStaff(form, { editing: !!editing }).phone))}
               />
+              <FieldError id="staff-phone" message={errors.phone} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="staff-password">
-                {editing ? "New password (leave blank to keep current)" : "Password"}
-              </Label>
+              {editing ? (
+                <Label htmlFor="staff-password">New password (leave blank to keep current)</Label>
+              ) : (
+                <RequiredLabel htmlFor="staff-password">Password</RequiredLabel>
+              )}
               <Input
                 id="staff-password"
                 type="password"
+                required={!editing}
                 value={form.password}
                 placeholder="At least 8 characters"
                 onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                {...fieldErrorProps("staff-password", errors.password)}
+                onBlur={() => setErrors((e) => withFieldError(e, "password", validateStaff(form, { editing: !!editing }).password))}
               />
+              <FieldError id="staff-password" message={errors.password} />
             </div>
           </div>
 

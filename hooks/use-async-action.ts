@@ -14,7 +14,11 @@ import { toast } from "sonner";
  * visible pending/error state instead of a silent, unguarded promise.
  * Resolves to `true` on success / `false` on a caught error, so a caller that
  * needs a follow-up only on success (e.g. closing a dialog) can `await` it.
+ * Pass `successMessage` (usually SAVED_MESSAGE) for save buttons to confirm with a toast.
  */
+/** The toast shown after any save succeeds. */
+export const SAVED_MESSAGE = "Saved successfully";
+
 export function useAsyncAction() {
   const [pendingKeys, setPendingKeys] = useState<ReadonlySet<string>>(new Set());
   const countsRef = useRef(new Map<string, number>());
@@ -27,10 +31,12 @@ export function useAsyncAction() {
     setPendingKeys(new Set(counts.keys()));
   };
 
-  const run = useCallback(async (key: string, fn: () => Promise<unknown>, errorMessage?: string) => {
+  const run = useCallback(
+    async (key: string, fn: () => Promise<unknown>, errorMessage?: string, successMessage?: string) => {
     setPending(key, 1);
     try {
       await fn();
+      if (successMessage) toast.success(successMessage);
       return true;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : errorMessage || "Something went wrong.");
@@ -38,7 +44,9 @@ export function useAsyncAction() {
     } finally {
       setPending(key, -1);
     }
-  }, []);
+  },
+    [],
+  );
 
   const isPending = useCallback((key: string) => pendingKeys.has(key), [pendingKeys]);
 

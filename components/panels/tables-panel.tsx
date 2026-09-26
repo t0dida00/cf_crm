@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldError, fieldErrorProps } from "@/components/field-error";
+import { RequiredLabel } from "@/components/required-label";
+import { blockInvalidNumberKeys, validateTable, type FieldErrors, withFieldError } from "@/lib/validation";
 import {
   Select,
   SelectContent,
@@ -23,13 +26,15 @@ import {
 } from "@/components/ui/select";
 import { SessionDetailDialog } from "@/components/session-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
-import { useAsyncAction } from "@/hooks/use-async-action";
+import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/use-async-action";
 import { groupOrdersIntoSessions, type OrderSession } from "@/lib/order-math";
 import { formatStamp } from "@/lib/range";
 import { orderTone } from "@/lib/tone";
 import type { TableRec } from "@/lib/types";
 
 const NEW_ZONE = "__new";
+// Zone is optional; a Select item can't have an empty value, so "no zone" has its own.
+const NO_ZONE = "__none";
 
 export function TablesPanel({ createSignal }: { createSignal: number }) {
   const { workspace, flow, fmt, saveTable, deleteTable } = useWorkspace();
@@ -37,6 +42,7 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
   const [editing, setEditing] = useState<TableRec | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", seats: "4", zone: "", newZone: "" });
+  const [errors, setErrors] = useState<FieldErrors<"name" | "seats">>({});
   const [historyTable, setHistoryTable] = useState<TableRec | null>(null);
   const [session, setSession] = useState<OrderSession | null>(null);
 
@@ -44,10 +50,11 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
 
   const startCreate = () => {
     setEditing(null);
+    setErrors({});
     setForm({
       name: `Table ${workspace.tables.length + 1}`,
       seats: "4",
-      zone: workspace.zones[0] ?? NEW_ZONE,
+      zone: workspace.zones[0] ?? NO_ZONE,
       newZone: "",
     });
     setOpen(true);
@@ -60,20 +67,24 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
 
   const startEdit = (table: TableRec) => {
     setEditing(table);
-    setForm({ name: table.name, seats: String(table.seats), zone: table.zone, newZone: "" });
+    setErrors({});
+    setForm({ name: table.name, seats: String(table.seats), zone: table.zone || NO_ZONE, newZone: "" });
     setOpen(true);
   };
 
   const submit = async () => {
-    if (!form.name.trim()) return;
-    const zone = form.zone === NEW_ZONE ? form.newZone.trim() : form.zone;
+    const found = validateTable(form);
+    setErrors(found);
+    if (Object.keys(found).length) return;
+    // No zone, or "+ New zone" left blank, saves the table without one.
+    const zone = form.zone === NEW_ZONE ? form.newZone.trim() : form.zone === NO_ZONE ? "" : form.zone;
     const ok = await run("save-table", () =>
       saveTable({
         id: editing?.id,
         name: form.name.trim(),
-        seats: Number(form.seats) || 2,
-        zone: zone || workspace.zones[0] || "—",
-      }),
+        seats: Number(form.seats),
+        zone,
+      }), undefined, SAVED_MESSAGE
     );
     if (ok) setOpen(false);
   };
@@ -85,7 +96,7 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
           <Card key={table.id}>
             <CardContent>
               <p className="text-base font-bold">{table.name}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">{table.zone}</p>
+              {table.zone && <p className="mt-0.5 text-xs text-muted-foreground">{table.zone}</p>}
               <p className="mt-4 flex items-center gap-1.5 text-sm">
                 <UsersThree size={16} weight="bold" className="text-muted-foreground" />
                 {table.seats} seats
@@ -140,32 +151,44 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="table-name">Name</Label>
+              <RequiredLabel htmlFor="table-name">Name</RequiredLabel>
               <Input
                 id="table-name"
+                required
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                {...fieldErrorProps("table-name", errors.name)}
+                onBlur={() => setErrors((e) => withFieldError(e, "name", validateTable(form).name))}
               />
+              <FieldError id="table-name" message={errors.name} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="table-seats">Seats</Label>
+              <RequiredLabel htmlFor="table-seats">Seats</RequiredLabel>
               <Input
                 id="table-seats"
                 type="number"
+                min={1}
+                step={1}
+                required
                 value={form.seats}
+                onKeyDown={blockInvalidNumberKeys({ whole: true })}
                 onChange={(e) => setForm((f) => ({ ...f, seats: e.target.value }))}
+                {...fieldErrorProps("table-seats", errors.seats)}
+                onBlur={() => setErrors((e) => withFieldError(e, "seats", validateTable(form).seats))}
               />
+              <FieldError id="table-seats" message={errors.seats} />
             </div>
             <div className="space-y-1.5">
-              <Label>Zone</Label>
+              <Label htmlFor="table-zone">Zone (optional)</Label>
               <Select
                 value={form.zone}
                 onValueChange={(zone) => setForm((f) => ({ ...f, zone }))}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Pick a zone" />
+                <SelectTrigger id="table-zone" className="w-full">
+                  <SelectValue placeholder="No zone" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value={NO_ZONE}>No zone</SelectItem>
                   {workspace.zones.map((zone) => (
                     <SelectItem key={zone} value={zone}>
                       {zone}
@@ -181,7 +204,7 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
                 <Input
                   id="table-new-zone"
                   value={form.newZone}
-                  placeholder="e.g. Garden"
+                  placeholder="e.g. Garden (leave blank for no zone)"
                   onChange={(e) => setForm((f) => ({ ...f, newZone: e.target.value }))}
                 />
               </div>
