@@ -119,7 +119,9 @@ export async function updatePlatform(
       name: input.name,
       platformTypeCode: input.domain,
       phone: input.phone ?? "",
-      email: input.email ?? "",
+      // Setup no longer asks for an email (it's the owner's signup email):
+      // leave the stored one alone unless one is given.
+      ...(input.email !== undefined ? { email: input.email } : {}),
       address: input.address ?? "",
       logoUrl: input.logoUrl ?? "",
     }),

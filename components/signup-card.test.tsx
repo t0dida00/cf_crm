@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { MIN_PASSWORD_LENGTH, SignupCard, signupErrorMessage } from "./signup-card";
 
@@ -26,12 +26,40 @@ describe("signupErrorMessage", () => {
 describe("SignupCard", () => {
   test("requires every field and enforces the password length", () => {
     render(<SignupCard signUp={vi.fn()} />);
-    expect((screen.getByLabelText("Full name") as HTMLInputElement).required).toBe(true);
-    expect((screen.getByLabelText("Email") as HTMLInputElement).type).toBe("email");
-    const password = screen.getByLabelText("Password") as HTMLInputElement;
+    expect((screen.getByLabelText(/^Full name/) as HTMLInputElement).required).toBe(true);
+    expect((screen.getByLabelText(/^Email/) as HTMLInputElement).type).toBe("email");
+    const password = screen.getByLabelText(/^Password/) as HTMLInputElement;
     expect(password.required).toBe(true);
     expect(password.minLength).toBe(MIN_PASSWORD_LENGTH);
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  test("blocks submitting and explains each invalid field", () => {
+    const signUp = vi.fn();
+    render(<SignupCard signUp={signUp} />);
+    fireEvent.change(screen.getByLabelText(/^Full name/), { target: { value: "Ana" } });
+    fireEvent.change(screen.getByLabelText(/^Email/), { target: { value: "ana@" } });
+    fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: "short" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Create account" }).closest("form")!);
+
+    expect(signUp).not.toHaveBeenCalled();
+    expect(screen.getByText("Enter a first and last name.")).toBeTruthy();
+    expect(screen.getByText("Enter a valid email, like name@example.com.")).toBeTruthy();
+    expect(screen.getByLabelText(/^Full name/).getAttribute("aria-invalid")).toBe("true");
+  });
+
+  test("leaving a field shows its error straight away", () => {
+    render(<SignupCard signUp={vi.fn()} />);
+    const name = screen.getByLabelText(/^Full name/);
+    fireEvent.change(name, { target: { value: "Ana" } });
+    fireEvent.blur(name);
+    expect(screen.getByText("Enter a first and last name.")).toBeTruthy();
+    // Only the field that was left is checked.
+    expect(screen.queryByText("Email is required.")).toBeNull();
+
+    fireEvent.change(name, { target: { value: "Ana Ruiz" } });
+    fireEvent.blur(name);
+    expect(screen.queryByText("Enter a first and last name.")).toBeNull();
   });
 
   test("shows the error as an alert", () => {

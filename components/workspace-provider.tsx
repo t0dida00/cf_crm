@@ -456,7 +456,7 @@ export function WorkspaceProvider({
         const saved = mapTable(res.table);
         patch((w) => ({
           tables: table.id ? w.tables.map((t) => (t.id === saved.id ? saved : t)) : [...w.tables, saved],
-          zones: w.zones.includes(saved.zone) ? w.zones : [...w.zones, saved.zone],
+          zones: !saved.zone || w.zones.includes(saved.zone) ? w.zones : [...w.zones, saved.zone],
         }));
       },
       deleteTable: async (id) => {

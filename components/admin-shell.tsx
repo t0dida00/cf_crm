@@ -112,7 +112,7 @@ function SidebarBody({
 }) {
   return (
     <>
-      <div className={cn("flex items-center gap-2.5", collapsed ? "justify-center px-0" : "px-2")}>
+      <div className={cn("flex gap-2.5", collapsed ? "items-center justify-center px-0" : "items-start px-2")}>
         <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-500">
           {workspaceLogoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -122,7 +122,8 @@ function SidebarBody({
           )}
         </span>
         {!collapsed && (
-          <span className="min-w-0 flex-1 truncate text-[15px] font-bold tracking-tight">
+          // Long names wrap onto as many lines as they need instead of being cut off.
+          <span className="min-w-0 flex-1 pt-0.5 text-[15px] leading-snug font-bold tracking-tight [overflow-wrap:anywhere]">
             {workspaceName}
           </span>
         )}

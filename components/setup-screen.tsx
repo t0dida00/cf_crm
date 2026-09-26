@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/required-label";
 import { LEXICON } from "@/lib/lexicon";
 import type { Domain } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { FieldError, fieldErrorProps } from "@/components/field-error";
+import { sanitizePhone, validateBusiness, type FieldErrors, withFieldError } from "@/lib/validation";
 
 const ICONS: Record<Domain, typeof ForkKnife> = {
   restaurant: ForkKnife,
@@ -20,7 +23,6 @@ export interface SetupDetails {
   name: string;
   domain: Domain;
   phone: string;
-  email: string;
   address: string;
   logoUrl: string;
 }
@@ -33,7 +35,7 @@ export function SetupScreen({
   onSubmit: (
     name: string,
     domain: Domain,
-    contact: { phone: string; email: string; address: string; logoUrl: string },
+    contact: { phone: string; address: string; logoUrl: string },
   ) => void | Promise<void>;
   error?: string | null;
   /** Values to start from, e.g. when coming back from step 2. */
@@ -42,10 +44,10 @@ export function SetupScreen({
   const [name, setName] = useState(initial?.name ?? "");
   const [domain, setDomain] = useState<Domain>(initial?.domain ?? "restaurant");
   const [phone, setPhone] = useState(initial?.phone ?? "");
-  const [email, setEmail] = useState(initial?.email ?? "");
   const [address, setAddress] = useState(initial?.address ?? "");
   const [logoUrl, setLogoUrl] = useState(initial?.logoUrl ?? "");
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors<"name" | "phone" | "address">>({});
 
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-12">
@@ -87,58 +89,59 @@ export function SetupScreen({
           </div>
 
           <div className="mt-6">
-            <Label htmlFor="business-name" className="mb-2 block text-sm font-semibold">
+            <RequiredLabel htmlFor="business-name" className="mb-2 block text-sm font-semibold">
               Enter your business name
-            </Label>
+            </RequiredLabel>
             <Input
               id="business-name"
+              required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Casa Marina"
               className="h-11 text-base"
+              {...fieldErrorProps("business-name", errors.name)}
+              onBlur={() => setErrors((e) => withFieldError(e, "name", validateBusiness({ name, phone, address }).name))}
             />
+            <FieldError id="business-name" message={errors.name} />
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="business-phone" className="mb-2 block text-sm font-semibold">
-                Phone
-              </Label>
-              <Input
-                id="business-phone"
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="e.g. +34 600 000 000"
-                className="h-11 text-base"
-              />
-            </div>
-            <div>
-              <Label htmlFor="business-email" className="mb-2 block text-sm font-semibold">
-                Email
-              </Label>
-              <Input
-                id="business-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. hello@casamarina.com"
-                className="h-11 text-base"
-              />
-            </div>
+          <div className="mt-6">
+            <RequiredLabel htmlFor="business-phone" className="mb-2 block text-sm font-semibold">
+              Phone
+            </RequiredLabel>
+            <Input
+              id="business-phone"
+              type="tel"
+              inputMode="tel"
+              required
+              value={phone}
+              onChange={(e) => setPhone(sanitizePhone(e.target.value))}
+              placeholder="e.g. +34 600 000 000"
+              className="h-11 text-base"
+              {...fieldErrorProps("business-phone", errors.phone)}
+              onBlur={() => setErrors((e) => withFieldError(e, "phone", validateBusiness({ name, phone, address }).phone))}
+            />
+            <FieldError id="business-phone" message={errors.phone} />
           </div>
 
           <div className="mt-4">
-            <Label htmlFor="business-address" className="mb-2 block text-sm font-semibold">
+            <RequiredLabel htmlFor="business-address" className="mb-2 block text-sm font-semibold">
               Address
-            </Label>
+            </RequiredLabel>
             <Input
               id="business-address"
+              required
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="e.g. Carrer del Mar 12, Barcelona"
               className="h-11 text-base"
+              {...fieldErrorProps("business-address", errors.address)}
+              onBlur={() => setErrors((e) => withFieldError(e, "address", validateBusiness({ name, phone, address }).address))}
             />
+            <FieldError id="business-address" message={errors.address} />
+            <p className="mt-2 text-xs text-muted-foreground">
+              Your business email is the one you signed up with.
+            </p>
           </div>
 
           <p className="mt-8 mb-3 text-sm font-semibold">What kind of business is it?</p>
@@ -184,13 +187,15 @@ export function SetupScreen({
               You can change all of this later.
             </span>
             <Button
-              disabled={!name.trim() || submitting}
+              disabled={submitting}
               onClick={async () => {
+                const found = validateBusiness({ name, phone, address });
+                setErrors(found);
+                if (Object.keys(found).length) return;
                 setSubmitting(true);
                 try {
                   await onSubmit(name.trim(), domain, {
                     phone: phone.trim(),
-                    email: email.trim(),
                     address: address.trim(),
                     logoUrl: logoUrl.trim(),
                   });

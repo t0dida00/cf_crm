@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/required-label";
+import { FieldError, fieldErrorProps } from "@/components/field-error";
+import { blockInvalidNumberKeys, countError } from "@/lib/validation";
 import {
   Select,
   SelectContent,
@@ -23,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
-import { useAsyncAction } from "@/hooks/use-async-action";
+import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/use-async-action";
 import { hhmm } from "@/lib/range";
 import { orderTone } from "@/lib/tone";
 import type { Order } from "@/lib/types";
@@ -47,6 +50,7 @@ export function StaffOrdersPanel() {
   const [addDishId, setAddDishId] = useState(workspace.dishes[0]?.id ?? "");
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({ tableName: "", itemId: "", qty: "1" });
+  const [qtyError, setQtyError] = useState<string | undefined>();
   const [servingId, setServingId] = useState<string | null>(null);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
@@ -427,13 +431,20 @@ export function StaffOrdersPanel() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="staff-order-qty">Quantity</Label>
+              <RequiredLabel htmlFor="staff-order-qty">Quantity</RequiredLabel>
               <Input
                 id="staff-order-qty"
                 type="number"
+                min={1}
+                step={1}
+                required
                 value={form.qty}
+                onKeyDown={blockInvalidNumberKeys({ whole: true })}
                 onChange={(e) => setForm((f) => ({ ...f, qty: e.target.value }))}
+                {...fieldErrorProps("staff-order-qty", qtyError)}
+                onBlur={() => setQtyError(countError(form.qty, "Quantity"))}
               />
+              <FieldError id="staff-order-qty" message={qtyError} />
             </div>
           </div>
           <DialogFooter>
@@ -443,13 +454,16 @@ export function StaffOrdersPanel() {
             <Button
               loading={isPending("create-order")}
               onClick={async () => {
+                const qtyProblem = countError(form.qty, "Quantity");
+                setQtyError(qtyProblem);
+                if (qtyProblem) return;
                 if (!form.tableName || !form.itemId) return;
                 const ok = await run("create-order", () =>
                   addOrder({
                     tableName: form.tableName,
                     itemId: form.itemId,
-                    qty: Number(form.qty) || 1,
-                  }),
+                    qty: Number(form.qty),
+                  }), undefined, SAVED_MESSAGE
                 );
                 if (ok) setCreateOpen(false);
               }}

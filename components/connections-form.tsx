@@ -5,9 +5,12 @@ import { CheckCircle, Database, Lightning } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/required-label";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorState, LoadingState } from "@/components/request-state";
 import { useConnections, type Connections } from "@/hooks/use-connections";
+import { toast } from "sonner";
+import { SAVED_MESSAGE } from "@/hooks/use-async-action";
 import { parsePusherSnippet, type PusherFields } from "@/lib/pusher-snippet";
 
 const EMPTY = { databaseUrl: "", appId: "", key: "", secret: "", cluster: "" };
@@ -99,6 +102,7 @@ export function ConnectionsForm({ onSaved, inSettings = false }: { onSaved?: () 
       },
       {
         onSuccess: () => {
+          toast.success(SAVED_MESSAGE);
           setForm(EMPTY);
           setPasteNote(null);
           setEditing(false);
@@ -136,10 +140,12 @@ export function ConnectionsForm({ onSaved, inSettings = false }: { onSaved?: () 
       {showForm ? (
         <form onSubmit={submit} className="space-y-5 border-t pt-5">
           <div className="space-y-1.5">
-            <Label htmlFor="database-url">Database connection URL</Label>
+            <RequiredLabel htmlFor="database-url">Database connection URL</RequiredLabel>
             <Input
               id="database-url"
               type="text"
+              // Some hosted database URLs (with API keys) are longer than 250 characters.
+              maxLength={2048}
               {...SECRET_FIELD_PROPS}
               required
               value={form.databaseUrl}
@@ -185,7 +191,7 @@ export function ConnectionsForm({ onSaved, inSettings = false }: { onSaved?: () 
                 ] as const
               ).map(([field, label, placeholder]) => (
                 <div key={field} className="space-y-1.5">
-                  <Label htmlFor={`pusher-${field}`}>{label}</Label>
+                  <RequiredLabel htmlFor={`pusher-${field}`}>{label}</RequiredLabel>
                   <Input
                     id={`pusher-${field}`}
                     type="text"

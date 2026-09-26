@@ -14,6 +14,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ImageDropzone } from "@/components/image-dropzone";
+import { toast } from "sonner";
+import { SAVED_MESSAGE } from "@/hooks/use-async-action";
+import { FieldError, fieldErrorProps } from "@/components/field-error";
+import { RequiredLabel } from "@/components/required-label";
+import { percentError, blockInvalidNumberKeys, sanitizePhone, validateBusiness, type FieldErrors, MAX_COMMON_TAX, MAX_SPECIAL_TAX, acceptNumberInput, withFieldError } from "@/lib/validation";
 import { useWorkspace } from "@/components/workspace-provider";
 import type { SpecialTax } from "@/lib/types";
 
@@ -71,7 +76,16 @@ export function SettingsPanel() {
     removedIds.length > 0 ||
     addedTaxes.length > 0;
 
+  const [profileErrors, setProfileErrors] = useState<FieldErrors<"name" | "phone" | "address">>({});
+  const [taxRateError, setTaxRateError] = useState<string | undefined>();
+  const [newTaxError, setNewTaxError] = useState<string | undefined>();
+
   const handleSave = async () => {
+    const found = profileDirty ? validateBusiness(profileDraft) : {};
+    setProfileErrors(found);
+    const rateProblem = percentError(String(billingDraft.taxRate), "Common tax", MAX_COMMON_TAX);
+    setTaxRateError(rateProblem);
+    if (Object.keys(found).length || rateProblem) return;
     setSaving(true);
     setError(null);
     try {
@@ -95,6 +109,7 @@ export function SettingsPanel() {
       for (const tax of addedTaxes) {
         await addSpecialTax({ name: tax.name, pct: tax.pct });
       }
+      toast.success(SAVED_MESSAGE);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save settings");
     } finally {
@@ -120,36 +135,49 @@ export function SettingsPanel() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="restaurant-name">Name</Label>
+              <RequiredLabel htmlFor="restaurant-name">Name</RequiredLabel>
               <Input
                 id="restaurant-name"
+                required
+                {...fieldErrorProps("restaurant-name", profileErrors.name)}
+                onBlur={() => setProfileErrors((e) => withFieldError(e, "name", validateBusiness(profileDraft).name))}
                 value={profileDraft.name}
                 onChange={(e) =>
                   setProfileDraft((d) => ({ ...d, name: e.target.value }))
                 }
               />
+              <FieldError id="restaurant-name" message={profileErrors.name} />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="restaurant-phone">Phone</Label>
+                <RequiredLabel htmlFor="restaurant-phone">Phone</RequiredLabel>
                 <Input
                   id="restaurant-phone"
                   type="tel"
+                  inputMode="tel"
+                  required
                   value={profileDraft.phone}
                   onChange={(e) =>
-                    setProfileDraft((d) => ({ ...d, phone: e.target.value }))
+                    setProfileDraft((d) => ({ ...d, phone: sanitizePhone(e.target.value) }))
                   }
+                  {...fieldErrorProps("restaurant-phone", profileErrors.phone)}
+                  onBlur={() => setProfileErrors((e) => withFieldError(e, "phone", validateBusiness(profileDraft).phone))}
                 />
+                <FieldError id="restaurant-phone" message={profileErrors.phone} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="restaurant-address">Address</Label>
+                <RequiredLabel htmlFor="restaurant-address">Address</RequiredLabel>
                 <Input
                   id="restaurant-address"
+                  required
                   value={profileDraft.address}
                   onChange={(e) =>
                     setProfileDraft((d) => ({ ...d, address: e.target.value }))
                   }
+                  {...fieldErrorProps("restaurant-address", profileErrors.address)}
+                  onBlur={() => setProfileErrors((e) => withFieldError(e, "address", validateBusiness(profileDraft).address))}
                 />
+                <FieldError id="restaurant-address" message={profileErrors.address} />
               </div>
             </div>
           </div>
@@ -164,13 +192,22 @@ export function SettingsPanel() {
                 <Input
                   id="tax-rate"
                   type="number"
+                  min={0}
+                  max={MAX_COMMON_TAX}
+                  step="0.01"
+                  onKeyDown={blockInvalidNumberKeys()}
+                  {...fieldErrorProps("tax-rate", taxRateError)}
+                  onBlur={() => setTaxRateError(percentError(String(billingDraft.taxRate), "Common tax", MAX_COMMON_TAX))}
                   value={billingDraft.taxRate}
-                  onChange={(e) =>
-                    setBillingDraft((d) => ({ ...d, taxRate: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    // Never more than 100%: a keystroke that would exceed it is ignored.
+                    const taxRate = acceptNumberInput(e.target.value, MAX_COMMON_TAX);
+                    if (taxRate !== null) setBillingDraft((d) => ({ ...d, taxRate }));
+                  }}
                 />
                 <span className="text-sm text-muted-foreground">%</span>
               </div>
+              <FieldError id="tax-rate" message={taxRateError} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="settings-currency">Currency</Label>
@@ -237,18 +274,32 @@ export function SettingsPanel() {
             />
             <Input
               type="number"
+              min={0}
+              max={MAX_SPECIAL_TAX}
+              step="0.01"
+              onKeyDown={blockInvalidNumberKeys()}
+              {...fieldErrorProps("new-tax-pct", newTaxError)}
               value={newTax.pct}
               placeholder="%"
               aria-label="New tax percentage"
               className="w-22"
-              onChange={(e) => setNewTax((d) => ({ ...d, pct: e.target.value }))}
+              onChange={(e) => {
+                const pct = acceptNumberInput(e.target.value, MAX_SPECIAL_TAX);
+                if (pct !== null) setNewTax((d) => ({ ...d, pct }));
+              }}
             />
             <Button
               variant="outline"
               onClick={() => {
                 const name = newTax.name.trim();
                 const pct = Number(newTax.pct);
-                if (!name || !Number.isFinite(pct)) return;
+                const problem = !name
+                  ? "Tax name is required."
+                  : !newTax.pct.trim()
+                    ? "Tax percentage is required."
+                    : percentError(newTax.pct, "Tax percentage", MAX_SPECIAL_TAX);
+                setNewTaxError(problem);
+                if (problem) return;
                 setTaxesDraft((list) => [...list, { id: nextDraftId(), name, pct }]);
                 setNewTax({ name: "", pct: "" });
               }}
@@ -256,6 +307,7 @@ export function SettingsPanel() {
               Add
             </Button>
           </div>
+          <FieldError id="new-tax-pct" message={newTaxError} />
         </div>
 
         {error && (
@@ -268,7 +320,7 @@ export function SettingsPanel() {
           <Button
             onClick={handleSave}
             loading={saving}
-            disabled={!dirty || saving || !profileDraft.name.trim()}
+            disabled={!dirty || saving}
           >
             {saving ? "Saving…" : "Save"}
           </Button>

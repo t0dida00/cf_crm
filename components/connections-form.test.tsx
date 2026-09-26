@@ -30,14 +30,14 @@ beforeEach(() => {
   state = { connections: base, saveError: null };
 });
 
-const fill = (label: string, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
+const fill = (label: string, value: string) => fireEvent.change(screen.getByLabelText(new RegExp(`^${label}`)), { target: { value } });
 
 describe("ConnectionsForm", () => {
   test("has a single Test & save that requires the database and Pusher fields", () => {
     render(<ConnectionsForm />);
     expect(screen.getAllByRole("button", { name: "Test & save" })).toHaveLength(1);
     for (const label of ["Database connection URL", "Pusher app ID", "Pusher cluster", "Pusher key", "Pusher secret"]) {
-      expect((screen.getByLabelText(label) as HTMLInputElement).required).toBe(true);
+      expect((screen.getByLabelText(new RegExp(`^${label}`)) as HTMLInputElement).required).toBe(true);
     }
   });
 
@@ -70,10 +70,10 @@ describe("ConnectionsForm", () => {
       target: { value: `app_id = "2192925"\nkey = "eb03391fdac437415721"\nsecret = "0123456789abcdef"\ncluster = "ap1"` },
     });
 
-    expect((screen.getByLabelText("Pusher app ID") as HTMLInputElement).value).toBe("2192925");
-    expect((screen.getByLabelText("Pusher key") as HTMLInputElement).value).toBe("eb03391fdac437415721");
-    expect((screen.getByLabelText("Pusher secret") as HTMLInputElement).value).toBe("0123456789abcdef");
-    expect((screen.getByLabelText("Pusher cluster") as HTMLInputElement).value).toBe("ap1");
+    expect((screen.getByLabelText(/^Pusher app ID/) as HTMLInputElement).value).toBe("2192925");
+    expect((screen.getByLabelText(/^Pusher key/) as HTMLInputElement).value).toBe("eb03391fdac437415721");
+    expect((screen.getByLabelText(/^Pusher secret/) as HTMLInputElement).value).toBe("0123456789abcdef");
+    expect((screen.getByLabelText(/^Pusher cluster/) as HTMLInputElement).value).toBe("ap1");
     expect(box.value).toBe("");
     expect(screen.getByText("Filled the Pusher app ID, key, secret and cluster.")).toBeTruthy();
   });
@@ -90,7 +90,7 @@ describe("ConnectionsForm", () => {
   test("every field is readable text, with writing assistants turned off", () => {
     render(<ConnectionsForm />);
     for (const label of ["Database connection URL", "Pusher app ID", "Pusher cluster", "Pusher key", "Pusher secret"]) {
-      const input = screen.getByLabelText(label) as HTMLInputElement;
+      const input = screen.getByLabelText(new RegExp(`^${label}`)) as HTMLInputElement;
       expect(input.type).toBe("text");
       expect(input.getAttribute("data-gramm")).toBe("false");
     }
@@ -108,10 +108,10 @@ describe("ConnectionsForm", () => {
     render(<ConnectionsForm />);
     expect(screen.getByText(/db\.example\.com\/shop/)).toBeTruthy();
     expect(screen.getByText(/App 42 · eu/)).toBeTruthy();
-    expect(screen.queryByLabelText("Database connection URL")).toBeNull();
+    expect(screen.queryByLabelText(/^Database connection URL/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Replace connections" }));
-    expect(screen.getByLabelText("Database connection URL")).toBeTruthy();
-    expect(screen.getByLabelText("Pusher secret")).toBeTruthy();
+    expect(screen.getByLabelText(/^Database connection URL/)).toBeTruthy();
+    expect(screen.getByLabelText(/^Pusher secret/)).toBeTruthy();
   });
 
   test("blocks saving when the server can't store credentials", () => {

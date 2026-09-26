@@ -47,7 +47,7 @@ export function BookingAssignDialog({ booking, onClose }: { booking: Booking | n
                     <span className="flex-1">
                       <span className="block text-[15px] font-semibold">{t.name}</span>
                       <span className="block text-xs text-muted-foreground">
-                        {t.seats} seats · {t.zone}
+                        {t.seats} seats{t.zone ? ` · ${t.zone}` : ""}
                       </span>
                     </span>
                     <ArrowRight size={14} weight="bold" className="text-muted-foreground" />
