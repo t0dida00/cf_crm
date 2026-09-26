@@ -31,7 +31,7 @@ export interface OrderSession {
   total: number;
 }
 
-const toSession = (orders: Order[]): OrderSession => {
+export const toSession = (orders: Order[]): OrderSession => {
   const sorted = [...orders].sort((a, b) => b.ts - a.ts);
   const closedTs = sorted.every((o) => o.closedTs !== null)
     ? Math.max(...sorted.map((o) => o.closedTs as number))

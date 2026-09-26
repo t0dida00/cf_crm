@@ -72,7 +72,7 @@ export function StaffMenuPanel() {
   const { categories, dishes } = workspace;
   const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
-  const debouncedQuery = useDebouncedValue(query, 500);
+  const debouncedQuery = useDebouncedValue(query, 300);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [noteOpenId, setNoteOpenId] = useState<string | null>(null);

@@ -138,7 +138,7 @@ const mapDish = (d: ApiDish): Dish => ({
   imageUrl: d.image_url ?? undefined,
 });
 
-interface ApiOrderLine {
+export interface ApiOrderLine {
   id: string;
   item_id: string;
   name: string;
@@ -146,7 +146,7 @@ interface ApiOrderLine {
   qty: number;
   note: string | null;
 }
-interface ApiOrder {
+export interface ApiOrder {
   id: string;
   code: string;
   table_name: string;
@@ -166,7 +166,7 @@ const mapOrderLine = (l: ApiOrderLine): OrderLine => ({
   qty: l.qty,
   note: l.note ?? undefined,
 });
-const mapOrder = (o: ApiOrder): Order => ({
+export const mapOrder = (o: ApiOrder): Order => ({
   id: o.id,
   code: o.code,
   tableName: o.table_name,

@@ -1,16 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PaginationBar } from "@/components/pagination-bar";
 import { SessionDetailDialog } from "@/components/session-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
-import { groupIntoSessions, summariseLines, type OrderSession } from "@/lib/order-math";
+import { summariseLines, type OrderSession } from "@/lib/order-math";
 import { orderTone } from "@/lib/tone";
 import { formatStamp } from "@/lib/range";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useOrderHistory } from "@/hooks/use-order-history";
+
+const PAGE_SIZE = 20;
 
 const sessionLabel = (s: OrderSession) =>
   s.orders.length > 1 ? `${s.orders.length} orders` : s.orders[0].code;
@@ -18,20 +22,20 @@ const sessionLabel = (s: OrderSession) =>
 export function StaffHistoryPanel() {
   const { workspace, flow, fmt } = useWorkspace();
   const [query, setQuery] = useState("");
-  const debouncedQuery = useDebouncedValue(query, 500);
+  const debouncedQuery = useDebouncedValue(query, 300);
   const [session, setSession] = useState<OrderSession | null>(null);
 
-  const history = useMemo(() => {
-    const q = debouncedQuery.toLowerCase();
-    const closed = workspace.orders.filter((o) => o.closedTs);
-    return groupIntoSessions(closed).filter(
-      (s) =>
-        !q ||
-        s.orders.some(
-          (o) => o.code.toLowerCase().includes(q) || o.tableName.toLowerCase().includes(q),
-        ),
-    );
-  }, [workspace.orders, debouncedQuery]);
+  const [page, setPage] = useState(1);
+
+  // A new search starts from the first page.
+  useEffect(() => setPage(1), [debouncedQuery]);
+
+  const { sessions: history, total, loading } = useOrderHistory({
+    status: "closed",
+    query: debouncedQuery,
+    page,
+    pageSize: PAGE_SIZE,
+  });
 
   return (
     <>
@@ -63,7 +67,7 @@ export function StaffHistoryPanel() {
             </div>
             {history.length === 0 ? (
               <p className="py-12 text-center text-sm text-muted-foreground">
-                Nothing checked out yet.
+                {loading ? "Loading…" : debouncedQuery ? "No orders match." : "Nothing checked out yet."}
               </p>
             ) : (
               history.map((s) => (
@@ -94,6 +98,7 @@ export function StaffHistoryPanel() {
             )}
           </div>
         </CardContent>
+        <PaginationBar page={page} pageSize={PAGE_SIZE} total={total} onPageChange={setPage} noun="sessions" />
       </Card>
 
       <SessionDetailDialog session={session} onClose={() => setSession(null)} />

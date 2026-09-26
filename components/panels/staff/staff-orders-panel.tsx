@@ -42,7 +42,7 @@ export function StaffOrdersPanel() {
   } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
-  const debouncedQuery = useDebouncedValue(query, 500);
+  const debouncedQuery = useDebouncedValue(query, 300);
   const [editId, setEditId] = useState<string | null>(null);
   const [addDishId, setAddDishId] = useState(workspace.dishes[0]?.id ?? "");
   const [createOpen, setCreateOpen] = useState(false);

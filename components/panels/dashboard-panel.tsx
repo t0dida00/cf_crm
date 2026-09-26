@@ -10,11 +10,13 @@ import { CalendarBlank, CalendarCheck, CurrencyCircleDollar, Receipt } from "@ph
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/data-table";
-import { OrderDetailDialog } from "@/components/order-detail-dialog";
+import { SessionDetailDialog } from "@/components/session-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
+import { toSession, type OrderSession } from "@/lib/order-math";
 import { RANGES, rangeBounds, rangeCaption, formatStamp, type RangeState } from "@/lib/range";
 import type { Order } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useOrderStats } from "@/hooks/use-order-stats";
 
 interface DashOrder {
   order: Order;
@@ -33,43 +35,36 @@ const bestHelper = createColumnHelper<Bestseller>();
 export function DashboardPanel() {
   const { workspace, fmt } = useWorkspace();
   const [range, setRange] = useState<RangeState>({ id: "month", from: "", to: "" });
-  const [detail, setDetail] = useState<Order | null>(null);
+  const [detail, setDetail] = useState<OrderSession | null>(null);
 
   const [lo, hi] = rangeBounds(range);
-  const inRange = useMemo(
-    () => workspace.orders.filter((o) => o.ts >= lo && o.ts <= hi),
-    [workspace.orders, lo, hi],
-  );
+  // Order figures are aggregated by the backend over the full history — the
+  // workspace's own order list only holds recent orders.
+  const orderStats = useOrderStats(lo, hi);
   const bookingsInRange = workspace.bookings.filter((b) => b.ts >= lo && b.ts <= hi);
-  const takings = inRange.reduce((a, o) => a + o.total, 0);
+  const { orderCount, takings } = orderStats;
   const rangeLabel = RANGES.find((r) => r.id === range.id)?.label ?? "";
-  const oldest = workspace.orders.length
-    ? Math.min(...workspace.orders.map((o) => o.ts))
-    : Date.now();
+  const oldest = orderStats.oldestTs ?? Date.now();
 
   const dashRows = useMemo<DashOrder[]>(
     () =>
-      inRange.slice(0, 8).map((order) => ({
+      orderStats.recent.map((order) => ({
         order,
         items: order.lines.reduce((a, l) => a + l.qty, 0),
       })),
-    [inRange],
+    [orderStats.recent],
   );
 
-  const bestsellers = useMemo<Bestseller[]>(() => {
-    const agg: Record<string, { name: string; qty: number; takings: number }> = {};
-    inRange.forEach((o) =>
-      o.lines.forEach((l) => {
-        const entry = (agg[l.itemId] ??= { name: l.name, qty: 0, takings: 0 });
-        entry.qty += l.qty;
-        entry.takings += l.qty * l.price;
-      }),
-    );
-    return Object.values(agg)
-      .sort((a, b) => b.qty - a.qty)
-      .slice(0, 10)
-      .map((b, i) => ({ rank: i + 1, ...b }));
-  }, [inRange]);
+  const bestsellers = useMemo<Bestseller[]>(
+    () =>
+      orderStats.bestsellers.map((b, i) => ({
+        rank: i + 1,
+        name: b.name,
+        qty: b.qty,
+        takings: b.takings,
+      })),
+    [orderStats.bestsellers],
+  );
 
   const dashTable = useReactTable({
     data: dashRows,
@@ -134,7 +129,7 @@ export function DashboardPanel() {
   });
 
   const stats = [
-    { Icon: Receipt, label: "ORDERS", value: String(inRange.length), hint: rangeLabel },
+    { Icon: Receipt, label: "ORDERS", value: orderCount.toLocaleString("en-GB"), hint: rangeLabel },
     {
       Icon: CalendarCheck,
       label: "BOOKINGS",
@@ -145,8 +140,8 @@ export function DashboardPanel() {
       Icon: CurrencyCircleDollar,
       label: "TAKINGS",
       value: fmt(takings),
-      hint: inRange.length
-        ? `Avg ${fmt(takings / inRange.length)} per order`
+      hint: orderCount
+        ? `Avg ${fmt(takings / orderCount)} per order`
         : "No orders yet",
     },
   ];
@@ -218,7 +213,7 @@ export function DashboardPanel() {
               table={dashTable}
               minWidth={480}
               emptyMessage="No orders in this range."
-              onRowClick={(row) => setDetail(row.order)}
+              onRowClick={(row) => setDetail(toSession([row.order]))}
             />
           </CardContent>
         </Card>
@@ -236,7 +231,7 @@ export function DashboardPanel() {
         </Card>
       </div>
 
-      <OrderDetailDialog order={detail} onClose={() => setDetail(null)} />
+      <SessionDetailDialog session={detail} onClose={() => setDetail(null)} />
     </div>
   );
 }

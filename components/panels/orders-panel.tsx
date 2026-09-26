@@ -1,19 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
-  CaretLeft,
-  CaretRight,
-  DownloadSimple,
-  MagnifyingGlass,
-} from "@phosphor-icons/react";
+import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { DownloadSimple, MagnifyingGlass } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,14 +23,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable } from "@/components/data-table";
+import { PaginationBar } from "@/components/pagination-bar";
 import { SessionDetailDialog } from "@/components/session-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
 import { useAsyncAction } from "@/hooks/use-async-action";
-import { groupIntoSessions, summariseLines, type OrderSession } from "@/lib/order-math";
+import { summariseLines, type OrderSession } from "@/lib/order-math";
 import { orderTone } from "@/lib/tone";
 import { formatStamp } from "@/lib/range";
-import type { Order } from "@/lib/types";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useOrderHistory } from "@/hooks/use-order-history";
 
 const helper = createColumnHelper<OrderSession>();
 
@@ -57,7 +47,9 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
   const { workspace, flow, fmt, addOrder } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
-  const debouncedQuery = useDebouncedValue(query, 500);
+  const debouncedQuery = useDebouncedValue(query, 300);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [detail, setDetail] = useState<OrderSession | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ tableName: "", itemId: "", qty: "1" });
@@ -74,24 +66,19 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createSignal]);
 
-  const data = useMemo(() => {
-    const q = debouncedQuery.toLowerCase();
-    // Open orders stay as their own row — they have no checkout time yet, so
-    // grouping them into a session ahead of time would be premature. Closed
-    // orders collapse into their checkout session (possibly several orders
-    // paid together in one go).
-    const open = workspace.orders.filter((o) => !o.closedTs);
-    const closed = workspace.orders.filter((o) => o.closedTs);
-    const sessions = [...open.map((o) => ({ orders: [o], ts: o.ts, closedTs: null, total: o.total })), ...groupIntoSessions(closed)]
-      .sort((a, b) => b.ts - a.ts);
-    return sessions.filter(
-      (s) =>
-        !q ||
-        s.orders.some(
-          (o) => o.code.toLowerCase().includes(q) || o.tableName.toLowerCase().includes(q),
-        ),
-    );
-  }, [workspace.orders, debouncedQuery]);
+  // A new search starts from the first page.
+  useEffect(() => setPage(1), [debouncedQuery]);
+
+  // Open orders stay as their own row — they have no checkout time yet, so
+  // grouping them into a session ahead of time would be premature. Closed
+  // orders collapse into their checkout session (possibly several orders
+  // paid together in one go). Grouping, search and paging run on the server.
+  const { sessions: data, total } = useOrderHistory({
+    status: "all",
+    query: debouncedQuery,
+    page,
+    pageSize,
+  });
 
   const columns = useMemo(
     () => [
@@ -149,13 +136,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 20 } },
   });
-
-  const { pageIndex, pageSize } = table.getState().pagination;
-  const total = table.getFilteredRowModel().rows.length;
 
   const exportCsv = () => {
     const rows = [
@@ -175,7 +156,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${(workspace.name || "orders").replace(/\s+/g, "-").toLowerCase()}-orders.csv`;
+    a.download = `${(workspace.name || "orders").replace(/\s+/g, "-").toLowerCase()}-orders-page-${page}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -203,7 +184,10 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
         <span className="text-[13px] text-muted-foreground">Rows</span>
         <Select
           value={String(pageSize)}
-          onValueChange={(v) => table.setPageSize(Number(v))}
+          onValueChange={(v) => {
+            setPageSize(Number(v));
+            setPage(1);
+          }}
         >
           <SelectTrigger className="w-20" aria-label="Rows per page">
             <SelectValue />
@@ -218,7 +202,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
         </Select>
         <Button variant="outline" onClick={exportCsv}>
           <DownloadSimple size={15} weight="bold" />
-          Export CSV
+          Export page (CSV)
         </Button>
       </div>
 
@@ -230,36 +214,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
             emptyMessage="No orders match."
             onRowClick={setDetail}
           />
-          <div className="flex items-center justify-between px-5 py-3.5">
-            <span className="text-[13px] text-muted-foreground">
-              {total
-                ? `Showing ${pageIndex * pageSize + 1}–${Math.min(
-                    (pageIndex + 1) * pageSize,
-                    total,
-                  )} of ${total} orders`
-                : "No orders"}
-            </span>
-            <span className="flex gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                disabled={!table.getCanPreviousPage()}
-                onClick={() => table.previousPage()}
-                aria-label="Previous page"
-              >
-                <CaretLeft size={14} weight="bold" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                disabled={!table.getCanNextPage()}
-                onClick={() => table.nextPage()}
-                aria-label="Next page"
-              >
-                <CaretRight size={14} weight="bold" />
-              </Button>
-            </span>
-          </div>
+          <PaginationBar page={page} pageSize={pageSize} total={total} onPageChange={setPage} />
         </CardContent>
       </Card>
 

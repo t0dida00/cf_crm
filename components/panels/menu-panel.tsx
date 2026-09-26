@@ -79,7 +79,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
   const { run, isPending } = useAsyncAction();
   const { categories, dishes, settings } = workspace;
   const [query, setQuery] = useState("");
-  const debouncedQuery = useDebouncedValue(query, 500);
+  const debouncedQuery = useDebouncedValue(query, 300);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Dish | null>(null);
