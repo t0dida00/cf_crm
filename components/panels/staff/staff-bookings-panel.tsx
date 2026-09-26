@@ -23,7 +23,14 @@ import {
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
 import { useAsyncAction } from "@/hooks/use-async-action";
-import { SLOT_TIMES } from "@/lib/lexicon";
+import { availableTimes, dayKey } from "@/lib/booking-slots";
+
+/** Staff book for today only, so only start times that haven't passed. */
+const todaysTimes = () => availableTimes(dayKey(new Date()));
+const defaultTime = () => {
+  const times = todaysTimes();
+  return times.includes("19:00") ? "19:00" : (times[0] ?? "");
+};
 import { bookingTone } from "@/lib/tone";
 import type { Booking } from "@/lib/types";
 
@@ -32,7 +39,7 @@ export function StaffBookingsPanel() {
   const { run, isPending } = useAsyncAction();
   const [assignId, setAssignId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", time: "19:00", party: "2" });
+  const [form, setForm] = useState({ name: "", time: defaultTime(), party: "2" });
 
   const bookings = workspace.bookings.slice().sort((a, b) => a.time.localeCompare(b.time));
   const assigning: Booking | null = workspace.bookings.find((b) => b.id === assignId) ?? null;
@@ -44,7 +51,7 @@ export function StaffBookingsPanel() {
         <Button
           size="sm"
           onClick={() => {
-            setForm({ name: "", time: "19:00", party: "2" });
+            setForm({ name: "", time: defaultTime(), party: "2" });
             setCreateOpen(true);
           }}
         >
@@ -182,12 +189,16 @@ export function StaffBookingsPanel() {
             </div>
             <div className="space-y-1.5">
               <Label>Time</Label>
-              <Select value={form.time} onValueChange={(time) => setForm((f) => ({ ...f, time }))}>
+              <Select
+                value={form.time}
+                onValueChange={(time) => setForm((f) => ({ ...f, time }))}
+                disabled={todaysTimes().length === 0}
+              >
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue placeholder="No times left today" />
                 </SelectTrigger>
-                <SelectContent>
-                  {SLOT_TIMES.map((t) => (
+                <SelectContent className="max-h-72">
+                  {todaysTimes().map((t) => (
                     <SelectItem key={t} value={t}>
                       {t}
                     </SelectItem>
@@ -211,8 +222,9 @@ export function StaffBookingsPanel() {
             </Button>
             <Button
               loading={isPending("create-booking")}
+              disabled={!form.time}
               onClick={async () => {
-                if (!form.name.trim()) return;
+                if (!form.name.trim() || !form.time) return;
                 const ok = await run("create-booking", () =>
                   saveBooking({
                     name: form.name.trim(),

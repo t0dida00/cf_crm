@@ -98,7 +98,9 @@ export interface Booking {
   /** Assigned table name, or null while awaiting assignment. */
   tableName: string | null;
   status: "Confirmed" | "Arrived";
-  /** Start of the booked day (ms). */
+  /** Booked day, "YYYY-MM-DD" (a calendar date, not an instant). */
+  date: string;
+  /** Local midnight of the booked day (ms). */
   ts: number;
 }
 

@@ -11,6 +11,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { money } from "@/lib/range";
+import { dayKey, parseDayKey } from "@/lib/booking-slots";
 import { errorMessage, type RequestStatus } from "@/lib/request-status";
 import { mapPlatformResponse, type PlatformApiResponse } from "@/lib/platform-api";
 import type {
@@ -59,7 +60,8 @@ interface WorkspaceContextValue {
   deleteOrder: (id: string) => Promise<void>;
   setOrderLineQty: (orderId: string, itemId: string, qty: number) => Promise<void>;
   addOrderLine: (orderId: string, itemId: string) => Promise<void>;
-  saveBooking: (booking: Omit<Booking, "id" | "ts">) => Promise<void>;
+  /** `date` ("YYYY-MM-DD") defaults to today. */
+  saveBooking: (booking: Omit<Booking, "id" | "ts" | "date"> & { date?: string }) => Promise<void>;
   toggleBooking: (id: string) => Promise<void>;
   deleteBooking: (id: string) => Promise<void>;
   assignBooking: (bookingId: string, tableId: string) => Promise<void>;
@@ -196,15 +198,21 @@ interface ApiBooking {
   date: string;
   tables?: { name: string } | null;
 }
-const mapBooking = (b: ApiBooking, tableNameById: Map<string, string>, tableId?: string | null): Booking => ({
-  id: b.id,
-  name: b.name,
-  time: b.time,
-  party: b.party,
-  tableName: tableId ? tableNameById.get(tableId) ?? null : null,
-  status: b.status as Booking["status"],
-  ts: new Date(b.date).getTime(),
-});
+const mapBooking = (b: ApiBooking, tableNameById: Map<string, string>, tableId?: string | null): Booking => {
+  // The backend stores a calendar date (serialized as UTC midnight); keep the
+  // date part as-is so a negative UTC offset can't move it to the day before.
+  const date = b.date.slice(0, 10);
+  return {
+    id: b.id,
+    name: b.name,
+    time: b.time,
+    party: b.party,
+    tableName: tableId ? tableNameById.get(tableId) ?? null : null,
+    status: b.status as Booking["status"],
+    date,
+    ts: parseDayKey(date).getTime(),
+  };
+};
 
 interface ApiSpecialTax {
   id: string;
@@ -519,7 +527,12 @@ export function WorkspaceProvider({
       saveBooking: async (booking) => {
         const res = await apiFetch<{ booking: ApiBookingRaw }>("/bookings", {
           method: "POST",
-          body: JSON.stringify({ name: booking.name, time: booking.time, party: booking.party }),
+          body: JSON.stringify({
+            name: booking.name,
+            time: booking.time,
+            party: booking.party,
+            date: booking.date ?? dayKey(new Date()),
+          }),
         });
         let created = mapBooking(res.booking, new Map(), null);
         if (booking.tableName) {

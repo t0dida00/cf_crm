@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Trash } from "@phosphor-icons/react";
+import { useEffect, useMemo, useState } from "react";
+import { CaretLeft, CaretRight, Trash } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,14 +23,41 @@ import {
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
 import { useAsyncAction } from "@/hooks/use-async-action";
-import { SLOT_TIMES } from "@/lib/lexicon";
+import { PaginationBar } from "@/components/pagination-bar";
+import {
+  availableTimes,
+  dayKey,
+  monthGrid,
+  parseDayKey,
+  pastBookings,
+  summariseDays,
+} from "@/lib/booking-slots";
+import { TONE_CLASSES } from "@/lib/tone";
+import { cn } from "@/lib/utils";
+
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const HISTORY_PAGE_SIZE = 10;
+
+/** The preferred start time if it's still bookable on `date`, else the first one that is. */
+const pickTime = (date: string, preferred = "19:00") => {
+  const times = availableTimes(date);
+  return times.includes(preferred) ? preferred : (times[0] ?? "");
+};
 
 export function BookingsPanel({ createSignal }: { createSignal: number }) {
   const { workspace, saveBooking, toggleBooking, deleteBooking } = useWorkspace();
   const { run, isPending } = useAsyncAction();
+  const todayKey = dayKey(new Date());
+  const [selected, setSelected] = useState(todayKey);
+  const [month, setMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
+  const [historyPage, setHistoryPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
+    date: todayKey,
     time: "19:00",
     party: "2",
     tableName: "",
@@ -38,9 +65,12 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
 
   useEffect(() => {
     if (createSignal > 0) {
+      // Bookings can't be made for past days: fall back to today.
+      const date = selected < todayKey ? todayKey : selected;
       setForm({
         name: "",
-        time: "19:00",
+        date,
+        time: pickTime(date),
         party: "2",
         tableName: workspace.tables[0]?.name ?? "",
       });
@@ -49,35 +79,128 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createSignal]);
 
-  const startOfToday = new Date().setHours(0, 0, 0, 0);
-  const today = workspace.bookings
-    .filter((b) => b.ts >= startOfToday)
+  const days = useMemo(() => summariseDays(workspace.bookings), [workspace.bookings]);
+  const weeks = useMemo(() => monthGrid(month.year, month.month), [month]);
+  const dayBookings = workspace.bookings
+    .filter((b) => b.date === selected)
     .sort((a, b) => a.time.localeCompare(b.time));
+  const summary = days.get(selected);
+  const history = useMemo(() => pastBookings(workspace.bookings), [workspace.bookings]);
+  const historyRows = history.slice((historyPage - 1) * HISTORY_PAGE_SIZE, historyPage * HISTORY_PAGE_SIZE);
+  const formTimes = availableTimes(form.date);
 
-  const seatTotal = workspace.tables.reduce((a, t) => a + t.seats, 0) || 1;
+  const selectedDate = parseDayKey(selected);
+  const shiftMonth = (delta: number) =>
+    setMonth(({ year, month: m }) => {
+      const d = new Date(year, m + delta, 1);
+      return { year: d.getFullYear(), month: d.getMonth() };
+    });
+  const selectDay = (d: Date) => {
+    setSelected(dayKey(d));
+    if (d.getMonth() !== month.month || d.getFullYear() !== month.year) {
+      setMonth({ year: d.getFullYear(), month: d.getMonth() });
+    }
+  };
 
   return (
     <>
-      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))] items-start">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(300px,380px)_1fr]">
         <Card>
           <CardContent>
-            <p className="mb-2 text-lg font-semibold">
-              {new Date().toLocaleDateString("en-GB", {
-                weekday: "long",
-                day: "2-digit",
-                month: "long",
-              })}
-            </p>
-            {today.length === 0 ? (
-              <p className="py-10 text-center text-sm text-muted-foreground">
-                No reservations today.
+            <div className="mb-3 flex items-center gap-2">
+              <p className="flex-1 text-base font-semibold">
+                {new Date(month.year, month.month, 1).toLocaleDateString("en-GB", {
+                  month: "long",
+                  year: "numeric",
+                })}
               </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => selectDay(new Date())}
+                disabled={selected === todayKey}
+              >
+                Today
+              </Button>
+              <Button variant="outline" size="icon" onClick={() => shiftMonth(-1)} aria-label="Previous month">
+                <CaretLeft size={14} weight="bold" />
+              </Button>
+              <Button variant="outline" size="icon" onClick={() => shiftMonth(1)} aria-label="Next month">
+                <CaretRight size={14} weight="bold" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1 text-center">
+              {WEEKDAYS.map((d) => (
+                <span key={d} className="py-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                  {d}
+                </span>
+              ))}
+              {weeks.flat().map((d) => {
+                const key = dayKey(d);
+                const info = days.get(key);
+                const inMonth = d.getMonth() === month.month;
+                const isSelected = key === selected;
+                const isToday = key === todayKey;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => selectDay(d)}
+                    aria-pressed={isSelected}
+                    aria-label={`${d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}${
+                      info ? `, ${info.bookings} booking${info.bookings === 1 ? "" : "s"}` : ", no bookings"
+                    }`}
+                    className={cn(
+                      "flex h-14 flex-col items-center justify-start gap-0.5 rounded-lg border pt-1.5 text-sm transition-colors",
+                      // Days with bookings are solid tiles; the selected day gets a single,
+                      // thicker border (dark on a solid tile, brand on an empty day).
+                      info
+                        ? "border-brand-500 bg-brand-500 font-bold text-white hover:bg-brand-600"
+                        : isSelected
+                          ? "bg-brand-50 font-bold text-brand-700"
+                          : "border-transparent hover:bg-secondary",
+                      isSelected && (info ? "border-2 border-brand-700" : "border-2 border-brand-500"),
+                      info && !inMonth && "opacity-50",
+                      !info && !inMonth && !isSelected && "text-muted-foreground/50",
+                      isToday && !info && !isSelected && "border-brand-500 font-bold",
+                    )}
+                  >
+                    {d.getDate()}
+                    {info && (
+                      <span
+                        className="text-[11px] leading-4 font-semibold text-white/90"
+                      >
+                        {info.bookings}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Blue days have bookings; the number shows how many.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent>
+            <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <p className="text-lg font-semibold">
+                {selectedDate.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {summary
+                  ? `${summary.bookings} booking${summary.bookings === 1 ? "" : "s"} · ${summary.guests} guests`
+                  : "No bookings"}
+              </p>
+            </div>
+            {dayBookings.length === 0 ? (
+              <p className="py-10 text-center text-sm text-muted-foreground">No reservations on this day.</p>
             ) : (
-              today.map((booking) => (
-                <div
-                  key={booking.id}
-                  className="flex items-center gap-4 border-t py-3.5"
-                >
+              dayBookings.map((booking) => (
+                <div key={booking.id} className="flex items-center gap-4 border-t py-3.5">
                   <span className="w-14 text-base font-bold">{booking.time}</span>
                   <div className="flex-1">
                     <p className="text-[15px]">{booking.name}</p>
@@ -85,13 +208,7 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
                       {booking.party} guests · {booking.tableName ?? "Not assigned"}
                     </p>
                   </div>
-                  <Badge
-                    className={
-                      booking.status === "Arrived"
-                        ? "bg-green-50 text-green-700"
-                        : "bg-sky-50 text-sky-700"
-                    }
-                  >
+                  <Badge className={booking.status === "Arrived" ? TONE_CLASSES.green : TONE_CLASSES.sky}>
                     {booking.status}
                   </Badge>
                   <button
@@ -120,37 +237,56 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
             )}
           </CardContent>
         </Card>
-
-        <Card>
-          <CardContent>
-            <p className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground">
-              CAPACITY BY SLOT
-            </p>
-            {SLOT_TIMES.map((time) => {
-              const booked = today
-                .filter((b) => b.time === time)
-                .reduce((a, b) => a + b.party, 0);
-              const pct = Math.min(100, Math.round((booked / seatTotal) * 100));
-              return (
-                <div key={time} className="py-2">
-                  <div className="mb-1.5 flex justify-between text-[13px]">
-                    <span>{time}</span>
-                    <span className="text-muted-foreground">
-                      {booked ? `${booked} / ${seatTotal} seats` : "free"}
-                    </span>
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={pct > 70 ? "h-full bg-amber-600" : "h-full bg-brand-500"}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
       </div>
+
+      <Card className="mt-4 overflow-hidden">
+        <CardContent className="px-0">
+          <div className="flex items-baseline gap-3 px-6 pb-3">
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground">BOOKING HISTORY</p>
+            <p className="text-xs text-muted-foreground">{history.length} past bookings · newest first</p>
+          </div>
+          {history.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">No past bookings yet.</p>
+          ) : (
+            <>
+              {historyRows.map((booking) => (
+                <button
+                  key={booking.id}
+                  type="button"
+                  onClick={() => selectDay(parseDayKey(booking.date))}
+                  className="flex w-full items-center gap-4 border-t px-6 py-3 text-left transition-colors hover:bg-secondary"
+                >
+                  <span className="w-36 shrink-0 text-sm font-semibold">
+                    {parseDayKey(booking.date).toLocaleDateString("en-GB", {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                  <span className="w-12 shrink-0 text-sm font-bold">{booking.time}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px]">{booking.name}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {booking.party} guests · {booking.tableName ?? "Not assigned"}
+                    </span>
+                  </span>
+                  <Badge className={booking.status === "Arrived" ? TONE_CLASSES.green : TONE_CLASSES.gray}>
+                    {booking.status}
+                  </Badge>
+                </button>
+              ))}
+              <PaginationBar
+                page={historyPage}
+                pageSize={HISTORY_PAGE_SIZE}
+                total={history.length}
+                onPageChange={setHistoryPage}
+                noun="bookings"
+              />
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
@@ -167,24 +303,48 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               />
             </div>
-            <div className="space-y-1.5">
-              <Label>Time</Label>
-              <Select
-                value={form.time}
-                onValueChange={(time) => setForm((f) => ({ ...f, time }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SLOT_TIMES.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="booking-date">Date</Label>
+                <Input
+                  id="booking-date"
+                  type="date"
+                  value={form.date}
+                  min={todayKey}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    if (!date || date < todayKey) return;
+                    setForm((f) => ({
+                      ...f,
+                      date,
+                      time: availableTimes(date).includes(f.time) ? f.time : pickTime(date),
+                    }));
+                  }}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Time</Label>
+                <Select
+                  value={form.time}
+                  onValueChange={(time) => setForm((f) => ({ ...f, time }))}
+                  disabled={formTimes.length === 0}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="No times left" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {formTimes.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+            {formTimes.length === 0 && (
+              <p className="-mt-2 text-xs text-destructive">No start times left today — pick a later date.</p>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="booking-party">Party size</Label>
               <Input
@@ -196,10 +356,7 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
             </div>
             <div className="space-y-1.5">
               <Label>Table</Label>
-              <Select
-                value={form.tableName}
-                onValueChange={(tableName) => setForm((f) => ({ ...f, tableName }))}
-              >
+              <Select value={form.tableName} onValueChange={(tableName) => setForm((f) => ({ ...f, tableName }))}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -219,18 +376,23 @@ export function BookingsPanel({ createSignal }: { createSignal: number }) {
             </Button>
             <Button
               loading={isPending("create-booking")}
+              disabled={!form.time || form.date < todayKey}
               onClick={async () => {
-                if (!form.name.trim()) return;
+                if (!form.name.trim() || !form.time || form.date < todayKey) return;
                 const ok = await run("create-booking", () =>
                   saveBooking({
                     name: form.name.trim(),
+                    date: form.date,
                     time: form.time,
                     party: Number(form.party) || 2,
                     tableName: form.tableName,
                     status: "Confirmed",
                   }),
                 );
-                if (ok) setOpen(false);
+                if (ok) {
+                  setOpen(false);
+                  selectDay(parseDayKey(form.date));
+                }
               }}
             >
               Add booking

@@ -66,7 +66,7 @@ const SUBTITLES: Record<TabId, string> = {
   categories: "Group your dishes. Invalid categories stay hidden from the menu.",
   menu: "Every dish, its price and the category it belongs to.",
   orders: "Full order history. Filter, page through and export.",
-  bookings: "Today's reservations and how full each slot is.",
+  bookings: "Pick a day on the calendar to see its reservations.",
   staff: "Staff accounts for this workspace. Disable an account to revoke access.",
   settings: "Tax and currency applied across the workspace.",
   qr: "Print one of these per table. Scanning opens the menu for that exact table — no app or login needed.",
