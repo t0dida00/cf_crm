@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { formatNumber, money } from "./format";
+import { formatNumber, money, moneyCompact } from "./format";
 
 describe("money", () => {
   test("adds thousands separators and two decimals", () => {
@@ -26,5 +26,16 @@ describe("formatNumber", () => {
 
   test("drops decimals", () => {
     expect(formatNumber(1234.6)).toBe("1,235");
+  });
+});
+
+describe("moneyCompact", () => {
+  test("abbreviates thousands and millions", () => {
+    expect(moneyCompact(7616136, "€")).toBe("€7.6M");
+    expect(moneyCompact(240000, "€")).toBe("€240K");
+    expect(moneyCompact(950, "€")).toBe("€950");
+    expect(moneyCompact(0, "€")).toBe("€0");
+    expect(moneyCompact(1500000000, "$")).toBe("$1.5B");
+    expect(moneyCompact(-2500, "€")).toBe("€-2.5K");
   });
 });

@@ -13,3 +13,16 @@ export const formatNumber = (value: number) => integerFormat.format(value);
  * decimals: (66312720, "€") → "€66,312,720.00". */
 export const money = (value: number, currency: string) =>
   `${currency}${moneyFormat.format(value)}`;
+
+const trim = (n: number) => String(Math.round(n * 10) / 10);
+
+/** Short amounts for chart axes: (7616136, "€") → "€7.6M", (240000, "€") → "€240K".
+ * Hand-rolled because Intl's compact notation differs between engines ("K" vs "k"). */
+export const moneyCompact = (value: number, currency: string) => {
+  const abs = Math.abs(value);
+  const sign = value < 0 ? "-" : "";
+  if (abs >= 1e9) return `${currency}${sign}${trim(abs / 1e9)}B`;
+  if (abs >= 1e6) return `${currency}${sign}${trim(abs / 1e6)}M`;
+  if (abs >= 1e3) return `${currency}${sign}${trim(abs / 1e3)}K`;
+  return `${currency}${sign}${trim(abs)}`;
+};

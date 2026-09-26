@@ -34,6 +34,7 @@ npx vitest run -t "formatTaxRates"       # tests matching a name
   - The provider invalidates `["orders"]` queries whenever its order list changes, so real-time updates reach cached reads.
   - No Zustand; don't add a second client store.
 - **Order history at scale.** The workspace's `orders` holds every open order but only the 500 most recently closed (a backend cap). Anything spanning history must use `hooks/use-order-history.ts` (`GET /orders/history`, server-paged sessions) or `hooks/use-order-stats.ts` (`GET /orders/stats`), never `workspace.orders`.
+- **Dashboard chart.** Chart.js via `react-chartjs-2` (`components/takings-chart.tsx`). `lib/chart-buckets.ts` maps the range to buckets: today → hours, last 7 days → weekdays, this month → days, this year → months, all time → years from the oldest order, none for custom. Bucketing uses the viewer's time zone (`GET /orders/stats/series?tz=`). Bars use brand-600 (`#1e90cc`) because brand-500 is under 3:1 contrast on white.
 - **Request status.** Reads expose `RequestStatus` (`idle | loading | success | error`, `lib/request-status.ts`; `toRequestStatus()` maps a TanStack query). Render them with `LoadingState` / `ErrorState` from `components/request-state.tsx`, or pass `status`/`error`/`onRetry` to `DataTable`. Mutations use `useAsyncAction` (button spinner + error toast) instead.
 - **API access.**
   - Staff calls: `apiFetch` → `/api/proxy/*`, which attaches the session JWT server-side.

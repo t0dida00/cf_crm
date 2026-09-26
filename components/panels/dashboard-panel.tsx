@@ -18,7 +18,10 @@ import type { Order } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/format";
 import { useOrderStats } from "@/hooks/use-order-stats";
-import { ErrorState } from "@/components/request-state";
+import { ErrorState, LoadingState } from "@/components/request-state";
+import { TakingsChart } from "@/components/takings-chart";
+import { useOrderSeries } from "@/hooks/use-order-series";
+import { chartPlan } from "@/lib/chart-buckets";
 
 interface DashOrder {
   order: Order;
@@ -35,7 +38,7 @@ const dashHelper = createColumnHelper<DashOrder>();
 const bestHelper = createColumnHelper<Bestseller>();
 
 export function DashboardPanel() {
-  const { workspace, fmt } = useWorkspace();
+  const { workspace, fmt, currency } = useWorkspace();
   const [range, setRange] = useState<RangeState>({ id: "month", from: "", to: "" });
   const [detail, setDetail] = useState<OrderSession | null>(null);
 
@@ -52,6 +55,26 @@ export function DashboardPanel() {
   // placeholder rather than a misleading 0.
   const statsPending = statsStatus === "loading" && orderStats.oldestTs === null;
   const figure = (value: string) => (statsPending || statsStatus === "error" ? "—" : value);
+  // Recomputed per render, but only changes when the range (or the day, or the
+  // oldest order for "All time") does.
+  const plan = useMemo(
+    () => chartPlan(range.id, new Date(), orderStats.oldestTs),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [range.id, lo, orderStats.oldestTs],
+  );
+  const {
+    series,
+    status: seriesStatus,
+    error: seriesError,
+    retry: retrySeries,
+  } = useOrderSeries(plan);
+  const chartTitle = plan
+    ? { hour: "Takings by hour", day: "Takings by day", month: "Takings by month", year: "Takings by year" }[
+        plan.bucket
+      ]
+    : "";
+  const chartEmpty = seriesStatus === "success" && series.length === 0;
+
   const bookingsInRange = workspace.bookings.filter((b) => b.ts >= lo && b.ts <= hi);
   const { orderCount, takings } = orderStats;
   const rangeLabel = RANGES.find((r) => r.id === range.id)?.label ?? "";
@@ -221,6 +244,27 @@ export function DashboardPanel() {
           </Card>
         ))}
       </div>
+
+      {plan && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{chartTitle}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {seriesStatus === "error" ? (
+              <ErrorState message={seriesError ?? undefined} onRetry={retrySeries} className="h-64 py-0" />
+            ) : seriesStatus !== "success" && series.length === 0 ? (
+              <LoadingState className="h-64 py-0" />
+            ) : chartEmpty ? (
+              <p className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+                No orders in this range.
+              </p>
+            ) : (
+              <TakingsChart slots={plan.slots} series={series} currency={currency} fmt={fmt} />
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid items-start gap-4 xl:grid-cols-[1.4fr_1fr]">
         <Card className="overflow-hidden">
