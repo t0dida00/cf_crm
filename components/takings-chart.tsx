@@ -116,25 +116,29 @@ export function TakingsChart({
       <div className="relative h-64 w-full">
         <Bar data={data} options={options} aria-hidden="true" />
       </div>
-      <table className="sr-only">
-        <caption>Takings per period</caption>
-        <thead>
-          <tr>
-            <th scope="col">Period</th>
-            <th scope="col">Takings</th>
-            <th scope="col">Orders</th>
-          </tr>
-        </thead>
-        <tbody>
-          {points.map((p) => (
-            <tr key={p.key}>
-              <th scope="row">{p.title}</th>
-              <td>{fmt(p.takings)}</td>
-              <td>{formatNumber(p.orders)}</td>
+      {/* sr-only goes on a wrapper: a <table> treats height as a minimum and grows
+          to fit its rows, so on the table itself it would stretch the page. */}
+      <div className="sr-only">
+        <table>
+          <caption>Takings per period</caption>
+          <thead>
+            <tr>
+              <th scope="col">Period</th>
+              <th scope="col">Takings</th>
+              <th scope="col">Orders</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {points.map((p) => (
+              <tr key={p.key}>
+                <th scope="row">{p.title}</th>
+                <td>{fmt(p.takings)}</td>
+                <td>{formatNumber(p.orders)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }
