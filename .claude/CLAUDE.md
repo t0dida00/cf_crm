@@ -25,6 +25,7 @@ npx vitest run -t "formatTaxRates"       # tests matching a name
 - Vitest + jsdom + React Testing Library; config in `vitest.config.ts` (`@/` alias, automatic JSX).
 - Tests sit next to the code as `*.test.ts(x)` (e.g. `lib/format.test.ts`, `hooks/use-debounced-value.test.ts`). Import `describe`/`test`/`expect`/`vi` from `vitest` explicitly; there are no globals.
 - Pure helpers in `lib/` get plain unit tests; hooks use `renderHook` (with `vi.useFakeTimers()` for timing).
+- Components that read `useWorkspace()` are tested by mocking `@/components/workspace-provider` with `vi.mock` and a fixed workspace (see `components/panels/bookings-panel.test.tsx`).
 
 ## Architecture
 
@@ -34,8 +35,14 @@ npx vitest run -t "formatTaxRates"       # tests matching a name
   - The provider invalidates `["orders"]` queries whenever its order list changes, so real-time updates reach cached reads.
   - No Zustand; don't add a second client store.
 - **Order history at scale.** The workspace's `orders` holds every open order but only the 500 most recently closed (a backend cap). Anything spanning history must use `hooks/use-order-history.ts` (`GET /orders/history`, server-paged sessions) or `hooks/use-order-stats.ts` (`GET /orders/stats`), never `workspace.orders`.
+- **Staff history** shows only today and yesterday: `staff-history-panel.tsx` passes `from: daysAgoStart(1)` (`lib/range.ts`) to `useOrderHistory`, which forwards it as `GET /orders/history?from=`. Admin history has no limit. This limits the view only; the backend doesn't restrict staff to 2 days.
 - **Dashboard chart.** Chart.js via `react-chartjs-2` (`components/takings-chart.tsx`). `lib/chart-buckets.ts` maps the range to buckets: today → hours, last 7 days → weekdays, this month → days, this year → months, all time → years from the oldest order, none for custom. Bucketing uses the viewer's time zone (`GET /orders/stats/series?tz=`). Bars use brand-600 (`#1e90cc`) because brand-500 is under 3:1 contrast on white.
 - **Bookings.** A booking's day is `booking.date` ("YYYY-MM-DD", a calendar date, never shifted by time zone); compare days with `dayKey()` from `lib/booking-slots.ts`. Start times come every 15 minutes (`SLOT_TIMES`, 09:00–21:45). No bookings for past days or already-passed times today: forms offer `availableTimes(date)`, and the backend rejects past dates. Past bookings show in the Bookings tab's history list (`pastBookings()`). Guests can stay as long as they like, so there is no seat-capacity or "full" calculation; don't add one without a dining-duration rule.
+- **Staff bookings reuse the admin view.** The staff Bookings tab renders `components/panels/bookings-panel.tsx` with `allowTableAssign`, which adds a per-booking "Assign table" action (`components/booking-assign-dialog.tsx`). Its "New booking" header button drives the panel's `createSignal`, as the admin shell does. Change the panel once for both apps; there's no separate staff bookings panel.
+- **Sold count and best sellers.** `Dish.soldCount` comes from the backend's `menu_items.sold_count` (a trigger keeps it current). Only the admin menu shows the number. Staff and guest menus show a "Best seller" tag on the top 5:
+  - Staff compute it with `bestSellerIds()` (`lib/best-sellers.ts`).
+  - Guests get `Dish.isBestSeller` from the public menu API and never receive the count.
+  - `lib/best-sellers.ts` mirrors the backend rule (not hidden, active category, sold at least once, ties by name); change both together.
 - **Request status.** Reads expose `RequestStatus` (`idle | loading | success | error`, `lib/request-status.ts`; `toRequestStatus()` maps a TanStack query). Render them with `LoadingState` / `ErrorState` from `components/request-state.tsx`, or pass `status`/`error`/`onRetry` to `DataTable`. Mutations use `useAsyncAction` (button spinner + error toast) instead.
 - **Cancellation.** Every API call goes through `fetchJson` (`lib/http.ts`, used by `apiFetch`/`publicApiFetch`): it takes a `signal` and has a default 20 s timeout ("Request timed out"). Always pass TanStack's `signal` from `queryFn: async ({ signal }) => …`. Refetches triggered by real-time events are latest-wins (abort the previous `AbortController`). Swallow aborts with `isAbortError()`, never surface them as errors. The `/api/proxy*` routes forward `req.signal` to the backend and answer 499 when the client went away. Mutations aren't aborted on purpose, only timed out.
 - **API access.**
@@ -47,4 +54,5 @@ npx vitest run -t "formatTaxRates"       # tests matching a name
 - **Tax.** Each order snapshots its own `taxRate`. Always use `order.taxRate` for past orders, never the current Settings rate. Label taxes with `formatTaxRates()`.
 - **Formatting.** Money and counts go through `lib/format.ts` (`money()`, re-exported from `lib/range.ts`; `formatNumber()`), usually via `useWorkspace().fmt`. Don't format numbers ad hoc.
 - **Images.** Dish photos render through `components/dish-image.tsx` (`next/image`, AVIF/WebP, lazy). Vercel Blob is the allowed remote host in `next.config.ts`; other hosts are passed through unoptimized. Give its parent `relative` and a fixed size.
+- **Buttons on a white or near-white background need a border.** The `outline` and `secondary` variants in `components/ui/button.tsx` already have one; hand-built light buttons (e.g. quantity-stepper "−" buttons) add `border`. Transparent icon buttons that only tint on hover don't.
 - **React keys for order lines** use `line.id ?? line.itemId`: one order can contain the same dish on two lines.
