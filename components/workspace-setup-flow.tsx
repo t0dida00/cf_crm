@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createPlatformAction } from "@/app/actions";
-import { SetupScreen } from "@/components/setup-screen";
+import { createPlatformAction, updatePlatformAction } from "@/app/actions";
+import { SetupScreen, type SetupDetails } from "@/components/setup-screen";
 import { BuildingScreen } from "@/components/building-screen";
 import { ConnectionsStep } from "@/components/connections-step";
 import { LoadingState } from "@/components/request-state";
 import { useWorkspace } from "@/components/workspace-provider";
-import type { Domain } from "@/lib/types";
 
 type Step = "details" | "connections" | "building" | "opening";
 
@@ -16,7 +15,8 @@ export function WorkspaceSetupFlow() {
   const router = useRouter();
   const { workspace, hydrated, reload } = useWorkspace();
   const [step, setStep] = useState<Step>("details");
-  const [created, setCreated] = useState<{ name: string; domain: Domain } | null>(null);
+  // What step 1 saved; set once the business exists, so "Back" edits it instead of creating another.
+  const [created, setCreated] = useState<SetupDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Once the workspace has a business (loaded, or reloaded after setup), open the admin app.
@@ -32,7 +32,7 @@ export function WorkspaceSetupFlow() {
   if (!hydrated) return null;
 
   if (step === "connections") {
-    return <ConnectionsStep onContinue={() => setStep("building")} />;
+    return <ConnectionsStep onContinue={() => setStep("building")} onBack={() => setStep("details")} />;
   }
 
   if (step === "building" && created) {
@@ -52,11 +52,14 @@ export function WorkspaceSetupFlow() {
   return (
     <SetupScreen
       error={error}
+      initial={created}
       onSubmit={async (name, domain, contact) => {
         setError(null);
         try {
-          await createPlatformAction({ name, domain, ...contact });
-          setCreated({ name, domain });
+          const details = { name, domain, ...contact };
+          if (created) await updatePlatformAction(details);
+          else await createPlatformAction(details);
+          setCreated(details);
           setStep("connections");
         } catch (err) {
           setError(err instanceof Error ? err.message : "Failed to create workspace");

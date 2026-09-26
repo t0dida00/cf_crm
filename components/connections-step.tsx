@@ -1,6 +1,6 @@
 "use client";
 
-import { SquaresFour } from "@phosphor-icons/react";
+import { ArrowLeft, SquaresFour } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
   ConnectionsForm,
@@ -13,7 +13,7 @@ import { useConnections } from "@/hooks/use-connections";
  * the operator allows the shared service, the owner can skip and connect later
  * in Settings; otherwise both must be connected to continue.
  */
-export function ConnectionsStep({ onContinue }: { onContinue: () => void }) {
+export function ConnectionsStep({ onContinue, onBack }: { onContinue: () => void; onBack?: () => void }) {
   const { connections } = useConnections();
   const ownBoth = !!connections?.database && !!connections.pusher;
   const canSkip = !!connections?.sharedInfraAllowed && !ownBoth;
@@ -42,7 +42,14 @@ export function ConnectionsStep({ onContinue }: { onContinue: () => void }) {
 
           <ConnectionsForm />
 
-          <div className="mt-8 flex justify-end gap-2 border-t pt-5">
+          <div className="mt-8 flex gap-2 border-t pt-5">
+            {onBack && (
+              <Button variant="outline" onClick={onBack}>
+                <ArrowLeft size={14} weight="bold" />
+                Back
+              </Button>
+            )}
+            <span className="flex-1" />
             {canSkip && (
               <Button variant="outline" onClick={onContinue}>
                 Use the shared service for now

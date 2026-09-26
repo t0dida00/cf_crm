@@ -105,3 +105,27 @@ export async function createPlatform(
     pusher: null,
   };
 }
+
+/** Updates the caller's business with the setup form's fields (used when going
+ * back to setup step 1 after the business was created). Server-side only. */
+export async function updatePlatform(
+  accessToken: string,
+  input: { name: string; domain: Domain; phone?: string; email?: string; address?: string; logoUrl?: string },
+): Promise<void> {
+  const res = await fetch(`${API_URL}/platforms/me`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({
+      name: input.name,
+      platformTypeCode: input.domain,
+      phone: input.phone ?? "",
+      email: input.email ?? "",
+      address: input.address ?? "",
+      logoUrl: input.logoUrl ?? "",
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.error || `Failed to update platform: ${res.status}`);
+  }
+}

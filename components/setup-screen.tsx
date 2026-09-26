@@ -16,9 +16,19 @@ const ICONS: Record<Domain, typeof ForkKnife> = {
   cafe: Coffee,
 };
 
+export interface SetupDetails {
+  name: string;
+  domain: Domain;
+  phone: string;
+  email: string;
+  address: string;
+  logoUrl: string;
+}
+
 export function SetupScreen({
   onSubmit,
   error,
+  initial,
 }: {
   onSubmit: (
     name: string,
@@ -26,13 +36,15 @@ export function SetupScreen({
     contact: { phone: string; email: string; address: string; logoUrl: string },
   ) => void | Promise<void>;
   error?: string | null;
+  /** Values to start from, e.g. when coming back from step 2. */
+  initial?: SetupDetails | null;
 }) {
-  const [name, setName] = useState("");
-  const [domain, setDomain] = useState<Domain>("restaurant");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
-  const [logoUrl, setLogoUrl] = useState("");
+  const [name, setName] = useState(initial?.name ?? "");
+  const [domain, setDomain] = useState<Domain>(initial?.domain ?? "restaurant");
+  const [phone, setPhone] = useState(initial?.phone ?? "");
+  const [email, setEmail] = useState(initial?.email ?? "");
+  const [address, setAddress] = useState(initial?.address ?? "");
+  const [logoUrl, setLogoUrl] = useState(initial?.logoUrl ?? "");
   const [submitting, setSubmitting] = useState(false);
 
   return (
