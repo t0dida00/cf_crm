@@ -31,6 +31,7 @@ import { OrdersPanel } from "@/components/panels/orders-panel";
 import { BookingsPanel } from "@/components/panels/bookings-panel";
 import { StaffPanel } from "@/components/panels/staff-panel";
 import { SettingsPanel } from "@/components/panels/settings-panel";
+import { QrPanel } from "@/components/panels/qr-panel";
 import type { TabId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useNewOrderNotifications } from "@/hooks/use-new-order-notifications";
@@ -56,6 +57,7 @@ const TITLES: Record<TabId, string> = {
   bookings: "Bookings",
   staff: "Staffs",
   settings: "Settings",
+  qr: "Table QR codes",
 };
 
 const SUBTITLES: Record<TabId, string> = {
@@ -67,6 +69,7 @@ const SUBTITLES: Record<TabId, string> = {
   bookings: "Today's reservations and how full each slot is.",
   staff: "Staff accounts for this workspace. Disable an account to revoke access.",
   settings: "Tax and currency applied across the workspace.",
+  qr: "Print one of these per table. Scanning opens the menu for that exact table — no app or login needed.",
 };
 
 const ACTION_LABELS: Partial<Record<TabId, string>> = {
@@ -78,7 +81,8 @@ const ACTION_LABELS: Partial<Record<TabId, string>> = {
   staff: "Add staff",
 };
 
-const TAB_IDS = NAV.map((n) => n.id);
+// "qr" isn't in NAV — it sits at the bottom of the sidebar — but is a tab all the same.
+const TAB_IDS: TabId[] = [...NAV.map((n) => n.id), "qr"];
 const isTabId = (value: string | null): value is TabId =>
   value !== null && (TAB_IDS as string[]).includes(value);
 
@@ -181,18 +185,22 @@ function SidebarBody({
       </nav>
 
       <div className="flex-1" />
-      <Link
-        href="/qr-generation"
+      <button
+        type="button"
+        onClick={() => setTab("qr")}
         title={collapsed ? "Table QR codes" : undefined}
         aria-label={collapsed ? "Table QR codes" : undefined}
         className={cn(
-          "flex items-center gap-2.5 rounded-lg py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white",
+          "flex items-center gap-2.5 rounded-lg py-2.5 text-sm transition-colors",
           collapsed ? "justify-center px-0" : "px-3",
+          tab === "qr"
+            ? "bg-white/12 font-semibold text-white"
+            : "font-medium text-white/55 hover:text-white",
         )}
       >
         <QrCode size={15} weight="bold" />
         {!collapsed && "Table QR codes"}
-      </Link>
+      </button>
       <form action={signOutAction}>
         <button
           type="submit"
@@ -360,6 +368,7 @@ export function AdminShell() {
           {tab === "bookings" && <BookingsPanel createSignal={createSignal} />}
           {tab === "staff" && <StaffPanel createSignal={createSignal} />}
           {tab === "settings" && <SettingsPanel />}
+          {tab === "qr" && <QrPanel />}
         </div>
 
         <footer className="border-t bg-card px-4 py-4 text-xs text-muted-foreground md:px-6">

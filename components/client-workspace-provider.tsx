@@ -3,12 +3,13 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { publicApiFetch } from "@/lib/public-api";
+import { errorMessage, toRequestStatus, type RequestStatus } from "@/lib/request-status";
 import { money } from "@/lib/range";
 import type { Category, Dish, Order, OrderLine, TableRec, TableRequestType } from "@/lib/types";
 
@@ -27,6 +28,10 @@ interface ClientWorkspace {
 interface ClientWorkspaceContextValue {
   workspace: ClientWorkspace;
   hydrated: boolean;
+  /** Menu/tables/settings load: loading → success | error. */
+  status: RequestStatus;
+  error: string | null;
+  reload: () => void;
   /** Always true for this provider — a guest browsing /client has no session. */
   isGuest: true;
   fmt: (value: number) => string;
@@ -151,53 +156,53 @@ export function ClientWorkspaceProvider({
   platformId: string;
   children: ReactNode;
 }) {
-  const [workspace, setWorkspace] = useState<ClientWorkspace>(emptyWorkspace);
-  const [hydrated, setHydrated] = useState(false);
   const [tableOrders, setTableOrders] = useState<Order[]>([]);
 
-  useEffect(() => {
-    let cancelled = false;
-    setHydrated(false);
-    Promise.all([
-      publicApiFetch<{ categories: ApiCategory[]; dishes: ApiDish[] }>(platformId, "/menu"),
-      publicApiFetch<{ tables: ApiTable[] }>(platformId, "/tables"),
-      publicApiFetch<{
-        settings: {
-          name: string;
-          address: string | null;
-          phone: string | null;
-          logoUrl: string | null;
-          currency: string;
-          taxRate: string | number;
-        };
-      }>(platformId, "/settings"),
-    ])
-      .then(([menuRes, tablesRes, settingsRes]) => {
-        if (cancelled) return;
-        setWorkspace({
-          name: settingsRes.settings.name,
-          address: settingsRes.settings.address,
-          phone: settingsRes.settings.phone,
-          logoUrl: settingsRes.settings.logoUrl,
-          categories: menuRes.categories.map(mapCategory),
-          dishes: menuRes.dishes.map(mapDish),
-          tables: tablesRes.tables.map(mapTable),
-          currency: settingsRes.settings.currency,
-          taxRate: Number(settingsRes.settings.taxRate),
-        });
-      })
-      .finally(() => {
-        if (!cancelled) setHydrated(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [platformId]);
+  const workspaceQuery = useQuery({
+    queryKey: ["public", platformId, "workspace"],
+    queryFn: async (): Promise<ClientWorkspace> => {
+      const [menuRes, tablesRes, settingsRes] = await Promise.all([
+        publicApiFetch<{ categories: ApiCategory[]; dishes: ApiDish[] }>(platformId, "/menu"),
+        publicApiFetch<{ tables: ApiTable[] }>(platformId, "/tables"),
+        publicApiFetch<{
+          settings: {
+            name: string;
+            address: string | null;
+            phone: string | null;
+            logoUrl: string | null;
+            currency: string;
+            taxRate: string | number;
+          };
+        }>(platformId, "/settings"),
+      ]);
+      return {
+        name: settingsRes.settings.name,
+        address: settingsRes.settings.address,
+        phone: settingsRes.settings.phone,
+        logoUrl: settingsRes.settings.logoUrl,
+        categories: menuRes.categories.map(mapCategory),
+        dishes: menuRes.dishes.map(mapDish),
+        tables: tablesRes.tables.map(mapTable),
+        currency: settingsRes.settings.currency,
+        taxRate: Number(settingsRes.settings.taxRate),
+      };
+    },
+  });
+  const workspace = workspaceQuery.data ?? emptyWorkspace;
+  const hydrated = !workspaceQuery.isPending;
+  const status = toRequestStatus(workspaceQuery);
+  const error = workspaceQuery.isError
+    ? errorMessage(workspaceQuery.error, "Couldn't load the menu.")
+    : null;
+  const reload = workspaceQuery.refetch;
 
   const value = useMemo<ClientWorkspaceContextValue>(
     () => ({
       workspace,
       hydrated,
+      status,
+      error,
+      reload: () => void reload(),
       isGuest: true,
       fmt: (v: number) => money(v, workspace.currency),
       tableOrders,
@@ -228,7 +233,7 @@ export function ClientWorkspaceProvider({
         });
       },
     }),
-    [workspace, hydrated, platformId, tableOrders],
+    [workspace, hydrated, status, error, reload, platformId, tableOrders],
   );
 
   return (

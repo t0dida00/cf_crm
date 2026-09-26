@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -24,6 +25,7 @@ import { DataTable } from "@/components/data-table";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { apiFetch } from "@/lib/api";
 import { formatStamp } from "@/lib/range";
+import { errorMessage, toRequestStatus } from "@/lib/request-status";
 import type { StaffAccount } from "@/lib/types";
 
 interface ApiStaffAccount {
@@ -51,12 +53,35 @@ const helper = createColumnHelper<StaffAccount>();
 const emptyForm = { fullName: "", email: "", phone: "", password: "" };
 
 const DEFAULT_STAFF_LIMIT = 5;
+const STAFF_KEY = ["staff"] as const;
+
+interface StaffList {
+  staff: StaffAccount[];
+  limit: number;
+}
 
 export function StaffPanel({ createSignal }: { createSignal: number }) {
   const { run, isPending } = useAsyncAction();
-  const [staff, setStaff] = useState<StaffAccount[]>([]);
-  const [limit, setLimit] = useState(DEFAULT_STAFF_LIMIT);
-  const [loaded, setLoaded] = useState(false);
+  const queryClient = useQueryClient();
+  const staffQuery = useQuery({
+    queryKey: STAFF_KEY,
+    queryFn: async (): Promise<StaffList> => {
+      const res = await apiFetch<{ staff: ApiStaffAccount[]; limit?: number }>("/staff");
+      return {
+        staff: res.staff.map(mapStaff),
+        limit: typeof res.limit === "number" ? res.limit : DEFAULT_STAFF_LIMIT,
+      };
+    },
+  });
+  const staff = useMemo(() => staffQuery.data?.staff ?? [], [staffQuery.data]);
+  const limit = staffQuery.data?.limit ?? DEFAULT_STAFF_LIMIT;
+  const loaded = staffQuery.isSuccess;
+  const staffStatus = staffQuery.isFetching ? "loading" : toRequestStatus(staffQuery);
+  // Writes the server's response for one account straight into the cache.
+  const setStaff = (fn: (prev: StaffAccount[]) => StaffAccount[]) =>
+    queryClient.setQueryData<StaffList>(STAFF_KEY, (prev) =>
+      prev ? { ...prev, staff: fn(prev.staff) } : prev,
+    );
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<StaffAccount | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -64,16 +89,6 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
   const [error, setError] = useState<string | null>(null);
 
   const atCapacity = staff.length >= limit;
-
-  const refresh = async () => {
-    const res = await apiFetch<{ staff: ApiStaffAccount[]; limit?: number }>("/staff");
-    setStaff(res.staff.map(mapStaff));
-    if (typeof res.limit === "number") setLimit(res.limit);
-  };
-
-  useEffect(() => {
-    refresh().finally(() => setLoaded(true));
-  }, []);
 
   useEffect(() => {
     if (createSignal > 0) {
@@ -235,7 +250,12 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
         <CardContent className="px-0">
           <DataTable
             table={table}
-            emptyMessage={loaded ? "No staff accounts yet." : "Loading…"}
+            emptyMessage="No staff accounts yet."
+            status={staffStatus}
+            error={
+              staffQuery.isError ? errorMessage(staffQuery.error, "Couldn't load staff accounts.") : null
+            }
+            onRetry={() => void staffQuery.refetch()}
           />
         </CardContent>
       </Card>

@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PaginationBar } from "@/components/pagination-bar";
+import { ErrorState, LoadingState } from "@/components/request-state";
+import { cn } from "@/lib/utils";
 import { SessionDetailDialog } from "@/components/session-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
 import { summariseLines, type OrderSession } from "@/lib/order-math";
@@ -20,7 +22,7 @@ const sessionLabel = (s: OrderSession) =>
   s.orders.length > 1 ? `${s.orders.length} orders` : s.orders[0].code;
 
 export function StaffHistoryPanel() {
-  const { workspace, flow, fmt } = useWorkspace();
+  const { flow, fmt } = useWorkspace();
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 300);
   const [session, setSession] = useState<OrderSession | null>(null);
@@ -30,7 +32,7 @@ export function StaffHistoryPanel() {
   // A new search starts from the first page.
   useEffect(() => setPage(1), [debouncedQuery]);
 
-  const { sessions: history, total, loading } = useOrderHistory({
+  const { sessions: history, total, status, error, retry } = useOrderHistory({
     status: "closed",
     query: debouncedQuery,
     page,
@@ -65,9 +67,13 @@ export function StaffHistoryPanel() {
               <span className="bg-secondary">Checkout time</span>
               <span className="bg-secondary">Status</span>
             </div>
-            {history.length === 0 ? (
+            {status === "error" ? (
+              <ErrorState message={error ?? undefined} onRetry={retry} />
+            ) : history.length === 0 && (status === "loading" || status === "idle") ? (
+              <LoadingState />
+            ) : history.length === 0 ? (
               <p className="py-12 text-center text-sm text-muted-foreground">
-                {loading ? "Loading…" : debouncedQuery ? "No orders match." : "Nothing checked out yet."}
+                {debouncedQuery ? "No orders match." : "Nothing checked out yet."}
               </p>
             ) : (
               history.map((s) => (
@@ -75,7 +81,10 @@ export function StaffHistoryPanel() {
                   key={s.orders[0].sessionId ?? s.orders[0].id}
                   type="button"
                   onClick={() => setSession(s)}
-                  className="group grid w-full grid-cols-[140px_120px_minmax(200px,1fr)_110px_170px_110px] items-start gap-3 border-b py-3 pr-5 text-left text-sm transition-colors last:border-0 hover:bg-secondary"
+                  className={cn(
+                    "group grid w-full grid-cols-[140px_120px_minmax(200px,1fr)_110px_170px_110px] items-start gap-3 border-b py-3 pr-5 text-left text-sm transition-colors last:border-0 hover:bg-secondary",
+                    status === "loading" && "opacity-60",
+                  )}
                 >
                   <span className="sticky left-0 -my-3 bg-card py-3 pl-5 font-bold group-hover:bg-secondary">
                     {sessionLabel(s)}

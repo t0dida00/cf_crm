@@ -17,6 +17,7 @@ import { RANGES, rangeBounds, rangeCaption, formatStamp, type RangeState } from 
 import type { Order } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useOrderStats } from "@/hooks/use-order-stats";
+import { ErrorState } from "@/components/request-state";
 
 interface DashOrder {
   order: Order;
@@ -40,7 +41,16 @@ export function DashboardPanel() {
   const [lo, hi] = rangeBounds(range);
   // Order figures are aggregated by the backend over the full history — the
   // workspace's own order list only holds recent orders.
-  const orderStats = useOrderStats(lo, hi);
+  const {
+    stats: orderStats,
+    status: statsStatus,
+    error: statsError,
+    retry: retryStats,
+  } = useOrderStats(lo, hi);
+  // Until the first response arrives there are no figures to show — render a
+  // placeholder rather than a misleading 0.
+  const statsPending = statsStatus === "loading" && orderStats.oldestTs === null;
+  const figure = (value: string) => (statsPending || statsStatus === "error" ? "—" : value);
   const bookingsInRange = workspace.bookings.filter((b) => b.ts >= lo && b.ts <= hi);
   const { orderCount, takings } = orderStats;
   const rangeLabel = RANGES.find((r) => r.id === range.id)?.label ?? "";
@@ -129,7 +139,7 @@ export function DashboardPanel() {
   });
 
   const stats = [
-    { Icon: Receipt, label: "ORDERS", value: orderCount.toLocaleString("en-GB"), hint: rangeLabel },
+    { Icon: Receipt, label: "ORDERS", value: figure(orderCount.toLocaleString("en-GB")), hint: rangeLabel },
     {
       Icon: CalendarCheck,
       label: "BOOKINGS",
@@ -139,7 +149,7 @@ export function DashboardPanel() {
     {
       Icon: CurrencyCircleDollar,
       label: "TAKINGS",
-      value: fmt(takings),
+      value: figure(fmt(takings)),
       hint: orderCount
         ? `Avg ${fmt(takings / orderCount)} per order`
         : "No orders yet",
@@ -188,6 +198,14 @@ export function DashboardPanel() {
         {rangeCaption(range, oldest)}
       </p>
 
+      {statsStatus === "error" && (
+        <Card>
+          <CardContent className="p-0">
+            <ErrorState message={statsError ?? undefined} onRetry={retryStats} className="py-6" />
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map(({ Icon, label, value, hint }) => (
           <Card key={label}>
@@ -213,6 +231,9 @@ export function DashboardPanel() {
               table={dashTable}
               minWidth={480}
               emptyMessage="No orders in this range."
+              status={statsStatus}
+              error={statsError}
+              onRetry={retryStats}
               onRowClick={(row) => setDetail(toSession([row.order]))}
             />
           </CardContent>
@@ -226,6 +247,9 @@ export function DashboardPanel() {
             <DataTable
               table={bestTable}
               emptyMessage="Nothing sold in this range."
+              status={statsStatus}
+              error={statsError}
+              onRetry={retryStats}
             />
           </CardContent>
         </Card>

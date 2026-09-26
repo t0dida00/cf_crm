@@ -73,7 +73,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
   // grouping them into a session ahead of time would be premature. Closed
   // orders collapse into their checkout session (possibly several orders
   // paid together in one go). Grouping, search and paging run on the server.
-  const { sessions: data, total } = useOrderHistory({
+  const { sessions: data, total, status, error, retry } = useOrderHistory({
     status: "all",
     query: debouncedQuery,
     page,
@@ -211,7 +211,10 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
           <DataTable
             table={table}
             minWidth={1040}
-            emptyMessage="No orders match."
+            emptyMessage={debouncedQuery ? "No orders match." : "No orders yet."}
+            status={status}
+            error={error}
+            onRetry={retry}
             onRowClick={setDetail}
           />
           <PaginationBar page={page} pageSize={pageSize} total={total} onPageChange={setPage} />

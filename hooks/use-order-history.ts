@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
-import { toSession, type OrderSession } from "@/lib/order-math";
-import { mapOrder, useWorkspace, type ApiOrder } from "@/components/workspace-provider";
+import { toSession } from "@/lib/order-math";
+import { errorMessage, toRequestStatus } from "@/lib/request-status";
+import { mapOrder, type ApiOrder } from "@/components/workspace-provider";
 
 interface OrderHistoryParams {
   /** "closed" = checked-out sessions only; "all" also lists each open order. */
@@ -17,43 +18,35 @@ interface OrderHistoryParams {
  * One page of order history, grouped into sessions and paginated by the
  * backend (`GET /orders/history`) — the workspace's order list only holds
  * recent history, so browsing or searching all of it has to go to the server.
- * Refetches whenever the workspace's orders change, i.e. on real-time updates.
+ * The previous page stays on screen while the next one loads. Cached under
+ * ["orders", …], which the workspace provider invalidates on order updates.
  */
 export function useOrderHistory({ status, query, page, pageSize }: OrderHistoryParams) {
-  const { workspace } = useWorkspace();
-  const [result, setResult] = useState<{ sessions: OrderSession[]; total: number }>({
-    sessions: [],
-    total: 0,
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    const params = new URLSearchParams({
-      status,
-      page: String(page),
-      pageSize: String(pageSize),
-      ...(query ? { q: query } : {}),
-    });
-    apiFetch<{ sessions: ApiOrder[][]; total: number }>(`/orders/history?${params}`)
-      .then((res) => {
-        if (cancelled) return;
-        setResult({
-          sessions: res.sessions.map((orders) => toSession(orders.map(mapOrder))),
-          total: res.total,
-        });
-      })
-      .catch(() => {
-        if (!cancelled) setResult({ sessions: [], total: 0 });
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+  const result = useQuery({
+    queryKey: ["orders", "history", { status, query, page, pageSize }],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        status,
+        page: String(page),
+        pageSize: String(pageSize),
+        ...(query ? { q: query } : {}),
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [status, query, page, pageSize, workspace.orders]);
+      const res = await apiFetch<{ sessions: ApiOrder[][]; total: number }>(
+        `/orders/history?${params}`,
+      );
+      return {
+        sessions: res.sessions.map((orders) => toSession(orders.map(mapOrder))),
+        total: res.total,
+      };
+    },
+    placeholderData: keepPreviousData,
+  });
 
-  return { ...result, loading };
+  return {
+    sessions: result.data?.sessions ?? [],
+    total: result.data?.total ?? 0,
+    status: result.isFetching ? "loading" as const : toRequestStatus(result),
+    error: result.isError ? errorMessage(result.error, "Couldn't load orders.") : null,
+    retry: () => void result.refetch(),
+  };
 }

@@ -3,6 +3,7 @@ import { Nunito_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import { auth } from "@/auth";
+import { QueryProvider } from "@/components/query-provider";
 import { WorkspaceProvider } from "@/components/workspace-provider";
 import "../node_modules/tw-animate-css/dist/tw-animate.css";
 import "./globals.scss";
@@ -32,9 +33,11 @@ export default async function RootLayout({
   return (
     <html lang="en" className={nunito.variable}>
       <body>
-        <WorkspaceProvider accessToken={accessToken ?? null}>
-          {children}
-        </WorkspaceProvider>
+        <QueryProvider>
+          <WorkspaceProvider accessToken={accessToken ?? null}>
+            {children}
+          </WorkspaceProvider>
+        </QueryProvider>
         <Toaster richColors position="top-right" />
         <Analytics />
       </body>

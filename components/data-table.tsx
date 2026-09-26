@@ -9,6 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ErrorState, LoadingState } from "@/components/request-state";
+import type { RequestStatus } from "@/lib/request-status";
 import { cn } from "@/lib/utils";
 
 interface DataTableProps<T> {
@@ -16,6 +18,12 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   emptyMessage?: string;
   minWidth?: number;
+  /** Status of the request that feeds `table`. While loading with nothing to
+   * show yet it renders a spinner, and on error a message with a retry;
+   * rows already on screen stay (dimmed) during a refetch. */
+  status?: RequestStatus;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 /** Thin presentational wrapper around a TanStack table instance. */
@@ -24,8 +32,13 @@ export function DataTable<T>({
   onRowClick,
   emptyMessage = "Nothing to show.",
   minWidth,
+  status = "success",
+  error,
+  onRetry,
 }: DataTableProps<T>) {
   const rows = table.getRowModel().rows;
+  const colSpan = table.getAllColumns().length;
+  const refetching = status === "loading" && rows.length > 0;
   return (
     <div className="overflow-x-auto">
       <Table style={minWidth ? { minWidth } : undefined}>
@@ -47,10 +60,22 @@ export function DataTable<T>({
           ))}
         </TableHeader>
         <TableBody>
-          {rows.length === 0 ? (
+          {status === "error" ? (
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={colSpan} className="p-0">
+                <ErrorState message={error ?? undefined} onRetry={onRetry} />
+              </TableCell>
+            </TableRow>
+          ) : rows.length === 0 && (status === "loading" || status === "idle") ? (
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={colSpan} className="p-0">
+                <LoadingState />
+              </TableCell>
+            </TableRow>
+          ) : rows.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={table.getAllColumns().length}
+                colSpan={colSpan}
                 className="py-12 text-center text-sm text-muted-foreground"
               >
                 {emptyMessage}
@@ -61,7 +86,7 @@ export function DataTable<T>({
               <TableRow
                 key={row.id}
                 onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-                className={cn(onRowClick && "cursor-pointer")}
+                className={cn(onRowClick && "cursor-pointer", refetching && "opacity-60")}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className="py-2.5 text-sm first:pl-4 last:pr-4">

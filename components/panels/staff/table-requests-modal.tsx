@@ -14,6 +14,8 @@ import {
 import { hhmm } from "@/lib/range";
 import { TONE_CLASSES } from "@/lib/tone";
 import type { TableRequest, TableRequestType } from "@/lib/types";
+import { ErrorState, LoadingState } from "@/components/request-state";
+import type { RequestStatus } from "@/lib/request-status";
 
 const TYPE_LABELS: Record<TableRequestType, string> = {
   call_staff: "Called staff",
@@ -25,11 +27,17 @@ export function TableRequestsModal({
   onOpenChange,
   requests,
   onResolve,
+  status = "success",
+  error,
+  onRetry,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   requests: TableRequest[];
   onResolve: (id: string) => Promise<void>;
+  status?: RequestStatus;
+  error?: string | null;
+  onRetry?: () => void;
 }) {
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
@@ -52,7 +60,11 @@ export function TableRequestsModal({
           </DialogDescription>
         </DialogHeader>
 
-        {requests.length === 0 ? (
+        {status === "error" ? (
+          <ErrorState message={error ?? undefined} onRetry={onRetry} className="py-8" />
+        ) : requests.length === 0 && (status === "loading" || status === "idle") ? (
+          <LoadingState className="py-8" />
+        ) : requests.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">No pending requests.</p>
         ) : (
           <div className="max-h-[60vh] space-y-2.5 overflow-y-auto">

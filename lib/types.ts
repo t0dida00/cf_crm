@@ -7,7 +7,8 @@ export type TabId =
   | "orders"
   | "bookings"
   | "staff"
-  | "settings";
+  | "settings"
+  | "qr";
 
 export type TaxMode = "none" | "include" | "exclude";
 

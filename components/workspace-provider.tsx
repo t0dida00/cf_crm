@@ -8,8 +8,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { money } from "@/lib/range";
+import { errorMessage, type RequestStatus } from "@/lib/request-status";
 import { mapPlatformResponse, type PlatformApiResponse } from "@/lib/platform-api";
 import type {
   Booking,
@@ -26,7 +28,13 @@ import { LEXICON } from "@/lib/lexicon";
 
 interface WorkspaceContextValue {
   workspace: Workspace;
+  /** True once the initial load has settled (successfully or not). */
   hydrated: boolean;
+  /** Initial workspace load: idle when signed out, then loading → success | error. */
+  status: RequestStatus;
+  error: string | null;
+  /** Re-runs the initial workspace load (e.g. after an error). */
+  reload: () => void;
   /** Session JWT, exposed for the direct browser->backend WebSocket connection
    * (REST calls go through the server-side proxy and don't need this). */
   accessToken: string | null;
@@ -275,16 +283,27 @@ export function WorkspaceProvider({
   accessToken?: string | null;
 }) {
   const [workspace, setWorkspace] = useState<Workspace>(emptyWorkspace);
-  const [hydrated, setHydrated] = useState(false);
+  const [status, setStatus] = useState<RequestStatus>(accessToken ? "loading" : "idle");
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const hydrated = status === "success" || status === "error" || status === "idle";
+  const queryClient = useQueryClient();
+
+  // Order history/stats are cached reads (TanStack Query) — any change to the
+  // live order list (a mutation or a real-time refetch) makes them stale.
+  useEffect(() => {
+    void queryClient.invalidateQueries({ queryKey: ["orders"] });
+  }, [workspace.orders, queryClient]);
 
   useEffect(() => {
     let cancelled = false;
     if (!accessToken) {
       setWorkspace(emptyWorkspace);
-      setHydrated(true);
+      setStatus("idle");
       return;
     }
-    setHydrated(false);
+    setStatus("loading");
+    setError(null);
     (async () => {
       const res = await fetch("/api/proxy/platforms/me", { cache: "no-store" });
       if (res.status === 404) return null;
@@ -306,15 +325,19 @@ export function WorkspaceProvider({
         });
       })
       .then((data) => {
-        if (!cancelled && data) setWorkspace(data);
+        if (cancelled) return;
+        if (data) setWorkspace(data);
+        setStatus("success");
       })
-      .finally(() => {
-        if (!cancelled) setHydrated(true);
+      .catch((err) => {
+        if (cancelled) return;
+        setError(errorMessage(err, "Couldn't load your workspace."));
+        setStatus("error");
       });
     return () => {
       cancelled = true;
     };
-  }, [accessToken]);
+  }, [accessToken, reloadKey]);
 
   const value = useMemo<WorkspaceContextValue>(() => {
     const patch = (fn: (w: Workspace) => Partial<Workspace>) =>
@@ -345,6 +368,9 @@ export function WorkspaceProvider({
     return {
       workspace,
       hydrated,
+      status,
+      error,
+      reload: () => setReloadKey((k) => k + 1),
       accessToken,
       flow,
       currency,
@@ -595,7 +621,7 @@ export function WorkspaceProvider({
         }));
       },
     };
-  }, [workspace, hydrated, accessToken]);
+  }, [workspace, hydrated, status, error, accessToken]);
 
   return (
     <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>

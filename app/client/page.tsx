@@ -1,9 +1,12 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ClientShell } from "@/components/client-shell";
 import { useWorkspace } from "@/components/workspace-provider";
+import { ErrorState, LoadingState } from "@/components/request-state";
+import { useQuery } from "@tanstack/react-query";
+import { errorMessage } from "@/lib/request-status";
 import {
   ClientWorkspaceProvider,
   useClientWorkspace,
@@ -19,8 +22,18 @@ function GuestClientPage({
   platformId: string;
   fixedTableName: string;
 }) {
-  const { workspace, hydrated, fmt, tableOrders, refreshTableOrders, placeOrder, createTableRequest } =
-    useClientWorkspace();
+  const {
+    workspace,
+    hydrated,
+    status,
+    error,
+    reload,
+    fmt,
+    tableOrders,
+    refreshTableOrders,
+    placeOrder,
+    createTableRequest,
+  } = useClientWorkspace();
 
   const tableName =
     workspace.tables.find((t) => t.name === fixedTableName)?.name ??
@@ -28,9 +41,9 @@ function GuestClientPage({
     fixedTableName;
 
   useEffect(() => {
-    if (hydrated) refreshTableOrders(tableName);
+    if (status === "success") refreshTableOrders(tableName);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, tableName]);
+  }, [status, tableName]);
 
   const channel = usePlatformSocket(hydrated ? platformId : null);
 
@@ -52,7 +65,14 @@ function GuestClientPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel, tableName]);
 
-  if (!hydrated) return null;
+  if (status === "error") {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-6">
+        <ErrorState message={error ?? "Couldn't load the menu."} onRetry={reload} />
+      </div>
+    );
+  }
+  if (status !== "success") return <LoadingState label="Loading menu…" className="min-h-screen" />;
 
   return (
     <ClientShell
@@ -74,13 +94,22 @@ function GuestClientPage({
 
 function SessionClientPage({ tableParam }: { tableParam: string | null }) {
   const router = useRouter();
-  const { workspace, hydrated, fmt, placeOrder } = useWorkspace();
+  const { workspace, status, error, reload, fmt, placeOrder } = useWorkspace();
 
   useEffect(() => {
-    if (hydrated && !workspace.name) router.replace("/");
-  }, [hydrated, workspace.name, router]);
+    if ((status === "success" || status === "idle") && !workspace.name) router.replace("/");
+  }, [status, workspace.name, router]);
 
-  if (!hydrated || !workspace.name) return null;
+  if (status === "error") {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-6">
+        <ErrorState message={error ?? "Couldn't load your workspace."} onRetry={reload} />
+      </div>
+    );
+  }
+  if (status !== "success" || !workspace.name) {
+    return <LoadingState label="Loading…" className="min-h-screen" />;
+  }
 
   const tableName =
     workspace.tables.find((t) => t.name === tableParam)?.name ??
@@ -116,36 +145,31 @@ interface ResolvedToken {
 }
 
 function TokenClientPage({ token }: { token: string }) {
-  const [resolved, setResolved] = useState<ResolvedToken | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const tokenQuery = useQuery({
+    queryKey: ["public", "token", token],
+    queryFn: async (): Promise<ResolvedToken> => {
+      const res = await fetch(`/api/token-resolve/${encodeURIComponent(token)}`);
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || "Invalid QR code");
+      const data = (await res.json()) as { platformId: string; tableName: string };
+      return { platformId: data.platformId, tableName: data.tableName };
+    },
+    staleTime: Infinity,
+    retry: false,
+  });
+  const resolved = tokenQuery.data;
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`/api/token-resolve/${encodeURIComponent(token)}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error || "Invalid QR code");
-        return res.json();
-      })
-      .then((data: { platformId: string; tableName: string }) => {
-        if (!cancelled) setResolved({ platformId: data.platformId, tableName: data.tableName });
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Invalid QR code");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [token]);
-
-  if (error) {
+  if (tokenQuery.isError) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-6 text-center">
-        <p className="text-sm text-muted-foreground">{error}</p>
+      <div className="flex min-h-screen items-center justify-center px-6">
+        <ErrorState
+          message={errorMessage(tokenQuery.error, "Invalid QR code")}
+          onRetry={() => void tokenQuery.refetch()}
+        />
       </div>
     );
   }
 
-  if (!resolved) return null;
+  if (!resolved) return <LoadingState label="Opening your table…" className="min-h-screen" />;
 
   return (
     <ClientWorkspaceProvider platformId={resolved.platformId}>

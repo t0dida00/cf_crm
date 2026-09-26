@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -26,10 +27,13 @@ import { TableRequestsModal } from "@/components/panels/staff/table-requests-mod
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/app/actions";
 import { apiFetch } from "@/lib/api";
+import { errorMessage, toRequestStatus } from "@/lib/request-status";
 import { useNewOrderNotifications } from "@/hooks/use-new-order-notifications";
 import { useTableRequestNotifications } from "@/hooks/use-table-request-notifications";
 import { useSidebarCollapse } from "@/hooks/use-sidebar-collapse";
 import type { TableRequest, TableRequestType } from "@/lib/types";
+
+const PENDING_REQUESTS_KEY = ["table-requests", "pending"] as const;
 
 type StaffTab = "menu" | "orders" | "bookings" | "tables" | "history";
 
@@ -193,7 +197,6 @@ export function StaffShell() {
   const tabParam = searchParams.get("tab");
   const tab: StaffTab = isStaffTab(tabParam) ? tabParam : "orders";
   const [now, setNow] = useState(() => Date.now());
-  const [pendingRequests, setPendingRequests] = useState<TableRequest[]>([]);
   const [requestsModalOpen, setRequestsModalOpen] = useState(false);
   const { collapsed, isNarrow, mobileOpen, closeMobile, toggle: toggleCollapsed } =
     useSidebarCollapse();
@@ -218,14 +221,16 @@ export function StaffShell() {
     return () => clearInterval(i);
   }, []);
 
-  const refreshRequests = async () => {
-    const res = await apiFetch<{ requests: ApiTableRequest[] }>("/table-requests?status=pending");
-    setPendingRequests(res.requests.map(mapRequest));
-  };
-
-  useEffect(() => {
-    refreshRequests();
-  }, []);
+  const queryClient = useQueryClient();
+  const requestsQuery = useQuery({
+    queryKey: PENDING_REQUESTS_KEY,
+    queryFn: async () => {
+      const res = await apiFetch<{ requests: ApiTableRequest[] }>("/table-requests?status=pending");
+      return res.requests.map(mapRequest);
+    },
+  });
+  const pendingRequests = requestsQuery.data ?? [];
+  const refreshRequests = () => void requestsQuery.refetch();
 
   useNewOrderNotifications(true, workspace.id, refreshOrders, fmt, workspace.orders, () =>
     setTab("orders"),
@@ -237,7 +242,9 @@ export function StaffShell() {
 
   const handleResolveRequest = async (id: string) => {
     await apiFetch(`/table-requests/${id}/resolve`, { method: "POST" });
-    setPendingRequests((prev) => prev.filter((r) => r.id !== id));
+    queryClient.setQueryData<TableRequest[]>(PENDING_REQUESTS_KEY, (prev) =>
+      prev?.filter((r) => r.id !== id),
+    );
   };
 
   const initials = (workspace.name || "W")
@@ -370,6 +377,11 @@ export function StaffShell() {
         open={requestsModalOpen}
         onOpenChange={setRequestsModalOpen}
         requests={pendingRequests}
+        status={requestsQuery.isFetching ? "loading" : toRequestStatus(requestsQuery)}
+        error={
+          requestsQuery.isError ? errorMessage(requestsQuery.error, "Couldn't load table requests.") : null
+        }
+        onRetry={refreshRequests}
         onResolve={handleResolveRequest}
       />
     </div>
