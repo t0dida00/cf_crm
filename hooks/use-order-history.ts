@@ -12,6 +12,8 @@ interface OrderHistoryParams {
   query: string;
   page: number;
   pageSize: number;
+  /** Only sessions checked out since this time (ms); omit for all history. */
+  from?: number;
 }
 
 /**
@@ -21,15 +23,16 @@ interface OrderHistoryParams {
  * The previous page stays on screen while the next one loads. Cached under
  * ["orders", …], which the workspace provider invalidates on order updates.
  */
-export function useOrderHistory({ status, query, page, pageSize }: OrderHistoryParams) {
+export function useOrderHistory({ status, query, page, pageSize, from }: OrderHistoryParams) {
   const result = useQuery({
-    queryKey: ["orders", "history", { status, query, page, pageSize }],
+    queryKey: ["orders", "history", { status, query, page, pageSize, from }],
     queryFn: async ({ signal }) => {
       const params = new URLSearchParams({
         status,
         page: String(page),
         pageSize: String(pageSize),
         ...(query ? { q: query } : {}),
+        ...(from !== undefined ? { from: String(from) } : {}),
       });
       const res = await apiFetch<{ sessions: ApiOrder[][]; total: number }>(
         `/orders/history?${params}`,

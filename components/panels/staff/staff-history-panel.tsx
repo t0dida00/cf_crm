@@ -12,11 +12,13 @@ import { SessionDetailDialog } from "@/components/session-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
 import { summariseLines, type OrderSession } from "@/lib/order-math";
 import { orderTone } from "@/lib/tone";
-import { formatStamp } from "@/lib/range";
+import { daysAgoStart, formatStamp } from "@/lib/range";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useOrderHistory } from "@/hooks/use-order-history";
 
 const PAGE_SIZE = 20;
+/** Staff only see recent history: today and yesterday. */
+const HISTORY_DAYS = 2;
 
 const sessionLabel = (s: OrderSession) =>
   s.orders.length > 1 ? `${s.orders.length} orders` : s.orders[0].code;
@@ -37,6 +39,8 @@ export function StaffHistoryPanel() {
     query: debouncedQuery,
     page,
     pageSize: PAGE_SIZE,
+    // Same value all day, so the query key only changes at midnight.
+    from: daysAgoStart(HISTORY_DAYS - 1),
   });
 
   return (
@@ -73,7 +77,7 @@ export function StaffHistoryPanel() {
               <LoadingState />
             ) : history.length === 0 ? (
               <p className="py-12 text-center text-sm text-muted-foreground">
-                {debouncedQuery ? "No orders match." : "Nothing checked out yet."}
+                {debouncedQuery ? "No orders match." : "Nothing checked out today or yesterday."}
               </p>
             ) : (
               history.map((s) => (

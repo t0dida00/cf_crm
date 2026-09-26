@@ -45,6 +45,10 @@ export const hhmm = (ts: number) =>
 
 export const formatStamp = (ts: number) => `${formatDate(ts)} ${hhmm(ts)}`;
 
+/** Local midnight `days` days before `now` (0 = today), in ms. */
+export const daysAgoStart = (days: number, now: Date = new Date()) =>
+  new Date(now.getFullYear(), now.getMonth(), now.getDate() - days).getTime();
+
 export function rangeCaption(range: RangeState, oldestTs: number): string {
   const today = Date.now();
   if (range.id === "all") {
