@@ -325,7 +325,9 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                 key={editing?.id ?? "new"}
                 value={form.imageUrl}
                 onChange={(imageUrl) => setForm((f) => ({ ...f, imageUrl }))}
-                className="aspect-square w-full max-w-48"
+                // Fixed size: the dropzone's wrapper has no width of its own, so a
+                // w-full box collapses to a dot once the photo (absolutely positioned) replaces the placeholder.
+                className="size-48"
               />
             </div>
 
