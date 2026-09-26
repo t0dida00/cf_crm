@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
 import { useAsyncAction } from "@/hooks/use-async-action";
+import { bestSellerIds } from "@/lib/best-sellers";
 import { TONE_CLASSES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import type { Dish, DishStatus } from "@/lib/types";
@@ -83,6 +84,8 @@ export function StaffMenuPanel() {
 
   const changeStatus = (dish: Dish, status: DishStatus) =>
     run(`dish-status-${dish.id}`, () => saveDish({ ...dish, status }), "Failed to update dish status.");
+
+  const bestSellers = useMemo(() => bestSellerIds(dishes, categories), [dishes, categories]);
 
   const filtered = useMemo(
     () => dishes.filter((d) => !debouncedQuery || d.name.toLowerCase().includes(debouncedQuery.toLowerCase())),
@@ -235,6 +238,9 @@ export function StaffMenuPanel() {
                             {dish.isVegan && (
                               <Badge className={TONE_CLASSES.green}>Vegan</Badge>
                             )}
+                            {bestSellers.has(dish.id) && (
+                              <Badge className={TONE_CLASSES.brand}>Best seller</Badge>
+                            )}
                           </div>
 
                           {noteOpen ? (
@@ -313,7 +319,7 @@ export function StaffMenuPanel() {
                                 <button
                                   type="button"
                                   onClick={() => setQty(dish.id, qty - 1)}
-                                  className="flex size-6.5 items-center justify-center rounded-full bg-background text-brand-700"
+                                  className="flex size-6.5 items-center justify-center rounded-full border bg-background text-brand-700"
                                   aria-label={`Decrease ${dish.name}`}
                                 >
                                   <Minus size={12} weight="bold" />
@@ -377,7 +383,7 @@ export function StaffMenuPanel() {
                     <button
                       type="button"
                       onClick={() => setQty(line.itemId, line.qty - 1)}
-                      className="flex size-6.5 items-center justify-center rounded-full bg-white text-foreground"
+                      className="flex size-6.5 items-center justify-center rounded-full border bg-white text-foreground"
                       aria-label={`Decrease ${line.name}`}
                     >
                       <Minus size={12} weight="bold" />

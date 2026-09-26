@@ -58,6 +58,10 @@ export interface Dish {
   taxPct?: number;
   isVegan?: boolean;
   imageUrl?: string;
+  /** Units ordered across all orders (staff/admin only; guests never receive it). */
+  soldCount?: number;
+  /** Set on the guest menu, where the server picks the best sellers. */
+  isBestSeller?: boolean;
 }
 
 export interface OrderLine {

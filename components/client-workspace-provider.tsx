@@ -83,6 +83,7 @@ interface ApiDish {
   status: Dish["status"];
   is_vegan: boolean;
   image_url: string | null;
+  is_best_seller: boolean;
 }
 const mapDish = (d: ApiDish): Dish => ({
   id: d.id,
@@ -96,6 +97,7 @@ const mapDish = (d: ApiDish): Dish => ({
   taxPct: d.tax_pct !== null ? Number(d.tax_pct) : undefined,
   isVegan: d.is_vegan,
   imageUrl: d.image_url ?? undefined,
+  isBestSeller: d.is_best_seller,
 });
 
 interface ApiTable {

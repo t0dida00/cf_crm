@@ -35,6 +35,7 @@ import type { Dish, DishStatus, TaxMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { DishImage } from "@/components/dish-image";
+import { formatNumber } from "@/lib/format";
 
 const COMMON_TAX = "Common tax";
 
@@ -278,7 +279,12 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                         )}
                       </span>
                     </span>
-                    <span className="font-semibold">{fmt(dish.price)}</span>
+                    <span className="flex flex-col">
+                      <span className="font-semibold">{fmt(dish.price)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatNumber(dish.soldCount ?? 0)} sold
+                      </span>
+                    </span>
                     <span>
                       <Badge className={STATUS_TONE[category.valid ? dish.status : "hidden"]}>
                         {category.valid ? STATUS_LABEL[dish.status] : "Hidden (category)"}

@@ -313,7 +313,7 @@ export function ClientShell({
                           type="button"
                           onClick={() => setQty(line.itemId, line.qty - 1)}
                           aria-label={`Remove one ${line.name}`}
-                          className="flex size-7 items-center justify-center rounded-full bg-background text-brand-700"
+                          className="flex size-7 items-center justify-center rounded-full border bg-background text-brand-700"
                         >
                           <Minus size={13} weight="bold" />
                         </button>
@@ -552,6 +552,9 @@ export function ClientShell({
                   {dish.isVegan && (
                     <Badge className={cn(TONE_CLASSES.green, "shrink-0")}>Vegan</Badge>
                   )}
+                  {dish.isBestSeller && (
+                    <Badge className={cn(TONE_CLASSES.brand, "shrink-0")}>Best seller</Badge>
+                  )}
                   {soldOut && (
                     <Badge className={cn(TONE_CLASSES.amber, "shrink-0")}>Sold out</Badge>
                   )}
@@ -642,7 +645,7 @@ export function ClientShell({
                         type="button"
                         onClick={() => setQty(dish.id, qty - 1)}
                         aria-label={`Remove one ${dish.name}`}
-                        className="flex size-7 items-center justify-center rounded-full bg-background text-brand-700"
+                        className="flex size-7 items-center justify-center rounded-full border bg-background text-brand-700"
                       >
                         <Minus size={13} weight="bold" />
                       </button>

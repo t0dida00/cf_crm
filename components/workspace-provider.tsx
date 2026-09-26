@@ -135,6 +135,7 @@ interface ApiDish {
   status: Dish["status"];
   is_vegan: boolean;
   image_url: string | null;
+  sold_count: number;
 }
 const mapDish = (d: ApiDish): Dish => ({
   id: d.id,
@@ -148,6 +149,7 @@ const mapDish = (d: ApiDish): Dish => ({
   taxPct: d.tax_pct !== null ? Number(d.tax_pct) : undefined,
   isVegan: d.is_vegan,
   imageUrl: d.image_url ?? undefined,
+  soldCount: d.sold_count,
 });
 
 export interface ApiOrderLine {
