@@ -27,6 +27,7 @@ import { useAsyncAction } from "@/hooks/use-async-action";
 import { hhmm } from "@/lib/range";
 import { orderTone } from "@/lib/tone";
 import type { Order } from "@/lib/types";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 export function StaffOrdersPanel() {
   const {
@@ -41,6 +42,7 @@ export function StaffOrdersPanel() {
   } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, 500);
   const [editId, setEditId] = useState<string | null>(null);
   const [addDishId, setAddDishId] = useState(workspace.dishes[0]?.id ?? "");
   const [createOpen, setCreateOpen] = useState(false);
@@ -87,13 +89,13 @@ export function StaffOrdersPanel() {
   }, []);
 
   const open = useMemo(() => {
-    const q = query.toLowerCase();
+    const q = debouncedQuery.toLowerCase();
     return workspace.orders.filter(
       (o) =>
         (!o.closedTs || recentlyClosedIds.has(o.id)) &&
         (!q || o.code.toLowerCase().includes(q) || o.tableName.toLowerCase().includes(q)),
     );
-  }, [workspace.orders, query, recentlyClosedIds]);
+  }, [workspace.orders, debouncedQuery, recentlyClosedIds]);
 
   const editing: Order | null = workspace.orders.find((o) => o.id === editId) ?? null;
   const serving: Order | null = workspace.orders.find((o) => o.id === servingId) ?? null;
@@ -152,7 +154,7 @@ export function StaffOrdersPanel() {
 
                   <div className="mt-3 space-y-1 border-t pt-3">
                     {order.lines.map((line) => (
-                      <div key={line.itemId} className="flex items-baseline gap-2.5 text-sm">
+                      <div key={line.id ?? line.itemId} className="flex items-baseline gap-2.5 text-sm">
                         <span className="w-6.5 font-bold text-muted-foreground">{line.qty}×</span>
                         <span className="flex-1">
                           {line.name}
@@ -235,7 +237,7 @@ export function StaffOrdersPanel() {
               <div>
                 {editing.lines.map((line) => (
                   <div
-                    key={line.itemId}
+                    key={line.id ?? line.itemId}
                     className="flex items-center gap-3 border-b py-2.5 last:border-0"
                   >
                     <span className="flex-1 text-[15px]">{line.name}</span>
@@ -338,7 +340,7 @@ export function StaffOrdersPanel() {
                 const checked = checkedItems.has(line.itemId);
                 return (
                   <label
-                    key={line.itemId}
+                    key={line.id ?? line.itemId}
                     className="flex cursor-pointer items-center gap-3 rounded-lg border py-2.5 px-3 text-sm transition-colors hover:bg-secondary"
                   >
                     <Checkbox

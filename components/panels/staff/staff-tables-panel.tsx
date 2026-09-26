@@ -11,7 +11,7 @@ import { BillReceipt, PrintableBillReceipt } from "@/components/bill-receipt";
 import { SessionDetailDialog } from "@/components/session-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
 import { useAsyncAction } from "@/hooks/use-async-action";
-import { groupOrdersIntoSessions, type OrderSession } from "@/lib/order-math";
+import { formatTaxRates, groupOrdersIntoSessions, type OrderSession } from "@/lib/order-math";
 import { formatStamp, hhmm } from "@/lib/range";
 import { tableStateTone, orderTone } from "@/lib/tone";
 import type { TableState } from "@/lib/types";
@@ -155,7 +155,7 @@ export function StaffTablesPanel() {
                         <span className="text-[13px] text-muted-foreground">{hhmm(o.ts)}</span>
                       </div>
                       {o.lines.map((l) => (
-                        <div key={l.itemId} className="flex items-baseline gap-2.5 py-1 text-sm">
+                        <div key={l.id ?? l.itemId} className="flex items-baseline gap-2.5 py-1 text-sm">
                           <span className="w-6.5 font-bold text-muted-foreground">{l.qty}×</span>
                           <span className="flex-1">
                             {l.name}
@@ -176,7 +176,7 @@ export function StaffTablesPanel() {
                       <span>{fmt(net)}</span>
                     </div>
                     <div className="flex justify-between pt-1.5 text-[13px] text-muted-foreground">
-                      <span>Tax</span>
+                      <span>Tax ({formatTaxRates(tableOrders)})</span>
                       <span>{fmt(tax)}</span>
                     </div>
                     <div className="mt-3 flex items-center justify-between border-t pt-3">

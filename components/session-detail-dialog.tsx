@@ -14,7 +14,7 @@ import { BillReceipt, PrintableBillReceipt } from "@/components/bill-receipt";
 import { useWorkspace } from "@/components/workspace-provider";
 import { formatStamp } from "@/lib/range";
 import { orderTone } from "@/lib/tone";
-import type { OrderSession } from "@/lib/order-math";
+import { formatTaxRates, type OrderSession } from "@/lib/order-math";
 
 export function SessionDetailDialog({
   session,
@@ -42,14 +42,15 @@ export function SessionDetailDialog({
             : undefined;
         if (!tax) return;
         const base = (line.price * line.qty) / (1 + taxRate / 100);
-        extras[tax.name] = (extras[tax.name] ?? 0) + (base * tax.pct) / 100;
+        const label = `${tax.name} (${tax.pct}%)`;
+        extras[label] = (extras[label] ?? 0) + (base * tax.pct) / 100;
       });
     });
     const commonTax = session.total - net - Object.values(extras).reduce((a, b) => a + b, 0);
     return {
       net,
       lines: [
-        { label: "Common tax", amount: commonTax },
+        { label: `Common tax (${formatTaxRates(session.orders)})`, amount: commonTax },
         ...Object.entries(extras).map(([label, amount]) => ({ label, amount })),
       ],
     };
@@ -94,7 +95,7 @@ export function SessionDetailDialog({
                 </div>
               )}
               {order.lines.map((line) => (
-                <div key={line.itemId} className="flex items-center gap-4 py-1.5 text-sm">
+                <div key={line.id ?? line.itemId} className="flex items-center gap-4 py-1.5 text-sm">
                   <span className="w-9 font-bold text-muted-foreground">{line.qty}×</span>
                   <span className="flex-1">
                     {line.name}

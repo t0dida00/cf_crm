@@ -1,3 +1,4 @@
+import { formatTaxRates } from "@/lib/order-math";
 import { formatStamp } from "@/lib/range";
 import type { Order } from "@/lib/types";
 
@@ -51,7 +52,7 @@ export function PrintableBillReceipt({
             <span>{formatStamp(o.ts)}</span>
           </div>
           {o.lines.map((l) => (
-            <div key={l.itemId}>
+            <div key={l.id ?? l.itemId}>
               <div className="bill-row">
                 <span className="bill-item-name">
                   {l.qty}× {l.name}
@@ -70,7 +71,7 @@ export function PrintableBillReceipt({
         <span>{fmt(net)}</span>
       </div>
       <div className="bill-row bill-muted">
-        <span>Tax</span>
+        <span>Tax ({formatTaxRates(orders)})</span>
         <span>{fmt(tax)}</span>
       </div>
       <div className="bill-rule" />
@@ -118,7 +119,7 @@ export function BillReceipt({
             <span className="text-[13px] text-muted-foreground">{formatStamp(o.ts)}</span>
           </div>
           {o.lines.map((l) => (
-            <div key={l.itemId} className="flex items-baseline gap-2.5 py-1 text-sm">
+            <div key={l.id ?? l.itemId} className="flex items-baseline gap-2.5 py-1 text-sm">
               <span className="w-6.5 font-bold text-muted-foreground">{l.qty}×</span>
               <span className="flex-1">
                 {l.name}
@@ -139,7 +140,7 @@ export function BillReceipt({
           <span>{fmt(net)}</span>
         </div>
         <div className="flex justify-between pt-1.5 text-[13px] text-muted-foreground">
-          <span>Tax</span>
+          <span>Tax ({formatTaxRates(orders)})</span>
           <span>{fmt(tax)}</span>
         </div>
         <div className="mt-3 flex items-center justify-between border-t pt-3">

@@ -33,6 +33,7 @@ import { useWorkspace } from "@/components/workspace-provider";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import type { Dish, DishStatus, TaxMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 const COMMON_TAX = "Common tax";
 
@@ -78,6 +79,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
   const { run, isPending } = useAsyncAction();
   const { categories, dishes, settings } = workspace;
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, 500);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Dish | null>(null);
@@ -136,9 +138,9 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
       dishes.filter(
         (d) =>
           (categoryFilter === "all" || d.catId === categoryFilter) &&
-          (!query || d.name.toLowerCase().includes(query.toLowerCase())),
+          (!debouncedQuery || d.name.toLowerCase().includes(debouncedQuery.toLowerCase())),
       ),
-    [dishes, categoryFilter, query],
+    [dishes, categoryFilter, debouncedQuery],
   );
 
   const groups = categories

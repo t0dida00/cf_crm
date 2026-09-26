@@ -39,7 +39,8 @@ export function OrderDetailDialog({
           : undefined;
       if (!tax) return;
       const base = (line.price * line.qty) / (1 + taxRate / 100);
-      extras[tax.name] = (extras[tax.name] ?? 0) + (base * tax.pct) / 100;
+      const label = `${tax.name} (${tax.pct}%)`;
+      extras[label] = (extras[label] ?? 0) + (base * tax.pct) / 100;
     });
     return {
       net,
@@ -76,7 +77,7 @@ export function OrderDetailDialog({
 
         {order.lines.map((line) => (
           <div
-            key={line.itemId}
+            key={line.id ?? line.itemId}
             className="flex items-center gap-4 border-t py-3 text-sm"
           >
             <span className="w-9 font-bold text-muted-foreground">{line.qty}×</span>

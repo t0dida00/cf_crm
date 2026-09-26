@@ -41,6 +41,7 @@ import { groupIntoSessions, summariseLines, type OrderSession } from "@/lib/orde
 import { orderTone } from "@/lib/tone";
 import { formatStamp } from "@/lib/range";
 import type { Order } from "@/lib/types";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 const helper = createColumnHelper<OrderSession>();
 
@@ -56,6 +57,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
   const { workspace, flow, fmt, addOrder } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, 500);
   const [detail, setDetail] = useState<OrderSession | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ tableName: "", itemId: "", qty: "1" });
@@ -73,7 +75,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
   }, [createSignal]);
 
   const data = useMemo(() => {
-    const q = query.toLowerCase();
+    const q = debouncedQuery.toLowerCase();
     // Open orders stay as their own row — they have no checkout time yet, so
     // grouping them into a session ahead of time would be premature. Closed
     // orders collapse into their checkout session (possibly several orders
@@ -89,7 +91,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
           (o) => o.code.toLowerCase().includes(q) || o.tableName.toLowerCase().includes(q),
         ),
     );
-  }, [workspace.orders, query]);
+  }, [workspace.orders, debouncedQuery]);
 
   const columns = useMemo(
     () => [

@@ -10,6 +10,7 @@ import { useWorkspace } from "@/components/workspace-provider";
 import { groupIntoSessions, summariseLines, type OrderSession } from "@/lib/order-math";
 import { orderTone } from "@/lib/tone";
 import { formatStamp } from "@/lib/range";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 const sessionLabel = (s: OrderSession) =>
   s.orders.length > 1 ? `${s.orders.length} orders` : s.orders[0].code;
@@ -17,10 +18,11 @@ const sessionLabel = (s: OrderSession) =>
 export function StaffHistoryPanel() {
   const { workspace, flow, fmt } = useWorkspace();
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, 500);
   const [session, setSession] = useState<OrderSession | null>(null);
 
   const history = useMemo(() => {
-    const q = query.toLowerCase();
+    const q = debouncedQuery.toLowerCase();
     const closed = workspace.orders.filter((o) => o.closedTs);
     return groupIntoSessions(closed).filter(
       (s) =>
@@ -29,7 +31,7 @@ export function StaffHistoryPanel() {
           (o) => o.code.toLowerCase().includes(q) || o.tableName.toLowerCase().includes(q),
         ),
     );
-  }, [workspace.orders, query]);
+  }, [workspace.orders, debouncedQuery]);
 
   return (
     <>

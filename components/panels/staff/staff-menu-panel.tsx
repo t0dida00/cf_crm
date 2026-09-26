@@ -43,6 +43,7 @@ import { useAsyncAction } from "@/hooks/use-async-action";
 import { TONE_CLASSES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import type { Dish, DishStatus } from "@/lib/types";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 const CATEGORY_ICONS: Record<string, PhosphorIcon> = {
   Starters: BowlFood,
@@ -71,6 +72,7 @@ export function StaffMenuPanel() {
   const { categories, dishes } = workspace;
   const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, 500);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [noteOpenId, setNoteOpenId] = useState<string | null>(null);
@@ -82,13 +84,13 @@ export function StaffMenuPanel() {
     run(`dish-status-${dish.id}`, () => saveDish({ ...dish, status }), "Failed to update dish status.");
 
   const filtered = useMemo(
-    () => dishes.filter((d) => !query || d.name.toLowerCase().includes(query.toLowerCase())),
-    [dishes, query],
+    () => dishes.filter((d) => !debouncedQuery || d.name.toLowerCase().includes(debouncedQuery.toLowerCase())),
+    [dishes, debouncedQuery],
   );
 
   const groups = categories
     .map((category) => ({ category, items: filtered.filter((d) => d.catId === category.id) }))
-    .filter((g) => g.items.length || !query);
+    .filter((g) => g.items.length || !debouncedQuery);
 
   const setQty = (dishId: string, qty: number) =>
     setCart((c) => {

@@ -3,6 +3,14 @@ import type { Order, OrderLine } from "./types";
 export const lineTotal = (lines: OrderLine[]) =>
   lines.reduce((a, l) => a + l.price * l.qty, 0);
 
+/** The common tax rate(s) the given orders were placed under, e.g. "20%", or
+ * "10% / 20%" when a bill spans a Settings change (each order snapshots its
+ * own rate at creation). */
+export function formatTaxRates(orders: Order[]): string {
+  const rates = Array.from(new Set(orders.map((o) => o.taxRate))).sort((a, b) => a - b);
+  return rates.length ? rates.map((r) => `${r}%`).join(" / ") : "0%";
+}
+
 /** Merges same-name lines (across one or several orders) into a single
  * qty for a compact summary, e.g. "23× Coca Cola" instead of listing every
  * individual round separately. */
