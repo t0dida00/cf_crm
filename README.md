@@ -34,7 +34,7 @@ Both gitignored; `.env.development.local.example` /
 
 | Var | Purpose |
 |---|---|
-| `AUTH_SECRET` | NextAuth session encryption (`openssl rand -base64 32`). The "Google" button is a demo login in `auth.ts`, so no Google credentials are needed |
+| `AUTH_SECRET` | NextAuth session encryption (`openssl rand -base64 32`). Sign-in is email and password only (`auth.ts`, checked by the backend's `POST /auth/login`) |
 | `API_URL` | Backend origin, used **server-side only** (the `/api/proxy*` routes attach the JWT and forward here — the browser never talks to the backend directly for authenticated staff calls) |
 | `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER` | The **shared** Pusher app's public key/cluster (see Real-time below), used by businesses that haven't connected their own. Same values as the backend's `PUSHER_KEY`/`PUSHER_CLUSTER`, safe to expose client-side (unlike `PUSHER_SECRET`, which stays backend-only) |
 | `RESEND_API_KEY` | Sends the contact form on the landing and login pages (`app/api/contact`) |

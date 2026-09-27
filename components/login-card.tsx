@@ -52,11 +52,9 @@ export function LoginCard({
         <p className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
           {code === "account_disabled"
             ? "Your account is disabled temporarily. Please contact your owner(s)."
-            : error === "AccessDenied"
-              ? "That account isn't allowed. Sign in with a @gmail.com account."
-              : error === "CredentialsSignin"
-                ? "Invalid email or password."
-                : "Something went wrong signing in. Please try again."}
+            : error === "CredentialsSignin"
+              ? "Invalid email or password."
+              : "Something went wrong signing in. Please try again."}
         </p>
       )}
 

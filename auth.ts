@@ -12,17 +12,6 @@ class AccountDisabledError extends CredentialsSignin {
 export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
   providers: [
     Credentials({
-      id: "google",
-      name: "Google",
-      credentials: {},
-      authorize: async () => ({
-        id: "demo-user",
-        name: "Demo User",
-        email: "demo.user@gmail.com",
-        image: null,
-      }),
-    }),
-    Credentials({
       id: "credentials",
       name: "Email",
       credentials: {
