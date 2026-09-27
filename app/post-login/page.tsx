@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { safeCallbackPath } from "@/lib/safe-redirect";
+import { safeCallbackPath } from "@/lib/safeRedirect";
 
 const OWNER_ONLY_PREFIXES = ["/admin", "/qr-generation"];
 

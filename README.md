@@ -90,8 +90,8 @@ session (redirects to `/login` with a `callbackUrl`).
    the public API, so staff can preview the ordering experience without a
    QR code.
 
-Guest paths (1 and 2) never see `workspace-provider.tsx`'s data — they use
-`client-workspace-provider.tsx`, which only ever calls the **public**,
+Guest paths (1 and 2) never see `WorkspaceProvider.tsx`'s data — they use
+`ClientWorkspaceProvider.tsx`, which only ever calls the **public**,
 unauthenticated backend endpoints (`/platforms/:platformId/...`).
 
 ## API access patterns
@@ -103,10 +103,10 @@ Three different ways this app reaches the backend, by trust level:
   session server-side, attaches `Authorization: Bearer <token>`, and
   forwards to `API_URL`. The browser never holds or sends the JWT itself
   for these calls.
-- **`lib/public-api.ts` (`publicApiFetch`)** — guest calls. Goes through
+- **`lib/publicApi.ts` (`publicApiFetch`)** — guest calls. Goes through
   `app/api/proxy-public/[platformId]/[...path]/route.ts`, which forwards to
   the backend's public endpoints. No auth involved either side.
-- **`hooks/use-platform-socket.ts`** — real-time. This one talks to Pusher
+- **`hooks/usePlatformSocket.ts`** — real-time. This one talks to Pusher
   directly from the browser (not through any Next.js API route), since it's
   a client-side subscription, not a REST call.
 
@@ -118,10 +118,10 @@ handler)` calls. `pusher` is the business's own Pusher app (`{ key, cluster }`
 from `GET /platforms/me` or the guest settings); without one it uses the
 shared app from `NEXT_PUBLIC_PUSHER_*`. Three consumers:
 
-- `hooks/use-new-order-notifications.ts` — staff shells toast + refresh on
+- `hooks/useNewOrderNotifications.ts` — staff shells toast + refresh on
   `order:created` / `order:updated` (only toasts on updates that changed the
   order's total, so a plain status advance doesn't spam a "new order" toast)
-- `hooks/use-table-request-notifications.ts` — staff shells toast on
+- `hooks/useTableRequestNotifications.ts` — staff shells toast on
   `table_request:created` (guest hit "call staff" / "checkout")
 - `app/client/page.tsx` (guest) — refetches this table's order history on
   `order:created` / `order:updated` / `table:checked_out`, so a staff-side
@@ -155,61 +155,68 @@ auth.ts                      NextAuth config: credentials provider calls
                             POST /auth/login on the backend, stores its JWT
                             as session.accessToken
 middleware.ts                 session gate (redirects to /login)
-components/
-  workspace-provider.tsx     staff-side data store: fetches everything on
-                            mount from the backend, exposes CRUD actions
-                            that call apiFetch and patch local state
-  client-workspace-provider.tsx   guest-side equivalent, public endpoints only
-  admin-shell.tsx / staff-shell.tsx   sidebar + header + panel switch,
-                            collapsible sidebar (useSidebarCollapse,
-                            persisted via localStorage)
-  client-shell.tsx            the guest ordering UI itself
-  workspace-setup-flow.tsx    first-time setup: step 1 connections (checked,
-                             not saved) → step 2 details (creates the business,
-                             saves the connections, uploads the logo) → building
-  connections-step.tsx / setup-screen.tsx / building-screen.tsx   its screens
-  connections-form.tsx        database + Pusher + storage form, shared with
-                             Settings → Connections (check or save mode)
-  image-dropzone.tsx          drag-and-drop image picker; uploads, or hands the
-                             file over (onFile) when the business doesn't exist
-  order-detail-dialog.tsx    line items + net/tax breakdown for one order
-  sidebar-clock.tsx           the sidebar clock, ticking on its own
-  bill-receipt.tsx            the bill on screen (BillReceipt), its printable
-                             copy, and PrintReceiptButton (paper width + Print)
-  qr-generation-view.tsx      QR code grid + downloadable SVGs
-  panels/                     one file per admin/staff tab
-    staff/                    staff-specific panel variants (simpler than admin's);
-                              Bookings has none: staff reuse the admin
-                              bookings-panel.tsx with allowTableAssign
-  booking-assign-dialog.tsx   staff-only: assign or release a table for a booking
+components/                   one folder per part of the UI; one PascalCase
+                              file per component (tests sit beside them)
+  ui/                         shadcn primitives: Button, Input, Select, Dialog…
+  common/                     shared building blocks: DataTable, DishImage,
+                              FieldError, ImageDropzone (uploads, or hands the
+                              file over with onFile before the business exists),
+                              PaginationBar, RequestState, RequiredLabel,
+                              ContactForm
+  providers/                  WorkspaceProvider (staff-side data: loads the
+                              workspace, CRUD actions, applies real-time
+                              events), ClientWorkspaceProvider (guest side,
+                              public endpoints only), QueryProvider
+  layout/                     AdminShell / StaffShell (sidebar + header +
+                              panel switch, collapsible sidebar),
+                              MobileNavDrawer, SidebarClock
+  auth/                       LoginCard (Owner / Staff choice), SignupCard,
+                              LoginSubmitButton
+  onboarding/                 WorkspaceSetupFlow (step 1 connections, checked
+                              not saved → step 2 details, which creates the
+                              business, saves them and uploads the logo →
+                              building); ConnectionsStep, SetupScreen,
+                              BuildingScreen; ConnectionsForm (database +
+                              Pusher + storage, shared with Settings)
+  marketing/                  LandingPage, InstructionPage, MarketingTheme
+  client/                     ClientShell: the guest ordering UI
+  orders/                     BillReceipt (the bill on screen, its printable
+                              copy and PrintReceiptButton), SessionDetailDialog
+  bookings/                   BookingsPanel (admin tab, reused by staff with
+                              allowTableAssign), BookingAssignDialog
+  admin/                      one panel per admin tab (Dashboard, Tables,
+                              Categories, Menu, Orders, Staff, Settings,
+                              Connections, QR codes) and TakingsChart
+  staff/                      staff-specific panel variants (simpler than
+                              admin's) and TableRequestsModal
 hooks/
-  use-platform-socket.ts      Pusher subscription
-  use-connections.ts          the owner's connections: load, check, save
-  use-new-order-notifications.ts / use-table-request-notifications.ts
-  use-sidebar-collapse.ts      localStorage-persisted sidebar state
-  use-now.ts                  the current time on an interval (for a clock
+  usePlatformSocket.ts      Pusher subscription
+  useConnections.ts          the owner's connections: load, check, save
+  useNewOrderNotifications.ts / useTableRequestNotifications.ts
+  useSidebarCollapse.ts      localStorage-persisted sidebar state
+  useNow.ts                  the current time on an interval (for a clock
                              component only, so ticks don't re-render pages)
 lib/
   types.ts                    Workspace, Order, Dish, Booking, Settings…
-  api.ts / public-api.ts      fetch wrappers for the two proxy routes
-  platform-api.ts             server-side-only platform fetch/create (used
+  api.ts / publicApi.ts      fetch wrappers for the two proxy routes
+  platformApi.ts             server-side-only platform fetch/create (used
                              by layout.tsx and actions.ts, needs a raw JWT)
   lexicon.ts                  per-domain (restaurant/cafe) copy and flow steps
   range.ts                    date formatting, currency formatting
-  order-math.ts               shared line-total math
-  best-sellers.ts             bestSellerIds(): the top 5 dishes by soldCount
+  orderMath.ts               shared line-total math
+  bestSellers.ts             bestSellerIds(): the top 5 dishes by soldCount
                              (mirrors the backend's rule for the guest menu)
-  upload-image.ts             uploadImage(file): 4 MB check (under Vercel's
+  uploadImage.ts             uploadImage(file): 4 MB check (under Vercel's
                              4.5 MB body limit), POST /api/upload
-  server-token.ts             getAccessToken(): the backend JWT, read on the
+  serverToken.ts             getAccessToken(): the backend JWT, read on the
                              server from the session cookie (never sent to
                              the browser)
-  safe-redirect.ts            safeCallbackPath(): only in-app paths after
+  safeRedirect.ts            safeCallbackPath(): only in-app paths after
                              sign-in (no open redirect)
-  guest-routes.ts             the only backend routes /api/proxy-public forwards
-  table-events.ts             eventIsForTable(): guest phones skip other
+  guestRoutes.ts             the only backend routes /api/proxy-public forwards
+  tableEvents.ts             eventIsForTable(): guest phones skip other
                              tables' real-time events
-  live-merge.ts               upsertById / removeById / isNewer: applying
+  liveMerge.ts               upsertById / removeById / isNewer: applying
                              real-time events to the workspace without refetching
   focus.ts                    focusFirstInvalid(): failed submits focus the
                              first field with an error
@@ -217,7 +224,7 @@ test/
   axe.ts                      axeViolations(): axe-core WCAG 2.2 A/AA check
                              for rendered components
   a11y.test.tsx               axe on sign-in, sign-up and onboarding screens
-  print-receipt.ts            printReceipt(): prints a bill in a hidden frame
+  printReceipt.ts            printReceipt(): prints a bill in a hidden frame
                              as one page sized to the receipt (80 or 58 mm
                              paper, remembered per browser)
   register.ts                 registerAccount(): POST /auth/register (server-side)
@@ -241,7 +248,7 @@ test/
 - Placing an order always creates a **new** order row (no merging into a
   prior open one at the same table) — a table's "Orders" list can show
   several open orders if it's ordered more than once before checkout.
-- Guest order history (`tableOrders` in `client-workspace-provider.tsx`) is
+- Guest order history (`tableOrders` in `ClientWorkspaceProvider.tsx`) is
   scoped to still-open orders only (`closed_ts: null` on the backend) — a
   newly-seated guest never sees a previous party's order history at the
   same table, and a staff-side checkout clears it from the guest's view.

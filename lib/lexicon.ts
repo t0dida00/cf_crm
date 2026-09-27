@@ -84,4 +84,4 @@ export const GUESTS = [
 ];
 
 // Booking slots are generated (every 15 minutes) in lib/booking-slots.ts.
-export { SLOT_TIMES } from "./booking-slots";
+export { SLOT_TIMES } from "./bookingSlots";

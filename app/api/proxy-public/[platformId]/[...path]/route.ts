@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { guestTarget } from "@/lib/guest-routes";
+import { guestTarget } from "@/lib/guestRoutes";
 
 // Deliberately no auth() call here — this proxy exists specifically to serve
 // anonymous guests on /client with zero session, unlike app/api/proxy/[...path].

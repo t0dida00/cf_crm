@@ -2,7 +2,7 @@ import { ArrowLeft, SquaresFour } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
-import { SignupCard, type SignupState } from "@/components/signup-card";
+import { SignupCard, type SignupState } from "@/components/auth/SignupCard";
 import { notifyNewAccount } from "@/lib/notify";
 import { registerAccount } from "@/lib/register";
 

@@ -2,20 +2,20 @@
 
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ClientShell } from "@/components/client-shell";
-import { useWorkspace } from "@/components/workspace-provider";
-import { ErrorState, LoadingState } from "@/components/request-state";
+import { ClientShell } from "@/components/client/ClientShell";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
+import { ErrorState, LoadingState } from "@/components/common/RequestState";
 import { useQuery } from "@tanstack/react-query";
-import { errorMessage } from "@/lib/request-status";
+import { errorMessage } from "@/lib/requestStatus";
 import { fetchJson } from "@/lib/http";
 import {
   ClientWorkspaceProvider,
   useClientWorkspace,
-} from "@/components/client-workspace-provider";
-import { usePlatformSocket } from "@/hooks/use-platform-socket";
+} from "@/components/providers/ClientWorkspaceProvider";
+import { usePlatformSocket } from "@/hooks/usePlatformSocket";
 import { apiFetch } from "@/lib/api";
 import type { TableRequestType } from "@/lib/types";
-import { eventIsForTable } from "@/lib/table-events";
+import { eventIsForTable } from "@/lib/tableEvents";
 
 function GuestClientPage({
   platformId,

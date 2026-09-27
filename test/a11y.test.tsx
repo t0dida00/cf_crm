@@ -1,13 +1,13 @@
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import type { Connections } from "@/hooks/use-connections";
+import type { Connections } from "@/hooks/useConnections";
 import { axeViolations } from "./axe";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }) }));
 vi.mock("@/app/actions", () => ({ signOutAction: vi.fn() }));
-vi.mock("@/components/contact-form", () => ({ ContactForm: () => null }));
+vi.mock("@/components/common/ContactForm", () => ({ ContactForm: () => null }));
 const connections: Connections = { database: null, pusher: null, storage: null, sharedInfraAllowed: true, canStoreCredentials: true };
-vi.mock("@/hooks/use-connections", () => ({
+vi.mock("@/hooks/useConnections", () => ({
   useConnections: () => ({
     connections,
     status: "success",
@@ -18,12 +18,12 @@ vi.mock("@/hooks/use-connections", () => ({
   }),
 }));
 
-import { LoginCard } from "@/components/login-card";
-import { SignupCard } from "@/components/signup-card";
-import { ConnectionsForm } from "@/components/connections-form";
-import { ConnectionsStep } from "@/components/connections-step";
-import { SetupScreen } from "@/components/setup-screen";
-import { ImageDropzone } from "@/components/image-dropzone";
+import { LoginCard } from "@/components/auth/LoginCard";
+import { SignupCard } from "@/components/auth/SignupCard";
+import { ConnectionsForm } from "@/components/onboarding/ConnectionsForm";
+import { ConnectionsStep } from "@/components/onboarding/ConnectionsStep";
+import { SetupScreen } from "@/components/onboarding/SetupScreen";
+import { ImageDropzone } from "@/components/common/ImageDropzone";
 
 afterEach(cleanup);
 
