@@ -196,6 +196,15 @@ export const mapOrder = (o: ApiOrder): Order => ({
   sessionId: o.session_id,
 });
 
+/** Every order (open + recent closed) and table, mapped: what a check-out can change. */
+async function fetchOrdersAndTables(signal: AbortSignal): Promise<Pick<Workspace, "orders" | "tables">> {
+  const [ordersRes, tablesRes] = await Promise.all([
+    apiFetch<{ orders: ApiOrder[] }>("/orders", { signal }),
+    apiFetch<{ tables: ApiTable[] }>("/tables", { signal }),
+  ]);
+  return { orders: ordersRes.orders.map(mapOrder), tables: tablesRes.tables.map(mapTable) };
+}
+
 interface ApiBooking {
   id: string;
   name: string;
@@ -405,22 +414,22 @@ export function WorkspaceProvider({
       const mapped = mapTable(table);
       setList("tables", (tables) => upsertById(tables, mapped));
     };
+    // Latest-wins: a newer refetch aborts the one still in flight.
+    const refetchAfterCheckout = async () => {
+      ordersRefetch.current?.abort();
+      const controller = new AbortController();
+      ordersRefetch.current = controller;
+      try {
+        const fresh = await fetchOrdersAndTables(controller.signal);
+        setWorkspace((w) => ({ ...w, ...fresh }));
+      } catch (err) {
+        if (!isAbortError(err)) console.error("Refetch after check-out failed:", err);
+      }
+    };
     let checkoutTimer: ReturnType<typeof setTimeout> | undefined;
     const onCheckedOut = () => {
       clearTimeout(checkoutTimer); // a burst of check-outs → one refetch
-      checkoutTimer = setTimeout(() => {
-        ordersRefetch.current?.abort();
-        const controller = new AbortController();
-        ordersRefetch.current = controller;
-        void Promise.all([
-          apiFetch<{ orders: ApiOrder[] }>("/orders", { signal: controller.signal }),
-          apiFetch<{ tables: ApiTable[] }>("/tables", { signal: controller.signal }),
-        ])
-          .then(([o, t]) => setWorkspace((w) => ({ ...w, orders: o.orders.map(mapOrder), tables: t.tables.map(mapTable) })))
-          .catch((err) => {
-            if (!isAbortError(err)) console.error("Refetch after check-out failed:", err);
-          });
-      }, 300);
+      checkoutTimer = setTimeout(refetchAfterCheckout, 300);
     };
     channel.bind("order:created", onOrder);
     channel.bind("order:updated", onOrder);
