@@ -3,8 +3,8 @@ import { AuthError } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
-import { LoginCard } from "@/components/login-card";
-import { safeCallbackPath } from "@/lib/safe-redirect";
+import { LoginCard } from "@/components/auth/LoginCard";
+import { safeCallbackPath } from "@/lib/safeRedirect";
 
 export const metadata = { title: "Sign in" };
 

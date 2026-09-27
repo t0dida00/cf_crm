@@ -28,6 +28,7 @@ Detailed guidance lives in `.claude/rules/` and is loaded automatically:
 
 | File | Covers |
 |---|---|
+| `structure-and-naming.md` | Component folders by UI area, PascalCase components, camelCase hooks/lib, UPPER_SNAKE_CASE constants |
 | `data-and-api.md` | Workspace provider vs TanStack Query, order history at scale, request status, cancellation, API access and real-time |
 | `orders-and-menu.md` | Sessions, tax snapshots, sold count and best sellers, order-line keys |
 | `onboarding-and-connections.md` | Signup, workspace setup, the business's own database and Pusher |

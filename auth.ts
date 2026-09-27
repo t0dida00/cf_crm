@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { fetchRole } from "@/lib/session-role";
+import { fetchRole } from "@/lib/sessionRole";
 
 const API_URL = process.env.API_URL || "http://localhost:3000";
 

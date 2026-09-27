@@ -3,8 +3,8 @@ import { Nunito_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import { auth } from "@/auth";
-import { QueryProvider } from "@/components/query-provider";
-import { WorkspaceProvider } from "@/components/workspace-provider";
+import { QueryProvider } from "@/components/providers/QueryProvider";
+import { WorkspaceProvider } from "@/components/providers/WorkspaceProvider";
 import "../node_modules/tw-animate-css/dist/tw-animate.css";
 import "./globals.scss";
 

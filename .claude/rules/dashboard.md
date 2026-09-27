@@ -1,6 +1,6 @@
 ---
 paths:
-  - "components/panels/dashboard-panel*"
+  - "components/admin/dashboard-panel*"
   - "components/takings-chart*"
   - "lib/chart-buckets*"
   - "hooks/use-order-stats*"
@@ -9,4 +9,4 @@ paths:
 
 # Dashboard
 
-- **Dashboard chart.** Chart.js via `react-chartjs-2` (`components/takings-chart.tsx`). `lib/chart-buckets.ts` maps the range to buckets: today → hours, last 7 days → weekdays, this month → days, this year → months, all time → years from the oldest order, none for custom. Bucketing uses the viewer's time zone (`GET /orders/stats/series?tz=`). Bars use brand-600 (`#1e90cc`) because brand-500 is under 3:1 contrast on white.
+- **Dashboard chart.** Chart.js via `react-chartjs-2` (`components/admin/TakingsChart.tsx`). `lib/chartBuckets.ts` maps the range to buckets: today → hours, last 7 days → weekdays, this month → days, this year → months, all time → years from the oldest order, none for custom. Bucketing uses the viewer's time zone (`GET /orders/stats/series?tz=`). Bars use brand-600 (`#1e90cc`) because brand-500 is under 3:1 contrast on white.

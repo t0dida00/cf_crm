@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getAccessToken } from "@/lib/server-token";
+import { getAccessToken } from "@/lib/serverToken";
 import { auth, signOut, unstable_update } from "@/auth";
-import { createPlatform, updatePlatform } from "@/lib/platform-api";
+import { createPlatform, updatePlatform } from "@/lib/platformApi";
 import type { Domain } from "@/lib/types";
 
 export async function signOutAction() {
