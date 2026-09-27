@@ -22,6 +22,7 @@ export default async function LoginPage({
       await signIn("credentials", {
         email: formData.get("email"),
         password: formData.get("password"),
+        signInAs: formData.get("signInAs"),
         redirectTo: postLoginUrl,
       });
     } catch (err) {
