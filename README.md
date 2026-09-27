@@ -148,6 +148,8 @@ app/
     proxy-public/[platformId]/[...path]/   guest API proxy (no auth)
     auth/[...nextauth]/       NextAuth handler
     token-resolve/[token]/    resolves a QR token before proxying to the backend
+    upload/                   forwards an image to POST /platforms/me/uploads
+                             (the generic proxy only carries JSON)
   actions.ts                 server actions: signOutAction, createPlatformAction
 auth.ts                      NextAuth config: credentials provider calls
                             POST /auth/login on the backend, stores its JWT
@@ -162,7 +164,14 @@ components/
                             collapsible sidebar (useSidebarCollapse,
                             persisted via localStorage)
   client-shell.tsx            the guest ordering UI itself
-  setup-screen.tsx / building-screen.tsx   first-time workspace setup flow
+  workspace-setup-flow.tsx    first-time setup: step 1 connections (checked,
+                             not saved) → step 2 details (creates the business,
+                             saves the connections, uploads the logo) → building
+  connections-step.tsx / setup-screen.tsx / building-screen.tsx   its screens
+  connections-form.tsx        database + Pusher + storage form, shared with
+                             Settings → Connections (check or save mode)
+  image-dropzone.tsx          drag-and-drop image picker; uploads, or hands the
+                             file over (onFile) when the business doesn't exist
   order-detail-dialog.tsx    line items + net/tax breakdown for one order
   qr-generation-view.tsx      QR code grid + downloadable SVGs
   panels/                     one file per admin/staff tab
@@ -172,6 +181,7 @@ components/
   booking-assign-dialog.tsx   staff-only: assign or release a table for a booking
 hooks/
   use-platform-socket.ts      Pusher subscription
+  use-connections.ts          the owner's connections: load, check, save
   use-new-order-notifications.ts / use-table-request-notifications.ts
   use-sidebar-collapse.ts      localStorage-persisted sidebar state
 lib/
@@ -184,6 +194,7 @@ lib/
   order-math.ts               shared line-total math
   best-sellers.ts             bestSellerIds(): the top 5 dishes by soldCount
                              (mirrors the backend's rule for the guest menu)
+  upload-image.ts             uploadImage(file): 5 MB check, POST /api/upload
   tone.ts                     status/state -> badge color mapping
   utils.ts                    cn()
 ```
