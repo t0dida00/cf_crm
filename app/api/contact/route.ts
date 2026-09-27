@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-
-const CONTACT_EMAIL = "ddkhoa97@gmail.com";
+import { ADMIN_EMAIL } from "@/lib/notify";
 
 export async function POST(req: NextRequest) {
   const { name, email, message } = await req.json();
@@ -24,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   const { error } = await resend.emails.send({
     from: "Tably Contact Form <onboarding@resend.dev>",
-    to: CONTACT_EMAIL,
+    to: ADMIN_EMAIL,
     replyTo: email,
     subject: `New Tably contact from ${name}`,
     text: `From: ${name} <${email}>\n\n${message}`,

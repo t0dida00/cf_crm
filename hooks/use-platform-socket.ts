@@ -2,17 +2,26 @@
 
 import { useEffect, useState } from "react";
 import Pusher, { type Channel } from "pusher-js";
+import type { PusherConfig } from "@/lib/types";
 
-const PUSHER_KEY = process.env.NEXT_PUBLIC_PUSHER_KEY || "";
-const PUSHER_CLUSTER = process.env.NEXT_PUBLIC_PUSHER_CLUSTER || "";
+/** The shared Pusher app, used by businesses that haven't connected their own. */
+const SHARED: PusherConfig | null =
+  process.env.NEXT_PUBLIC_PUSHER_KEY && process.env.NEXT_PUBLIC_PUSHER_CLUSTER
+    ? { key: process.env.NEXT_PUBLIC_PUSHER_KEY, cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER }
+    : null;
 
-let pusherClient: Pusher | null = null;
-function getPusherClient(): Pusher | null {
-  if (!PUSHER_KEY || !PUSHER_CLUSTER) return null;
-  if (!pusherClient) {
-    pusherClient = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
+// One client (one websocket) per Pusher app.
+const clients = new Map<string, Pusher>();
+export function getPusherClient(config: PusherConfig | null | undefined): Pusher | null {
+  const app = config ?? SHARED;
+  if (!app) return null;
+  const id = `${app.key}:${app.cluster}`;
+  let client = clients.get(id);
+  if (!client) {
+    client = new Pusher(app.key, { cluster: app.cluster });
+    clients.set(id, client);
   }
-  return pusherClient;
+  return client;
 }
 
 // Multiple hook instances (e.g. useNewOrderNotifications and
@@ -26,21 +35,28 @@ function getPusherClient(): Pusher | null {
 // events until something forced a fresh client (a full page reload). This
 // map reference-counts subscribers per channel name so the real
 // unsubscribe only happens once nothing is using it anymore.
-const refCounts = new Map<string, number>();
+// Counts are per client, since two Pusher apps can have the same channel name.
+const refCounts = new WeakMap<Pusher, Map<string, number>>();
+const countsFor = (client: Pusher) => {
+  let counts = refCounts.get(client);
+  if (!counts) refCounts.set(client, (counts = new Map()));
+  return counts;
+};
 
 function acquireChannel(client: Pusher, name: string): Channel {
-  const count = refCounts.get(name) ?? 0;
-  refCounts.set(name, count + 1);
+  const counts = countsFor(client);
+  counts.set(name, (counts.get(name) ?? 0) + 1);
   return client.channel(name) ?? client.subscribe(name);
 }
 
 function releaseChannel(client: Pusher, name: string) {
-  const count = refCounts.get(name) ?? 0;
+  const counts = countsFor(client);
+  const count = counts.get(name) ?? 0;
   if (count <= 1) {
-    refCounts.delete(name);
+    counts.delete(name);
     client.unsubscribe(name);
   } else {
-    refCounts.set(name, count - 1);
+    counts.set(name, count - 1);
   }
 }
 
@@ -51,8 +67,12 @@ function releaseChannel(client: Pusher, name: string) {
  * see through the public REST endpoints). Returns the channel (or null
  * before/between subscriptions) so callers can `.bind(...)` in an effect
  * keyed off this value, mirroring the old socket.io-based hook's shape.
+ * `pusher` is the business's own Pusher app; without one it uses the shared
+ * app from NEXT_PUBLIC_PUSHER_KEY / NEXT_PUBLIC_PUSHER_CLUSTER.
  */
-export function usePlatformSocket(platformId: string | null) {
+export function usePlatformSocket(platformId: string | null, pusher?: PusherConfig | null) {
+  const key = pusher?.key;
+  const cluster = pusher?.cluster;
   const [channel, setChannel] = useState<Channel | null>(null);
 
   useEffect(() => {
@@ -61,7 +81,7 @@ export function usePlatformSocket(platformId: string | null) {
       return;
     }
 
-    const client = getPusherClient();
+    const client = getPusherClient(key && cluster ? { key, cluster } : null);
     if (!client) {
       setChannel(null);
       return;
@@ -75,7 +95,7 @@ export function usePlatformSocket(platformId: string | null) {
       releaseChannel(client, name);
       setChannel(null);
     };
-  }, [platformId]);
+  }, [platformId, key, cluster]);
 
   return channel;
 }

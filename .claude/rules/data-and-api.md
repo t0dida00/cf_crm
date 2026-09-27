@@ -1,0 +1,15 @@
+# Data, API access and requests
+
+- **Two data layers.**
+  - `components/workspace-provider.tsx` loads the signed-in user's whole workspace on mount (tables, menu, orders, bookings, settings). It exposes the CRUD actions, which call `apiFetch` and patch local state; UI reads it via `useWorkspace()`.
+  - Paged or large reads use **TanStack Query** (`components/query-provider.tsx`, mounted in `app/layout.tsx`): order history, dashboard stats, staff list, QR tokens, table requests, and the guest menu.
+  - The provider invalidates `["orders"]` queries whenever its order list changes, so real-time updates reach cached reads.
+  - No Zustand; don't add a second client store.
+- **Order history at scale.** The workspace's `orders` holds every open order but only the 500 most recently closed (a backend cap). Anything spanning history must use `hooks/use-order-history.ts` (`GET /orders/history`, server-paged sessions) or `hooks/use-order-stats.ts` (`GET /orders/stats`), never `workspace.orders`.
+- **Staff history** shows only today and yesterday: `staff-history-panel.tsx` passes `from: daysAgoStart(1)` (`lib/range.ts`) to `useOrderHistory`, which forwards it as `GET /orders/history?from=`. Admin history has no limit. This limits the view only; the backend doesn't restrict staff to 2 days.
+- **Request status.** Reads expose `RequestStatus` (`idle | loading | success | error`, `lib/request-status.ts`; `toRequestStatus()` maps a TanStack query). Render them with `LoadingState` / `ErrorState` from `components/request-state.tsx`, or pass `status`/`error`/`onRetry` to `DataTable`. Mutations use `useAsyncAction` (button spinner + error toast) instead.
+- **Cancellation.** Every API call goes through `fetchJson` (`lib/http.ts`, used by `apiFetch`/`publicApiFetch`): it takes a `signal` and has a default 20 s timeout ("Request timed out"). Always pass TanStack's `signal` from `queryFn: async ({ signal }) => …`. Refetches triggered by real-time events are latest-wins (abort the previous `AbortController`). Swallow aborts with `isAbortError()`, never surface them as errors. The `/api/proxy*` routes forward `req.signal` to the backend and answer 499 when the client went away. Mutations aren't aborted on purpose, only timed out.
+- **API access.**
+  - Staff calls: `apiFetch` → `/api/proxy/*`, which attaches the session JWT server-side.
+  - Guest calls: `publicApiFetch` → `/api/proxy-public/:platformId/*`, no auth.
+  - Real-time: Pusher, subscribed directly from the browser (`usePlatformSocket(platformId, pusher)`). Pass the business's own app: `workspace.pusher` (staff/admin, from `GET /platforms/me`) or the guest workspace's `pusher` (public settings). Null falls back to `NEXT_PUBLIC_PUSHER_*`. The hook keeps one client per Pusher key.

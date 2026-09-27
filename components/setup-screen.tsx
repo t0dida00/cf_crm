@@ -1,39 +1,65 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight, CheckCircle, Coffee, ForkKnife, SignOut, SquaresFour } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowRight, CheckCircle, Coffee, ForkKnife, SignOut, SquaresFour } from "@phosphor-icons/react";
 import { signOutAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/required-label";
 import { LEXICON } from "@/lib/lexicon";
 import type { Domain } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { FieldError, fieldErrorProps } from "@/components/field-error";
+import { sanitizePhone, validateBusiness, type FieldErrors, withFieldError } from "@/lib/validation";
 
 const ICONS: Record<Domain, typeof ForkKnife> = {
   restaurant: ForkKnife,
   cafe: Coffee,
 };
 
+export interface SetupDetails {
+  name: string;
+  domain: Domain;
+  phone: string;
+  address: string;
+  logoUrl: string;
+}
+
+/**
+ * Onboarding step 2: the business's details. A logo picked here isn't
+ * uploaded yet (the business and its storage don't exist): it's previewed
+ * locally and handed to `onSubmit` as `logoFile`, with `logoUrl` left as the
+ * logo saved before, if any.
+ */
 export function SetupScreen({
   onSubmit,
+  onBack,
   error,
+  initial,
 }: {
   onSubmit: (
     name: string,
     domain: Domain,
-    contact: { phone: string; email: string; address: string; logoUrl: string },
+    contact: { phone: string; address: string; logoUrl: string; logoFile: File | null },
   ) => void | Promise<void>;
+  onBack?: () => void;
   error?: string | null;
+  /** Values to start from, e.g. when coming back to this step. */
+  initial?: SetupDetails | null;
 }) {
-  const [name, setName] = useState("");
-  const [domain, setDomain] = useState<Domain>("restaurant");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
-  const [logoUrl, setLogoUrl] = useState("");
+  const [name, setName] = useState(initial?.name ?? "");
+  const [domain, setDomain] = useState<Domain>(initial?.domain ?? "restaurant");
+  const [phone, setPhone] = useState(initial?.phone ?? "");
+  const [address, setAddress] = useState(initial?.address ?? "");
+  const [logoUrl, setLogoUrl] = useState(initial?.logoUrl ?? "");
+  // The picked logo, and its local preview URL (shown instead of logoUrl).
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  useEffect(() => () => void (logoPreview && URL.revokeObjectURL(logoPreview)), [logoPreview]);
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors<"name" | "phone" | "address">>({});
 
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-12">
@@ -43,7 +69,7 @@ export function SetupScreen({
             <SquaresFour size={15} weight="bold" />
           </span>
           <span className="text-xs font-semibold tracking-wide text-muted-foreground">
-            WORKSPACE SETUP · STEP 1 OF 2
+            WORKSPACE SETUP · STEP 2 OF 2
           </span>
           <span className="flex-1" />
           <form action={signOutAction}>
@@ -67,66 +93,71 @@ export function SetupScreen({
           <div className="space-y-1.5">
             <Label className="block text-sm font-semibold">Logo</Label>
             <ImageDropzone
-              value={logoUrl}
+              value={logoPreview ?? logoUrl}
               onChange={setLogoUrl}
+              onFile={(file) => {
+                setLogoFile(file);
+                setLogoPreview(URL.createObjectURL(file));
+              }}
               className="size-[200px] max-w-full"
               placeholder="Drop a logo, or click to browse"
             />
           </div>
 
           <div className="mt-6">
-            <Label htmlFor="business-name" className="mb-2 block text-sm font-semibold">
+            <RequiredLabel htmlFor="business-name" className="mb-2 block text-sm font-semibold">
               Enter your business name
-            </Label>
+            </RequiredLabel>
             <Input
               id="business-name"
+              required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Casa Marina"
               className="h-11 text-base"
+              {...fieldErrorProps("business-name", errors.name)}
+              onBlur={() => setErrors((e) => withFieldError(e, "name", validateBusiness({ name, phone, address }).name))}
             />
+            <FieldError id="business-name" message={errors.name} />
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="business-phone" className="mb-2 block text-sm font-semibold">
-                Phone
-              </Label>
-              <Input
-                id="business-phone"
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="e.g. +34 600 000 000"
-                className="h-11 text-base"
-              />
-            </div>
-            <div>
-              <Label htmlFor="business-email" className="mb-2 block text-sm font-semibold">
-                Email
-              </Label>
-              <Input
-                id="business-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. hello@casamarina.com"
-                className="h-11 text-base"
-              />
-            </div>
+          <div className="mt-6">
+            <RequiredLabel htmlFor="business-phone" className="mb-2 block text-sm font-semibold">
+              Phone
+            </RequiredLabel>
+            <Input
+              id="business-phone"
+              type="tel"
+              inputMode="tel"
+              required
+              value={phone}
+              onChange={(e) => setPhone(sanitizePhone(e.target.value))}
+              placeholder="e.g. +34 600 000 000"
+              className="h-11 text-base"
+              {...fieldErrorProps("business-phone", errors.phone)}
+              onBlur={() => setErrors((e) => withFieldError(e, "phone", validateBusiness({ name, phone, address }).phone))}
+            />
+            <FieldError id="business-phone" message={errors.phone} />
           </div>
 
           <div className="mt-4">
-            <Label htmlFor="business-address" className="mb-2 block text-sm font-semibold">
+            <RequiredLabel htmlFor="business-address" className="mb-2 block text-sm font-semibold">
               Address
-            </Label>
+            </RequiredLabel>
             <Input
               id="business-address"
+              required
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="e.g. Carrer del Mar 12, Barcelona"
               className="h-11 text-base"
+              {...fieldErrorProps("business-address", errors.address)}
+              onBlur={() => setErrors((e) => withFieldError(e, "address", validateBusiness({ name, phone, address }).address))}
             />
+            <FieldError id="business-address" message={errors.address} />
+            <p className="mt-2 text-xs text-muted-foreground">
+              Your business email is the one you signed up with.
+            </p>
           </div>
 
           <p className="mt-8 mb-3 text-sm font-semibold">What kind of business is it?</p>
@@ -167,20 +198,29 @@ export function SetupScreen({
             </p>
           )}
 
-          <div className="mt-8 flex items-center justify-between border-t pt-6">
-            <span className="text-xs text-muted-foreground">
+          <div className="mt-8 flex items-center gap-3 border-t pt-6">
+            {onBack && (
+              <Button variant="outline" onClick={onBack} disabled={submitting}>
+                <ArrowLeft size={14} weight="bold" />
+                Back
+              </Button>
+            )}
+            <span className="flex-1 text-xs text-muted-foreground">
               You can change all of this later.
             </span>
             <Button
-              disabled={!name.trim() || submitting}
+              disabled={submitting}
               onClick={async () => {
+                const found = validateBusiness({ name, phone, address });
+                setErrors(found);
+                if (Object.keys(found).length) return;
                 setSubmitting(true);
                 try {
                   await onSubmit(name.trim(), domain, {
                     phone: phone.trim(),
-                    email: email.trim(),
                     address: address.trim(),
                     logoUrl: logoUrl.trim(),
+                    logoFile,
                   });
                 } finally {
                   setSubmitting(false);

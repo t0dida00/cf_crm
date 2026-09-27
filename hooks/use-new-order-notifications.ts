@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { usePlatformSocket } from "@/hooks/use-platform-socket";
+import type { PusherConfig } from "@/lib/types";
 
 interface ApiOrder {
   id: string;
@@ -31,8 +32,9 @@ export function useNewOrderNotifications(
   fmt: (value: number) => string,
   knownOrders?: { id: string; total: number }[],
   onToastClick?: () => void,
+  pusher?: PusherConfig | null,
 ) {
-  const channel = usePlatformSocket(enabled ? platformId : null);
+  const channel = usePlatformSocket(enabled ? platformId : null, pusher);
   const lastTotals = useRef(new Map<string, number>());
 
   useEffect(() => {

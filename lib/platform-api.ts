@@ -1,4 +1,4 @@
-import type { Domain } from "@/lib/types";
+import type { Domain, PusherConfig } from "@/lib/types";
 
 const API_URL = process.env.API_URL || "http://localhost:3000";
 
@@ -11,6 +11,8 @@ export interface PlatformRecord {
   address: string | null;
   logoUrl: string | null;
   role: string;
+  pusher: PusherConfig | null;
+  databaseName: string | null;
 }
 
 export interface PlatformApiResponse {
@@ -24,6 +26,8 @@ export interface PlatformApiResponse {
     platform_types: { code: string };
   };
   role: string;
+  pusher?: PusherConfig | null;
+  databaseName?: string | null;
 }
 
 function toDomain(code: string): Domain {
@@ -40,6 +44,8 @@ export function mapPlatformResponse(data: PlatformApiResponse): PlatformRecord {
     address: data.platform.address,
     logoUrl: data.platform.logo_url,
     role: data.role,
+    pusher: data.pusher ?? null,
+    databaseName: data.databaseName ?? null,
   };
 }
 
@@ -98,5 +104,34 @@ export async function createPlatform(
     address: data.platform.address,
     logoUrl: data.platform.logo_url,
     role: data.role,
+    // A brand-new business hasn't connected its own Pusher app or database yet.
+    pusher: null,
+    databaseName: null,
   };
+}
+
+/** Updates the caller's business with the setup form's fields (used when going
+ * back to setup step 1 after the business was created). Server-side only. */
+export async function updatePlatform(
+  accessToken: string,
+  input: { name: string; domain: Domain; phone?: string; email?: string; address?: string; logoUrl?: string },
+): Promise<void> {
+  const res = await fetch(`${API_URL}/platforms/me`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({
+      name: input.name,
+      platformTypeCode: input.domain,
+      phone: input.phone ?? "",
+      // Setup no longer asks for an email (it's the owner's signup email):
+      // leave the stored one alone unless one is given.
+      ...(input.email !== undefined ? { email: input.email } : {}),
+      address: input.address ?? "",
+      logoUrl: input.logoUrl ?? "",
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.error || `Failed to update platform: ${res.status}`);
+  }
 }

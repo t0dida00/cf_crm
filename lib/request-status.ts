@@ -13,5 +13,8 @@ export function toRequestStatus(query: {
   return query.fetchStatus === "idle" ? "idle" : "loading";
 }
 
+/** The backend's answer when a business has no database of its own and the shared one is turned off. */
+export const DATABASE_NOT_CONNECTED = "DATABASE_NOT_CONNECTED";
+
 export const errorMessage = (error: unknown, fallback = "Something went wrong.") =>
   error instanceof Error && error.message ? error.message : fallback;

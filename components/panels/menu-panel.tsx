@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredLabel } from "@/components/required-label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -30,11 +31,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useWorkspace } from "@/components/workspace-provider";
-import { useAsyncAction } from "@/hooks/use-async-action";
+import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/use-async-action";
 import type { Dish, DishStatus, TaxMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { DishImage } from "@/components/dish-image";
+import { FieldError, fieldErrorProps } from "@/components/field-error";
+import { blockInvalidNumberKeys, validateDish, type FieldErrors, acceptNumberInput, MAX_SPECIAL_TAX, withFieldError } from "@/lib/validation";
 import { formatNumber } from "@/lib/format";
 
 const COMMON_TAX = "Common tax";
@@ -85,6 +88,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Dish | null>(null);
+  const [errors, setErrors] = useState<FieldErrors<"name" | "price" | "catId" | "taxPct">>({});
   const [form, setForm] = useState<DishForm>({
     name: "",
     price: "",
@@ -101,13 +105,15 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
   useEffect(() => {
     if (createSignal > 0) {
       setEditing(null);
+      setErrors({});
       setForm({
         name: "",
         price: "",
         taxMode: "none",
         taxName: COMMON_TAX,
         taxPct: "",
-        catId: categories[0]?.id ?? "",
+        // Category is required and picked on purpose, not defaulted.
+        catId: "",
         status: "valid",
         description: "",
         imageUrl: "",
@@ -120,6 +126,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
 
   const startEdit = (dish: Dish) => {
     setEditing(dish);
+    setErrors({});
     setForm({
       name: dish.name,
       price: String(dish.price),
@@ -160,13 +167,16 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
         : null;
 
   const submit = async () => {
-    if (!form.name.trim()) return;
+    // Only an "exclude" tax has its own percentage to check.
+    const found = validateDish({ ...form, taxPct: form.taxMode === "exclude" ? form.taxPct : "" });
+    setErrors(found);
+    if (Object.keys(found).length) return;
     const ok = await run("save-dish", () =>
       saveDish({
         id: editing?.id,
         name: form.name.trim(),
         price: Number(form.price) || 0,
-        catId: form.catId || categories[0]?.id || "",
+        catId: form.catId,
         status: form.status,
         taxMode: form.taxMode,
         taxName: form.taxMode === "include" ? form.taxName : undefined,
@@ -174,7 +184,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
         description: form.description.trim() || undefined,
         imageUrl: form.imageUrl.trim() || undefined,
         isVegan: form.isVegan,
-      }),
+      }), undefined, SAVED_MESSAGE
     );
     if (ok) setOpen(false);
   };
@@ -338,23 +348,34 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="dish-name">Name</Label>
+              <RequiredLabel htmlFor="dish-name">Name</RequiredLabel>
               <Input
                 id="dish-name"
+                required
                 value={form.name}
                 placeholder="Dish name"
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                {...fieldErrorProps("dish-name", errors.name)}
+                onBlur={() => setErrors((e) => withFieldError(e, "name", validateDish({ ...form, taxPct: form.taxMode === "exclude" ? form.taxPct : "" }).name))}
               />
+              <FieldError id="dish-name" message={errors.name} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="dish-price">Price ({settings.currency})</Label>
+              <RequiredLabel htmlFor="dish-price">Price ({settings.currency})</RequiredLabel>
               <Input
                 id="dish-price"
                 type="number"
+                min={0}
+                step="0.01"
+                required
                 value={form.price}
+                onKeyDown={blockInvalidNumberKeys()}
                 placeholder="12.00"
                 onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                {...fieldErrorProps("dish-price", errors.price)}
+                onBlur={() => setErrors((e) => withFieldError(e, "price", validateDish({ ...form, taxPct: form.taxMode === "exclude" ? form.taxPct : "" }).price))}
               />
+              <FieldError id="dish-price" message={errors.price} />
             </div>
             <div className="space-y-1.5">
               <Label>Tax</Label>
@@ -404,10 +425,20 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                   <Input
                     id="dish-tax-pct"
                     type="number"
+                    min={0}
+                    max={MAX_SPECIAL_TAX}
+                    step="0.01"
                     value={form.taxPct}
                     placeholder="10"
-                    onChange={(e) => setForm((f) => ({ ...f, taxPct: e.target.value }))}
+                    onKeyDown={blockInvalidNumberKeys()}
+                    onChange={(e) => {
+                      const taxPct = acceptNumberInput(e.target.value, MAX_SPECIAL_TAX);
+                      if (taxPct !== null) setForm((f) => ({ ...f, taxPct }));
+                    }}
+                    {...fieldErrorProps("dish-tax-pct", errors.taxPct)}
+                    onBlur={() => setErrors((e) => withFieldError(e, "taxPct", validateDish({ ...form, taxPct: form.taxMode === "exclude" ? form.taxPct : "" }).taxPct))}
                   />
+                  <FieldError id="dish-tax-pct" message={errors.taxPct} />
                 </div>
                 <p className="rounded-lg border bg-secondary px-3 py-2.5 text-[13px] text-muted-foreground">
                   Estimated final price: {fmt(estimated)} · {fmt(Number(form.price) || 0)}{" "}
@@ -417,13 +448,13 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
             )}
 
             <div className="space-y-1.5">
-              <Label>Category</Label>
+              <RequiredLabel htmlFor="dish-category">Category</RequiredLabel>
               <Select
                 value={form.catId}
                 onValueChange={(catId) => setForm((f) => ({ ...f, catId }))}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Pick a category" />
+                <SelectTrigger id="dish-category" className="w-full" {...fieldErrorProps("dish-category", errors.catId)}>
+                  <SelectValue placeholder={categories.length ? "Pick a category" : "Add a category first"} />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((c) => (
@@ -433,6 +464,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                   ))}
                 </SelectContent>
               </Select>
+              <FieldError id="dish-category" message={errors.catId} />
             </div>
 
             <div className="space-y-1.5">

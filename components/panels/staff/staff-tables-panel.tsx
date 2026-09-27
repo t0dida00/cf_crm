@@ -99,7 +99,7 @@ export function StaffTablesPanel() {
                 <span>
                   <span className="block text-[17px] font-bold">{t.name}</span>
                   <span className="mt-0.5 block text-xs text-muted-foreground">
-                    {t.seats} seats · {t.zone}
+                    {t.seats} seats{t.zone ? ` · ${t.zone}` : ""}
                   </span>
                 </span>
                 <Badge className={tableStateTone(t.state)}>{t.state}</Badge>
@@ -123,7 +123,7 @@ export function StaffTablesPanel() {
               <div className="flex items-center gap-4 border-b pb-3.5">
                 <Badge className={tableStateTone(table.state)}>{table.state}</Badge>
                 <span className="text-[13px] text-muted-foreground">
-                  {table.seats} seats · {table.zone}
+                  {table.seats} seats{table.zone ? ` · ${table.zone}` : ""}
                 </span>
                 <span className="flex-1" />
                 {table.seatedAt && (

@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { isAbortError } from "@/lib/http";
 import { money } from "@/lib/range";
@@ -36,8 +37,11 @@ interface WorkspaceContextValue {
   /** Initial workspace load: idle when signed out, then loading → success | error. */
   status: RequestStatus;
   error: string | null;
-  /** Re-runs the initial workspace load (e.g. after an error). */
+  /** Re-runs the initial workspace load (e.g. after an error), showing the loading state. */
   reload: () => void;
+  /** Reloads the workspace in the background: the current data stays on screen
+   * until the new data arrives, and a failure only shows a toast. */
+  refresh: () => void;
   /** Session JWT, exposed for the direct browser->backend WebSocket connection
    * (REST calls go through the server-side proxy and don't need this). */
   accessToken: string | null;
@@ -298,6 +302,8 @@ export function WorkspaceProvider({
   const [status, setStatus] = useState<RequestStatus>(accessToken ? "loading" : "idle");
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  // Set by refresh(): the next load keeps the current workspace on screen.
+  const backgroundLoad = useRef(false);
   const hydrated = status === "success" || status === "error" || status === "idle";
   const queryClient = useQueryClient();
 
@@ -316,8 +322,12 @@ export function WorkspaceProvider({
       setStatus("idle");
       return;
     }
-    setStatus("loading");
-    setError(null);
+    const background = backgroundLoad.current;
+    backgroundLoad.current = false;
+    if (!background) {
+      setStatus("loading");
+      setError(null);
+    }
     (async () => {
       const res = await fetch("/api/proxy/platforms/me", { cache: "no-store", signal: controller.signal });
       if (res.status === 404) return null;
@@ -336,7 +346,7 @@ export function WorkspaceProvider({
           email: initialPlatform.email ?? undefined,
           address: initialPlatform.address ?? undefined,
           logoUrl: initialPlatform.logoUrl ?? undefined,
-        }, controller.signal);
+        }, controller.signal).then((data) => ({ ...data, pusher: initialPlatform.pusher, databaseName: initialPlatform.databaseName }));
       })
       .then((data) => {
         if (cancelled()) return;
@@ -345,6 +355,10 @@ export function WorkspaceProvider({
       })
       .catch((err) => {
         if (cancelled() || isAbortError(err)) return;
+        if (background) {
+          toast.error(errorMessage(err, "Couldn't refresh your workspace."));
+          return;
+        }
         setError(errorMessage(err, "Couldn't load your workspace."));
         setStatus("error");
       });
@@ -415,6 +429,10 @@ export function WorkspaceProvider({
       status,
       error,
       reload: () => setReloadKey((k) => k + 1),
+      refresh: () => {
+        backgroundLoad.current = true;
+        setReloadKey((k) => k + 1);
+      },
       accessToken,
       flow,
       currency,
@@ -438,7 +456,7 @@ export function WorkspaceProvider({
         const saved = mapTable(res.table);
         patch((w) => ({
           tables: table.id ? w.tables.map((t) => (t.id === saved.id ? saved : t)) : [...w.tables, saved],
-          zones: w.zones.includes(saved.zone) ? w.zones : [...w.zones, saved.zone],
+          zones: !saved.zone || w.zones.includes(saved.zone) ? w.zones : [...w.zones, saved.zone],
         }));
       },
       deleteTable: async (id) => {

@@ -34,23 +34,40 @@ Both gitignored; `.env.development.local.example` /
 
 | Var | Purpose |
 |---|---|
-| `AUTH_SECRET` | NextAuth session encryption (`openssl rand -base64 32`). The "Google" button is a demo login in `auth.ts`, so no Google credentials are needed |
+| `AUTH_SECRET` | NextAuth session encryption (`openssl rand -base64 32`). Sign-in is email and password only (`auth.ts`, checked by the backend's `POST /auth/login`) |
 | `API_URL` | Backend origin, used **server-side only** (the `/api/proxy*` routes attach the JWT and forward here — the browser never talks to the backend directly for authenticated staff calls) |
-| `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER` | Public Pusher app key/cluster for the real-time subscription (see Real-time below) — same values as the backend's `PUSHER_KEY`/`PUSHER_CLUSTER`, safe to expose client-side (unlike `PUSHER_SECRET`, which stays backend-only) |
-| `RESEND_API_KEY` | Sends the contact form on the landing and login pages (`app/api/contact`) |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob uploads for dish photos and logos (`app/api/upload`); kept in `.env.local` so dev and production builds both load it |
+| `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER` | The **shared** Pusher app's public key/cluster (see Real-time below), used by businesses that haven't connected their own. Same values as the backend's `PUSHER_KEY`/`PUSHER_CLUSTER`, safe to expose client-side (unlike `PUSHER_SECRET`, which stays backend-only) |
+| `RESEND_API_KEY` | Emails the admin (`ADMIN_EMAIL` in `lib/notify.ts`): the contact form on the landing and login pages (`app/api/contact`), and a "New Account Registration" notice (full name and email) for every signup. Only the admin is emailed, never the new user |
 
 **Vercel deployment** (`cf-crm` project) reads none of these files — set the
 same variables in the Vercel dashboard (Settings → Environment Variables).
 Same gotcha as the backend: a newly-added var sometimes needs a remove +
 re-add + redeploy cycle before it actually reaches the running function.
 
+## Business connections
+
+Each business can run on its own PostgreSQL database, Pusher app and image
+storage (a Vercel Blob store or any S3-compatible bucket). The owner connects
+all three together during onboarding (step 1, before the business details) or
+in **Settings → Connections**. The
+backend checks each one before saving, stores the secrets encrypted, and never
+sends them back: the page shows only the database's `host/database`, the
+Pusher app id and cluster, and the storage's store or bucket name. Connecting a
+different database or storage later doesn't move existing data. See the
+backend README for how it works.
+
+Image uploads (`app/api/upload`) forward the file to the backend
+(`POST /platforms/me/uploads`), which holds the storage credentials. Businesses
+without their own storage use the shared Vercel Blob store, whose
+`BLOB_READ_WRITE_TOKEN` is now set on the **backend**.
+
 ## Routing
 
 | Route | Who | What |
 |---|---|---|
 | `/login` | anyone | credentials sign-in |
-| `/` | signed-in, no platform yet | workspace setup form → build animation → `/admin` |
+| `/signup` | anyone | create an owner account and email the admin, then continue to `/`. When the backend has `REQUIRE_ACCOUNT_APPROVAL=true`, it shows "Dear <name>, your request is being reviewed…" with an OK button (to `/login`) instead, and sign-in is refused until the account is approved |
+| `/` | signed-in, no platform yet | step 1: connect the business's own database, Pusher app and image storage (only checked here, since the business doesn't exist yet; skippable while the backend allows the shared service) → step 2: business details, which creates the business, then saves the checked connections and uploads the logo to them → build animation → `/admin` |
 | `/admin` | signed-in staff (owner) | full admin panel: Dashboard, Tables, Categories, Menu, Orders, Bookings, Settings |
 | `/staff` | signed-in staff | day-to-day floor app: Orders, Tables, Bookings, Menu, History |
 | `/qr-generation` | signed-in staff | generates one QR code per table, linking to `/client?t=<signed token>` |
@@ -95,9 +112,11 @@ Three different ways this app reaches the backend, by trust level:
 
 ## Real-time
 
-`usePlatformSocket(platformId)` subscribes to a public Pusher channel
+`usePlatformSocket(platformId, pusher)` subscribes to a public Pusher channel
 (`platform-{platformId}`) and returns the channel for `.bind(event,
-handler)` calls. Three consumers:
+handler)` calls. `pusher` is the business's own Pusher app (`{ key, cluster }`
+from `GET /platforms/me` or the guest settings); without one it uses the
+shared app from `NEXT_PUBLIC_PUSHER_*`. Three consumers:
 
 - `hooks/use-new-order-notifications.ts` — staff shells toast + refresh on
   `order:created` / `order:updated` (only toasts on updates that changed the
@@ -129,6 +148,8 @@ app/
     proxy-public/[platformId]/[...path]/   guest API proxy (no auth)
     auth/[...nextauth]/       NextAuth handler
     token-resolve/[token]/    resolves a QR token before proxying to the backend
+    upload/                   forwards an image to POST /platforms/me/uploads
+                             (the generic proxy only carries JSON)
   actions.ts                 server actions: signOutAction, createPlatformAction
 auth.ts                      NextAuth config: credentials provider calls
                             POST /auth/login on the backend, stores its JWT
@@ -143,7 +164,14 @@ components/
                             collapsible sidebar (useSidebarCollapse,
                             persisted via localStorage)
   client-shell.tsx            the guest ordering UI itself
-  setup-screen.tsx / building-screen.tsx   first-time workspace setup flow
+  workspace-setup-flow.tsx    first-time setup: step 1 connections (checked,
+                             not saved) → step 2 details (creates the business,
+                             saves the connections, uploads the logo) → building
+  connections-step.tsx / setup-screen.tsx / building-screen.tsx   its screens
+  connections-form.tsx        database + Pusher + storage form, shared with
+                             Settings → Connections (check or save mode)
+  image-dropzone.tsx          drag-and-drop image picker; uploads, or hands the
+                             file over (onFile) when the business doesn't exist
   order-detail-dialog.tsx    line items + net/tax breakdown for one order
   qr-generation-view.tsx      QR code grid + downloadable SVGs
   panels/                     one file per admin/staff tab
@@ -153,6 +181,7 @@ components/
   booking-assign-dialog.tsx   staff-only: assign or release a table for a booking
 hooks/
   use-platform-socket.ts      Pusher subscription
+  use-connections.ts          the owner's connections: load, check, save
   use-new-order-notifications.ts / use-table-request-notifications.ts
   use-sidebar-collapse.ts      localStorage-persisted sidebar state
 lib/
@@ -165,6 +194,9 @@ lib/
   order-math.ts               shared line-total math
   best-sellers.ts             bestSellerIds(): the top 5 dishes by soldCount
                              (mirrors the backend's rule for the guest menu)
+  upload-image.ts             uploadImage(file): 5 MB check, POST /api/upload
+  register.ts                 registerAccount(): POST /auth/register (server-side)
+  notify.ts                   notifyNewAccount(): Resend email to the admin only
   tone.ts                     status/state -> badge color mapping
   utils.ts                    cn()
 ```

@@ -1,31 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import { put } from "@vercel/blob";
 import { auth } from "@/auth";
 
-const MAX_SIZE = 5 * 1024 * 1024;
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+const API_URL = process.env.API_URL || "http://localhost:3000";
 
+/**
+ * Forwards an image to the backend (`POST /platforms/me/uploads`), which
+ * stores it in the business's own storage or the shared one and answers
+ * `{ url }`. The generic proxy only carries JSON, so the raw file goes
+ * through here.
+ */
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session) {
+  const accessToken = (session as { accessToken?: string } | null)?.accessToken;
+  if (!accessToken) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const file = req.body ? await req.blob() : null;
-  const contentType = req.headers.get("content-type") || "";
-  const filename = req.headers.get("x-filename") || "upload";
-
-  if (!file || !ALLOWED_TYPES.includes(contentType)) {
-    return NextResponse.json({ error: "Please upload a PNG, JPEG, WEBP, or GIF image." }, { status: 400 });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/platforms/me/uploads`, {
+      method: "POST",
+      headers: {
+        "Content-Type": req.headers.get("content-type") || "application/octet-stream",
+        "X-Filename": req.headers.get("x-filename") || "upload",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: await req.arrayBuffer(),
+      cache: "no-store",
+      signal: req.signal,
+    });
+  } catch (err) {
+    if (req.signal.aborted) return new NextResponse(null, { status: 499 }); // client went away
+    throw err;
   }
-  if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "Image must be smaller than 5MB." }, { status: 400 });
-  }
 
-  const blob = await put(`dishes/${Date.now()}-${filename}`, file, {
-    access: "public",
-    contentType,
+  return new NextResponse(await res.text(), {
+    status: res.status,
+    headers: { "Content-Type": res.headers.get("Content-Type") || "application/json" },
   });
-
-  return NextResponse.json({ url: blob.url });
 }
