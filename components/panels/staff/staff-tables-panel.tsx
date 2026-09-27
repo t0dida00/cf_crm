@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarCheck, CheckCircle, Clock, ClockCounterClockwise, Printer, Receipt } from "@phosphor-icons/react";
+import { CalendarCheck, CheckCircle, Clock, ClockCounterClockwise, Receipt } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BillReceipt, PrintableBillReceipt } from "@/components/bill-receipt";
+import { BillReceipt, PrintReceiptButton } from "@/components/bill-receipt";
 import { SessionDetailDialog } from "@/components/session-detail-dialog";
 import { useWorkspace } from "@/components/workspace-provider";
 import { useAsyncAction } from "@/hooks/use-async-action";
@@ -250,13 +250,17 @@ export function StaffTablesPanel() {
                 <Button variant="secondary" onClick={() => setBillOpen(false)}>
                   Back
                 </Button>
-                <Button
-                  onClick={() => window.print()}
-                  style={{ backgroundColor: "#232F3F", color: "#FFF" }}
-                >
-                  <Printer size={15} weight="bold" />
-                  Print
-                </Button>
+                <PrintReceiptButton
+                  workspaceName={workspace.name}
+                  workspaceAddress={workspace.address}
+                  workspacePhone={workspace.phone}
+                  tableName={table.name}
+                  orders={tableOrders}
+                  net={net}
+                  tax={tax}
+                  total={total}
+                  fmt={fmt}
+                />
                 <span className="flex-1" />
                 <Button
                   loading={isPending(`checkout-${table.id}`)}
@@ -279,22 +283,6 @@ export function StaffTablesPanel() {
           )}
         </DialogContent>
       </Dialog>
-
-      {billOpen && table && (
-        <div id="bill-print-area" className="hidden">
-          <PrintableBillReceipt
-            workspaceName={workspace.name}
-            workspaceAddress={workspace.address}
-            workspacePhone={workspace.phone}
-            tableName={table.name}
-            orders={tableOrders}
-            net={net}
-            tax={tax}
-            total={total}
-            fmt={fmt}
-          />
-        </div>
-      )}
 
       <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
         <DialogContent className="sm:max-w-lg">

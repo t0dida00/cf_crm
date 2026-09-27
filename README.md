@@ -34,7 +34,7 @@ Both gitignored; `.env.development.local.example` /
 
 | Var | Purpose |
 |---|---|
-| `AUTH_SECRET` | NextAuth session encryption (`openssl rand -base64 32`). Sign-in is email and password only (`auth.ts`, checked by the backend's `POST /auth/login`) |
+| `AUTH_SECRET` | **Required.** Encrypts the NextAuth session cookie that holds the backend JWT (`openssl rand -base64 32`). Our code never reads it: NextAuth picks it up from the environment by name, and production sign-in fails (`MissingSecret`) without it. Changing it signs everyone out |
 | `API_URL` | Backend origin, used **server-side only** (the `/api/proxy*` routes attach the JWT and forward here — the browser never talks to the backend directly for authenticated staff calls) |
 | `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER` | The **shared** Pusher app's public key/cluster (see Real-time below), used by businesses that haven't connected their own. Same values as the backend's `PUSHER_KEY`/`PUSHER_CLUSTER`, safe to expose client-side (unlike `PUSHER_SECRET`, which stays backend-only) |
 | `RESEND_API_KEY` | Emails the admin (`ADMIN_EMAIL` in `lib/notify.ts`): the contact form on the landing and login pages (`app/api/contact`), and a "New Account Registration" notice (full name and email) for every signup. Only the admin is emailed, never the new user |
@@ -65,7 +65,7 @@ without their own storage use the shared Vercel Blob store, whose
 
 | Route | Who | What |
 |---|---|---|
-| `/login` | anyone | credentials sign-in |
+| `/login` | anyone | email and password sign-in, choosing **Owner** or **Staff** first (remembered per browser). A wrong choice gets the same "Email or password is wrong" message as a wrong password. Owners land on `/admin`, staff on `/staff` |
 | `/signup` | anyone | create an owner account and email the admin, then continue to `/`. When the backend has `REQUIRE_ACCOUNT_APPROVAL=true`, it shows "Dear <name>, your request is being reviewed…" with an OK button (to `/login`) instead, and sign-in is refused until the account is approved |
 | `/` | signed-in, no platform yet | step 1: connect the business's own database, Pusher app and image storage (only checked here, since the business doesn't exist yet; skippable while the backend allows the shared service) → step 2: business details, which creates the business, then saves the checked connections and uploads the logo to them → build animation → `/admin` |
 | `/admin` | signed-in staff (owner) | full admin panel: Dashboard, Tables, Categories, Menu, Orders, Bookings, Settings |
@@ -173,6 +173,8 @@ components/
   image-dropzone.tsx          drag-and-drop image picker; uploads, or hands the
                              file over (onFile) when the business doesn't exist
   order-detail-dialog.tsx    line items + net/tax breakdown for one order
+  bill-receipt.tsx            the bill on screen (BillReceipt), its printable
+                             copy, and PrintReceiptButton (paper width + Print)
   qr-generation-view.tsx      QR code grid + downloadable SVGs
   panels/                     one file per admin/staff tab
     staff/                    staff-specific panel variants (simpler than admin's);
@@ -195,6 +197,9 @@ lib/
   best-sellers.ts             bestSellerIds(): the top 5 dishes by soldCount
                              (mirrors the backend's rule for the guest menu)
   upload-image.ts             uploadImage(file): 5 MB check, POST /api/upload
+  print-receipt.ts            printReceipt(): prints a bill in a hidden frame
+                             as one page sized to the receipt (80 or 58 mm
+                             paper, remembered per browser)
   register.ts                 registerAccount(): POST /auth/register (server-side)
   notify.ts                   notifyNewAccount(): Resend email to the admin only
   tone.ts                     status/state -> badge color mapping

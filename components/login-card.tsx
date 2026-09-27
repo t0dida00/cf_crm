@@ -1,12 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Hourglass, PaperPlaneTilt } from "@phosphor-icons/react";
 import { ContactForm } from "@/components/contact-form";
 import { Input } from "@/components/ui/input";
 import { RequiredLabel } from "@/components/required-label";
 import { LoginSubmitButton } from "@/components/login-submit-button";
+import { cn } from "@/lib/utils";
+
+export type SignInAs = "owner" | "staff";
+
+const SIGN_IN_AS: [SignInAs, string][] = [
+  ["owner", "Owner"],
+  ["staff", "Staff"],
+];
+/** Remembers this browser's last choice (a convenience only). */
+const SIGN_IN_AS_KEY = "tably:sign-in-as";
 
 /** What to tell the user after a failed sign-in. `warning`: not an error, just not yet (the account is under review). */
 export function loginNotice(error?: string, code?: string): { text: string; tone: "error" | "warning" } | null {
@@ -20,7 +30,8 @@ export function loginNotice(error?: string, code?: string): { text: string; tone
   if (code === "account_disabled") {
     return { text: "Your account is disabled temporarily. Please contact your owner(s).", tone: "error" };
   }
-  if (error === "CredentialsSignin") return { text: "Invalid email or password.", tone: "error" };
+  // Also what a wrong Owner / Staff choice gets: the backend can't be asked which kind an email is.
+  if (error === "CredentialsSignin") return { text: "Email or password is wrong, please try again.", tone: "error" };
   return { text: "Something went wrong signing in. Please try again.", tone: "error" };
 }
 
@@ -34,7 +45,24 @@ export function LoginCard({
   code?: string;
 }) {
   const [view, setView] = useState<"sign-in" | "contact">("sign-in");
+  const [signInAs, setSignInAs] = useState<SignInAs>("owner");
   const notice = loginNotice(error, code);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(SIGN_IN_AS_KEY) === "staff") setSignInAs("staff");
+    } catch {
+      // Storage unavailable (private mode): start on Owner.
+    }
+  }, []);
+  const choose = (next: SignInAs) => {
+    setSignInAs(next);
+    try {
+      localStorage.setItem(SIGN_IN_AS_KEY, next);
+    } catch {
+      // Not remembered; the choice still applies to this sign-in.
+    }
+  };
 
   if (view === "contact") {
     return (
@@ -84,6 +112,33 @@ export function LoginCard({
       )}
 
       <form action={loginWithCredentials} className="space-y-4">
+        <fieldset className="space-y-1.5">
+          <legend className="mb-1.5 text-sm font-medium">Sign in as</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {SIGN_IN_AS.map(([value, label]) => (
+              <label
+                key={value}
+                className={cn(
+                  "flex h-10 cursor-pointer items-center justify-center rounded-lg border text-sm font-semibold transition-colors",
+                  "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+                  signInAs === value
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-input bg-background text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="signInAs"
+                  value={value}
+                  checked={signInAs === value}
+                  onChange={() => choose(value)}
+                  className="sr-only"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <div className="space-y-1.5">
           <RequiredLabel htmlFor="email">Email</RequiredLabel>
           <Input
@@ -109,23 +164,26 @@ export function LoginCard({
         <LoginSubmitButton />
       </form>
 
-      <p className="mt-6 text-center text-xs text-muted-foreground">
-        Setting up a new business?{" "}
-        <Link href="/signup" className="font-semibold text-foreground underline-offset-2 hover:underline">
-          Create an account
-        </Link>
-      </p>
-      <p className="mt-2 text-center text-xs text-muted-foreground">
-        Staff: ask your owner for an account, or{" "}
-        <button
-          type="button"
-          onClick={() => setView("contact")}
-          className="font-semibold text-foreground underline-offset-2 hover:underline"
-        >
-          contact us
-        </button>
-        .
-      </p>
+      {signInAs === "owner" ? (
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Setting up a new business?{" "}
+          <Link href="/signup" className="font-semibold text-foreground underline-offset-2 hover:underline">
+            Create an account
+          </Link>
+        </p>
+      ) : (
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          No account yet? Ask your owner for one, or{" "}
+          <button
+            type="button"
+            onClick={() => setView("contact")}
+            className="font-semibold text-foreground underline-offset-2 hover:underline"
+          >
+            contact us
+          </button>
+          .
+        </p>
+      )}
     </div>
   );
 }

@@ -22,16 +22,20 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        // The sign-in page's Owner / Staff choice; the backend refuses the
+        // other kind of account like a wrong password.
+        signInAs: { label: "Sign in as", type: "text" },
       },
       authorize: async (credentials) => {
         const email = credentials?.email;
         const password = credentials?.password;
         if (!email || !password) return null;
+        const signInAs = credentials?.signInAs === "staff" ? "staff" : "owner";
 
         const res = await fetch(`${API_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ email, password, signInAs }),
         });
 
         if (!res.ok) {

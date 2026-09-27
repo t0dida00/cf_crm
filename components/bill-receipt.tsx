@@ -1,4 +1,16 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Printer } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
 import { formatTaxRates } from "@/lib/order-math";
+import {
+  PAPER_WIDTHS,
+  printReceipt,
+  savedPaperWidth,
+  savePaperWidth,
+  type PaperWidth,
+} from "@/lib/print-receipt";
 import { formatStamp } from "@/lib/range";
 import type { Order } from "@/lib/types";
 
@@ -14,11 +26,10 @@ export interface BillReceiptProps {
   fmt: (value: number) => string;
 }
 
-/** Plain-text, dashed-rule layout matching a till receipt — used only inside
- * #bill-print-area (see globals.scss's @media print block), which supplies
- * its own fixed-width monospace styling. Tailwind classes don't survive
- * print's own width/margins the way they do in the dialog, so this renders
- * with semantic bill-* class names instead. */
+/** Plain-text, dashed-rule layout matching a till receipt. It's only printed
+ * (PrintReceiptButton copies it into lib/print-receipt.ts's print document,
+ * which styles the bill-* class names for receipt paper), so it uses those
+ * names instead of Tailwind. */
 export function PrintableBillReceipt({
   workspaceName,
   workspaceAddress,
@@ -149,5 +160,47 @@ export function BillReceipt({
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * The bill dialog's print controls: the receipt paper this device's printer
+ * uses (80 or 58 mm, remembered per browser) and Print, which prints
+ * PrintableBillReceipt as one receipt-length page (lib/print-receipt.ts).
+ */
+export function PrintReceiptButton(props: BillReceiptProps) {
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const [paper, setPaper] = useState<PaperWidth>(80);
+  useEffect(() => setPaper(savedPaperWidth()), []);
+
+  return (
+    <>
+      <select
+        aria-label="Receipt paper width"
+        value={paper}
+        onChange={(e) => {
+          const next = Number(e.target.value) as PaperWidth;
+          setPaper(next);
+          savePaperWidth(next);
+        }}
+        className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+      >
+        {PAPER_WIDTHS.map((w) => (
+          <option key={w} value={w}>
+            {w} mm
+          </option>
+        ))}
+      </select>
+      <Button
+        onClick={() => receiptRef.current && printReceipt(receiptRef.current, paper)}
+        style={{ backgroundColor: "#232F3F", color: "#FFF" }}
+      >
+        <Printer size={15} weight="bold" />
+        Print
+      </Button>
+      <div ref={receiptRef} hidden>
+        <PrintableBillReceipt {...props} />
+      </div>
+    </>
   );
 }
