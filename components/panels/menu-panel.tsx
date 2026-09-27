@@ -269,7 +269,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                         {dish.imageUrl ? (
                           <DishImage
                             src={dish.imageUrl}
-                            alt={dish.name}
+                            alt="" // the name is shown right beside it
                             sizes="108px"
                             fallback={<ImageSquare size={48} />}
                           />
@@ -338,6 +338,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
           <div className="space-y-4">
             <div className="flex justify-center">
               <ImageDropzone
+                label="dish photo"
                 key={editing?.id ?? "new"}
                 value={form.imageUrl}
                 onChange={(imageUrl) => setForm((f) => ({ ...f, imageUrl }))}
@@ -378,12 +379,12 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
               <FieldError id="dish-price" message={errors.price} />
             </div>
             <div className="space-y-1.5">
-              <Label>Tax</Label>
+              <Label htmlFor="menu-panel-tax">Tax</Label>
               <Select
                 value={form.taxMode}
                 onValueChange={(taxMode: TaxMode) => setForm((f) => ({ ...f, taxMode }))}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="menu-panel-tax" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -396,12 +397,12 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
 
             {form.taxMode === "include" && (
               <div className="space-y-1.5">
-                <Label>Tax included in the price</Label>
+                <Label htmlFor="menu-panel-tax-included-in-the-price">Tax included in the price</Label>
                 <Select
                   value={form.taxName}
                   onValueChange={(taxName) => setForm((f) => ({ ...f, taxName }))}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id="menu-panel-tax-included-in-the-price" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -486,14 +487,15 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
               Vegan
             </Label>
 
-            <div className="space-y-1.5">
-              <Label>Status</Label>
+            <fieldset className="space-y-1.5">
+              <legend className="mb-1.5 text-sm font-medium">Status</legend>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {(Object.keys(STATUS_LABEL) as DishStatus[]).map((status) => (
                   <label
                     key={status}
                     className={cn(
                       "flex cursor-pointer items-center gap-2 rounded-lg border bg-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors",
+                      "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-1",
                       STATUS_RADIO_TONE[status],
                     )}
                   >
@@ -510,7 +512,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                   </label>
                 ))}
               </div>
-            </div>
+            </fieldset>
           </div>
           <DialogFooter>
             {editing && (

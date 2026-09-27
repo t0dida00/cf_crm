@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   BowlFood,
@@ -34,6 +34,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { DishImage } from "@/components/dish-image";
+
+/** Each screen's heading: it takes focus when the screen changes, and is the fallback focus target. */
+const SCREEN_HEADING_ID = "client-screen-heading";
 
 const CATEGORY_ICONS: Record<string, PhosphorIcon> = {
   Starters: BowlFood,
@@ -99,6 +102,24 @@ export function ClientShell({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  // Keyboard focus to restore after a render that replaces the focused control
+  // (Add ↔ counter, removed lines, screen changes): an element id.
+  const focusNext = useRef<string | null>(null);
+  useEffect(() => {
+    if (!focusNext.current) return;
+    const el = document.getElementById(focusNext.current) ?? document.getElementById(SCREEN_HEADING_ID);
+    focusNext.current = null;
+    el?.focus();
+  });
+  // A new screen takes focus to its heading, so it's announced (not on first load).
+  const firstScreen = useRef(true);
+  useEffect(() => {
+    if (firstScreen.current) {
+      firstScreen.current = false;
+      return;
+    }
+    document.getElementById(SCREEN_HEADING_ID)?.focus();
+  }, [screen]);
 
   const canOrder = placeOrder !== null;
 
@@ -184,7 +205,9 @@ export function ClientShell({
           <div className="flex size-16 items-center rounded-full bg-brand-50 text-brand-700 sm:size-19">
             <CheckCircle size={100} weight="fill" />
           </div>
-          <h1 className="mt-6 text-xl font-bold sm:text-2xl">Thanks for your order</h1>
+          <h1 id={SCREEN_HEADING_ID} tabIndex={-1} className="mt-6 text-xl font-bold outline-none sm:text-2xl">
+            Thanks for your order
+          </h1>
           <p className="mt-2.5 text-[15px] text-muted-foreground">
             We&apos;re preparing your foods.
             <br />
@@ -254,7 +277,9 @@ export function ClientShell({
             >
               <ArrowLeft size={16} weight="bold" />
             </button>
-            <h1 className="text-[17px] font-bold">Your order</h1>
+            <h1 id={SCREEN_HEADING_ID} tabIndex={-1} className="text-[17px] font-bold outline-none">
+              Your order
+            </h1>
             <span className="flex-1" />
             <span className="text-[13px] font-semibold text-muted-foreground">{tableName}</span>
           </div>
@@ -301,7 +326,10 @@ export function ClientShell({
                     <div className="flex shrink-0 flex-col items-end justify-between gap-1">
                       <button
                         type="button"
-                        onClick={() => setQty(line.itemId, 0)}
+                        onClick={() => {
+                          focusNext.current = SCREEN_HEADING_ID; // the line is gone
+                          setQty(line.itemId, 0);
+                        }}
                         aria-label={`Remove ${line.name}`}
                         className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
                       >
@@ -311,7 +339,10 @@ export function ClientShell({
                       <span className="flex items-center gap-1 rounded-full bg-brand-50 p-[3px]">
                         <button
                           type="button"
-                          onClick={() => setQty(line.itemId, line.qty - 1)}
+                          onClick={() => {
+                            if (line.qty === 1) focusNext.current = SCREEN_HEADING_ID;
+                            setQty(line.itemId, line.qty - 1);
+                          }}
                           aria-label={`Remove one ${line.name}`}
                           className="flex size-7 items-center justify-center rounded-full border bg-background text-brand-700"
                         >
@@ -352,7 +383,9 @@ export function ClientShell({
               </p>
             )}
             {orderError && (
-              <p className="mb-3 text-center text-[13px] text-destructive">{orderError}</p>
+              <p role="alert" className="mb-3 text-center text-[13px] text-destructive">
+                {orderError}
+              </p>
             )}
             <div className="flex gap-3">
               <button
@@ -395,7 +428,9 @@ export function ClientShell({
             )}
           </span>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[15px] font-bold tracking-tight">{workspaceName}</div>
+            <h1 id={SCREEN_HEADING_ID} tabIndex={-1} className="truncate text-[15px] font-bold tracking-tight outline-none">
+              {workspaceName}
+            </h1>
             {workspaceAddress || workspacePhone ? (
               <div className="flex flex-col gap-0.5">
                 {workspaceAddress && (
@@ -490,6 +525,7 @@ export function ClientShell({
                 key={c.id}
                 type="button"
                 onClick={() => setTab(c.id)}
+                aria-pressed={tab === c.id}
                 className={cn(
                   "shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition-colors",
                   active
@@ -523,7 +559,10 @@ export function ClientShell({
               {qty > 0 && (
                 <button
                   type="button"
-                  onClick={() => setQty(dish.id, 0)}
+                  onClick={() => {
+                    focusNext.current = `add-${dish.id}`;
+                    setQty(dish.id, 0);
+                  }}
                   aria-label={`Remove ${dish.name}`}
                   className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
                 >
@@ -537,7 +576,7 @@ export function ClientShell({
                 {dish.imageUrl ? (
                   <DishImage
                     src={dish.imageUrl}
-                    alt={dish.name}
+                    alt="" // the name is shown right beside it
                     sizes="(min-width: 640px) 100px, 80px"
                     priority={i < 4}
                     fallback={<Icon size={28} weight="fill" className="sm:size-[30px]" />}
@@ -567,13 +606,14 @@ export function ClientShell({
                 {noteOpen ? (
                   <div className="mt-2">
                     <textarea
+                      aria-label={`Note for the kitchen: ${dish.name}`}
                       value={noteText}
                       onChange={(e) =>
                         setNotes((n) => ({ ...n, [dish.id]: e.target.value }))
                       }
                       placeholder="Add a note for the kitchen, e.g. no onion"
                       rows={2}
-                      className="w-full resize-none rounded-lg border bg-background p-2 text-base outline-none focus:border-brand-500"
+                      className="w-full resize-none rounded-lg border border-input-border bg-background p-2 text-base outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
                     />
                     <div className="mt-1.5 flex justify-end gap-3">
                       <button
@@ -631,8 +671,12 @@ export function ClientShell({
                     </span>
                   ) : qty === 0 ? (
                     <button
+                      id={`add-${dish.id}`}
                       type="button"
-                      onClick={() => setQty(dish.id, 1)}
+                      onClick={() => {
+                        focusNext.current = `inc-${dish.id}`;
+                        setQty(dish.id, 1);
+                      }}
                       aria-label={`Add ${dish.name}`}
                       className="flex h-[34px] items-center gap-1.5 rounded-full bg-brand-700 px-3.5 text-[13px] font-bold text-white"
                     >
@@ -643,7 +687,10 @@ export function ClientShell({
                     <span className="flex items-center gap-1 rounded-full bg-brand-50 p-[3px]">
                       <button
                         type="button"
-                        onClick={() => setQty(dish.id, qty - 1)}
+                        onClick={() => {
+                          if (qty === 1) focusNext.current = `add-${dish.id}`;
+                          setQty(dish.id, qty - 1);
+                        }}
                         aria-label={`Remove one ${dish.name}`}
                         className="flex size-7 items-center justify-center rounded-full border bg-background text-brand-700"
                       >
@@ -654,6 +701,7 @@ export function ClientShell({
                         <span className="sr-only"> × {dish.name}</span>
                       </span>
                       <button
+                        id={`inc-${dish.id}`}
                         type="button"
                         onClick={() => setQty(dish.id, qty + 1)}
                         aria-label={`Add one ${dish.name}`}

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { safeCallbackPath } from "@/lib/safe-redirect";
 
 const OWNER_ONLY_PREFIXES = ["/admin", "/qr-generation"];
 
@@ -8,7 +9,8 @@ export default async function PostLoginPage({
 }: {
   searchParams: Promise<{ callbackUrl?: string }>;
 }) {
-  const { callbackUrl } = await searchParams;
+  // Only paths inside the app: never another site (open redirect).
+  const callbackUrl = safeCallbackPath((await searchParams).callbackUrl);
   const session = await auth();
   const role = (session as { role?: string | null } | null)?.role;
 

@@ -183,7 +183,7 @@ export function PrintReceiptButton(props: BillReceiptProps) {
           setPaper(next);
           savePaperWidth(next);
         }}
-        className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+        className="h-9 rounded-md border border-input-border bg-background px-2 text-sm"
       >
         {PAPER_WIDTHS.map((w) => (
           <option key={w} value={w}>

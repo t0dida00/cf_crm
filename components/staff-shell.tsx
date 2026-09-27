@@ -36,6 +36,7 @@ import { useTableRequestNotifications } from "@/hooks/use-table-request-notifica
 import { useSidebarCollapse } from "@/hooks/use-sidebar-collapse";
 import type { TableRequest, TableRequestType } from "@/lib/types";
 import { MobileNavDrawer, SkipToContent } from "@/components/mobile-nav-drawer";
+import { SidebarClock } from "@/components/sidebar-clock";
 
 const PENDING_REQUESTS_KEY = ["table-requests", "pending"] as const;
 
@@ -90,7 +91,6 @@ function SidebarBody({
   tab,
   setTab,
   counts,
-  clock,
   onToggle,
 }: {
   collapsed: boolean;
@@ -101,7 +101,6 @@ function SidebarBody({
   tab: StaffTab;
   setTab: (next: StaffTab) => void;
   counts: Record<StaffTab, number>;
-  clock: string;
   onToggle: () => void;
 }) {
   return (
@@ -126,6 +125,7 @@ function SidebarBody({
           onClick={onToggle}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
           className="flex size-6 shrink-0 items-center justify-center rounded-md text-white/55 transition-colors hover:text-white"
         >
           {collapsed ? (
@@ -135,7 +135,7 @@ function SidebarBody({
           )}
         </button>
       </div>
-      {!collapsed && <div className="px-2 text-[13px] text-white/55">{clock}</div>}
+      {!collapsed && <SidebarClock className="px-2 text-[13px] text-white/55" />}
 
       <nav className="flex flex-col gap-1">
         {!collapsed && (
@@ -146,13 +146,13 @@ function SidebarBody({
         {/* The business's database, styled like a tab row but not clickable. */}
         {/* <div
           title={databaseName ? `Database: ${databaseName}` : "Using the shared database"}
-          aria-label={collapsed ? (databaseName ? `Database: ${databaseName}` : "Using the shared database") : undefined}
           className={cn(
             "flex items-center gap-2.5 rounded-lg py-2.5 text-sm font-bold text-white/65",
             collapsed ? "justify-center px-0" : "px-3",
           )}
         >
-          <Database size={17} weight="bold" className="shrink-0" />
+          <Database size={17} weight="bold" className="shrink-0" aria-hidden />
+          {collapsed && <span className="sr-only">{databaseName ? `Database: ${databaseName}` : "Using the shared database"}</span>}
           {!collapsed && <span className="min-w-0 flex-1 [overflow-wrap:anywhere] text-white">{databaseName ?? "Shared database"}</span>}
         </div> */}
         {NAV.map(({ id, label, Icon }) => {
@@ -164,6 +164,7 @@ function SidebarBody({
               onClick={() => setTab(id)}
               title={collapsed ? label : undefined}
               aria-label={collapsed ? label : undefined}
+              aria-current={active ? "page" : undefined}
               className={cn(
                 "flex items-center gap-2.5 rounded-lg py-2.5 text-sm transition-colors",
                 collapsed ? "justify-center px-0" : "px-3",
@@ -211,11 +212,13 @@ function SidebarBody({
 }
 
 export function StaffShell() {
-  const { workspace, fmt, refreshOrders } = useWorkspace();
+  const { workspace, fmt } = useWorkspace();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const tab: StaffTab = isStaffTab(tabParam) ? tabParam : "orders";
-  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    document.title = `${TITLES[tab]} · Staff · Tably`;
+  }, [tab]);
   const [requestsModalOpen, setRequestsModalOpen] = useState(false);
   const { collapsed, isNarrow, mobileOpen, closeMobile, toggle: toggleCollapsed } =
     useSidebarCollapse();
@@ -237,10 +240,6 @@ export function StaffShell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
 
-  useEffect(() => {
-    const i = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(i);
-  }, []);
 
   const queryClient = useQueryClient();
   const [createSignal, setCreateSignal] = useState(0);
@@ -257,7 +256,7 @@ export function StaffShell() {
   useNewOrderNotifications(
     true,
     workspace.id,
-    refreshOrders,
+    undefined, // WorkspaceProvider applies the order itself
     fmt,
     workspace.orders,
     () => setTab("orders"),
@@ -292,18 +291,6 @@ export function StaffShell() {
     history: closedOrders.length,
   };
 
-  const clock =
-    new Date(now).toLocaleDateString("en-GB", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-    }) +
-    " · " +
-    new Date(now).toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
 
   return (
     <div className="flex min-h-screen">
@@ -322,7 +309,6 @@ export function StaffShell() {
           tab={tab}
           setTab={setTab}
           counts={counts}
-          clock={clock}
           onToggle={toggleCollapsed}
         />
       </aside>
@@ -339,7 +325,6 @@ export function StaffShell() {
             closeMobile();
           }}
           counts={counts}
-          clock={clock}
           onToggle={closeMobile}
         />
       </MobileNavDrawer>
@@ -372,11 +357,13 @@ export function StaffShell() {
             type="button"
             onClick={() => setRequestsModalOpen(true)}
             className="relative flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            aria-label="Table requests"
+            aria-label={
+              pendingRequests.length ? `Table requests, ${pendingRequests.length} waiting` : "Table requests"
+            }
           >
-            <BellRinging size={18} weight="bold" />
+            <BellRinging size={18} weight="bold" aria-hidden />
             {pendingRequests.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-brand-700 text-[10px] font-bold text-white">
+              <span aria-hidden className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-brand-700 text-[10px] font-bold text-white">
                 {pendingRequests.length}
               </span>
             )}

@@ -7,6 +7,7 @@ import { Hourglass } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { FieldError, fieldErrorProps } from "@/components/field-error";
 import { validateSignup, withFieldError, type FieldErrors } from "@/lib/validation";
+import { focusFirstInvalid } from "@/lib/focus";
 import { Input } from "@/components/ui/input";
 import { RequiredLabel } from "@/components/required-label";
 import { LoginSubmitButton } from "@/components/login-submit-button";
@@ -27,12 +28,12 @@ export function signupErrorMessage(error?: string, message?: string): string | n
 function PendingReview({ fullName, email }: { fullName: string; email: string }) {
   const router = useRouter();
   return (
-    <div role="status" className="rounded-xl border bg-card p-10">
+    <div className="rounded-xl border bg-card p-10">
       <span className="mb-5 flex size-11 items-center justify-center rounded-full bg-brand-500/10 text-brand-700">
-        <Hourglass size={22} weight="bold" />
+        <Hourglass size={22} weight="bold" aria-hidden />
       </span>
       <h1 className="text-2xl font-bold">Dear {fullName},</h1>
-      <p className="mt-3 text-sm text-muted-foreground text-pretty">
+      <p role="status" className="mt-3 text-sm text-muted-foreground text-pretty">
         Your request is being reviewed. We&apos;ll notify you at <strong className="text-foreground">{email}</strong>{" "}
         once your account is approved. Then you can sign in and set up your business.
       </p>
@@ -74,7 +75,10 @@ export function SignupCard({
   const check = (e: FormEvent<HTMLFormElement>) => {
     const found = validateForm(e.currentTarget);
     setErrors(found);
-    if (Object.keys(found).length) e.preventDefault();
+    if (Object.keys(found).length) {
+      e.preventDefault();
+      focusFirstInvalid(e.currentTarget);
+    }
   };
 
   // Leaving a field shows its error straight away.
@@ -141,7 +145,7 @@ export function SignupCard({
             autoComplete="new-password"
             required
             minLength={MIN_PASSWORD_LENGTH}
-            aria-describedby={errors.password ? "password-error" : "password-hint"}
+            aria-describedby={errors.password ? "password-error password-hint" : "password-hint"}
             aria-invalid={errors.password ? true : undefined}
             onBlur={blur("password")}
           />

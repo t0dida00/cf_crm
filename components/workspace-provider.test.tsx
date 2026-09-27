@@ -32,7 +32,7 @@ function Probe() {
 const renderProvider = () =>
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <WorkspaceProvider accessToken="jwt">
+      <WorkspaceProvider signedIn>
         <Probe />
       </WorkspaceProvider>
     </QueryClientProvider>,

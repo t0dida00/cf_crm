@@ -216,7 +216,7 @@ export function StaffOrdersPanel() {
                       onClick={() =>
                         run(`delete-${order.id}`, () => deleteOrder(order.id), "Failed to delete order.")
                       }
-                      className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
+                      className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
                       aria-label={`Delete ${order.code}`}
                     >
                       <Trash size={15} weight="bold" />
@@ -395,12 +395,12 @@ export function StaffOrdersPanel() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Table</Label>
+              <Label htmlFor="staff-orders-panel-table">Table</Label>
               <Select
                 value={form.tableName}
                 onValueChange={(tableName) => setForm((f) => ({ ...f, tableName }))}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="staff-orders-panel-table" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -413,12 +413,12 @@ export function StaffOrdersPanel() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Dish</Label>
+              <Label htmlFor="staff-orders-panel-dish">Dish</Label>
               <Select
                 value={form.itemId}
                 onValueChange={(itemId) => setForm((f) => ({ ...f, itemId }))}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="staff-orders-panel-dish" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

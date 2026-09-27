@@ -45,7 +45,7 @@ export function ConnectionsStep({
   const showContinue = onChecked ? !!checked : !canSkip;
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-6 py-12">
+    <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <div className="w-full max-w-2xl">
         <div className="mb-7 flex items-center gap-2.5">
           <span className="flex size-7 items-center justify-center rounded-lg bg-brand-500 text-white">
@@ -107,6 +107,6 @@ export function ConnectionsStep({
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

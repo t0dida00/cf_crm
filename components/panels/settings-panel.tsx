@@ -128,6 +128,7 @@ export function SettingsPanel() {
             <div className="space-y-1.5">
               <Label>Logo</Label>
               <ImageDropzone
+                label="logo"
                 value={profileDraft.logoUrl}
                 onChange={(logoUrl) => setProfileDraft((d) => ({ ...d, logoUrl }))}
                 className="size-[300px]"
@@ -256,7 +257,7 @@ export function SettingsPanel() {
                   onClick={() =>
                     setTaxesDraft((list) => list.filter((t) => t.id !== tax.id))
                   }
-                  className="text-muted-foreground transition-colors hover:text-destructive"
+                  className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive"
                   aria-label={`Remove ${tax.name}`}
                 >
                   <Trash size={15} weight="bold" />

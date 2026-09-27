@@ -84,7 +84,7 @@ describe("ConnectionsForm", () => {
     fill("Vercel Blob read-write token", "vercel_blob_rw_store_secret");
     fireEvent.click(screen.getByRole("radio", { name: "S3-compatible" }));
 
-    expect(screen.getByRole("radio", { name: "S3-compatible" }).getAttribute("aria-checked")).toBe("true");
+    expect((screen.getByRole("radio", { name: "S3-compatible" }) as HTMLInputElement).checked).toBe(true);
     expect(screen.queryByLabelText(/^Vercel Blob read-write token/)).toBeNull();
     for (const label of ["Endpoint", "Bucket", "Public URL", "Access key ID", "Secret access key"]) {
       expect((screen.getByLabelText(new RegExp(`^${label}`)) as HTMLInputElement).required).toBe(true);
@@ -214,7 +214,7 @@ describe("ConnectionsForm", () => {
     );
     expect((screen.getByLabelText(/^Database connection URL/) as HTMLInputElement).value).toBe("postgresql://u:p@db.example.com/shop");
     expect((screen.getByLabelText(/^Pusher secret/) as HTMLInputElement).value).toBe("fedcba654321");
-    expect(screen.getByRole("radio", { name: "S3-compatible" }).getAttribute("aria-checked")).toBe("true");
+    expect((screen.getByRole("radio", { name: "S3-compatible" }) as HTMLInputElement).checked).toBe(true);
     expect((screen.getByLabelText(/^Bucket/) as HTMLInputElement).value).toBe("menu-photos");
   });
 

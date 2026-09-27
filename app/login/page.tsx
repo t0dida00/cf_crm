@@ -4,13 +4,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { LoginCard } from "@/components/login-card";
+import { safeCallbackPath } from "@/lib/safe-redirect";
+
+export const metadata = { title: "Sign in" };
 
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ callbackUrl?: string; error?: string; code?: string }>;
 }) {
-  const { callbackUrl, error, code } = await searchParams;
+  const { error, code } = await searchParams;
+  const callbackUrl = safeCallbackPath((await searchParams).callbackUrl) ?? undefined;
 
   const postLoginUrl = callbackUrl
     ? `/post-login?callbackUrl=${encodeURIComponent(callbackUrl)}`
@@ -43,7 +47,7 @@ export default async function LoginPage({
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-6 py-12">
+    <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
         <Link
           href="/"
@@ -64,6 +68,6 @@ export default async function LoginPage({
 
         <LoginCard loginWithCredentials={loginWithCredentials} error={error} code={code} />
       </div>
-    </div>
+    </main>
   );
 }

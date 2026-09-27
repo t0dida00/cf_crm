@@ -31,15 +31,15 @@ describe("ImageDropzone", () => {
     expect(init?.headers).toMatchObject({ "Content-Type": "image/png", "X-Filename": "a.png" });
   });
 
-  test("refuses images over 5MB without sending them", async () => {
+  test("refuses images over 4MB without sending them", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const { container } = render(<ImageDropzone value="" onChange={vi.fn()} />);
     const big = new File(["x"], "big.png", { type: "image/png" });
-    Object.defineProperty(big, "size", { value: 6 * 1024 * 1024 });
+    Object.defineProperty(big, "size", { value: 5 * 1024 * 1024 });
 
     pick(container, big);
 
-    await waitFor(() => expect(toastError).toHaveBeenCalledWith("Image must be smaller than 5MB."));
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith("Image must be smaller than 4MB."));
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 

@@ -19,6 +19,7 @@ export function ImageDropzone({
   placeholder = "Drag & drop an image, or click to browse",
   compact = false,
   onFile,
+  label = "image",
 }: {
   value: string;
   onChange: (url: string) => void;
@@ -30,6 +31,8 @@ export function ImageDropzone({
   compact?: boolean;
   /** Called with the chosen file instead of uploading it; the parent sets `value` (e.g. a preview URL). */
   onFile?: (file: File) => void;
+  /** What the image is, for its accessible name ("Choose logo" / "Replace logo"). */
+  label?: string;
 }) {
   const { run, isPending } = useAsyncAction();
   const [dragActive, setDragActive] = useState(false);
@@ -56,9 +59,14 @@ export function ImageDropzone({
       <div
         role="button"
         tabIndex={0}
+        aria-label={`${trimmed ? "Replace" : "Choose"} ${label}`}
+        aria-busy={isPending("upload-image") || undefined}
         onClick={() => fileInputRef.current?.click()}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click();
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault(); // Space would scroll the page
+            fileInputRef.current?.click();
+          }
         }}
         onDragOver={(e) => {
           e.preventDefault();
@@ -73,7 +81,7 @@ export function ImageDropzone({
         }}
         className={cn(
           "relative flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed text-center transition-colors",
-          dragActive ? "border-primary bg-primary/5" : "border-input bg-secondary hover:bg-secondary/70",
+          dragActive ? "border-primary bg-primary/5" : "border-input-border bg-secondary hover:bg-secondary/70",
           className,
         )}
       >
@@ -109,7 +117,9 @@ export function ImageDropzone({
         ref={fileInputRef}
         type="file"
         accept="image/png,image/jpeg,image/webp,image/gif"
-        className="hidden"
+        // Opened by the drop area above, which is the control people use.
+        hidden
+        tabIndex={-1}
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) pickFile(file);

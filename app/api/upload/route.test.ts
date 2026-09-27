@@ -4,6 +4,8 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 const session = vi.hoisted(() => ({ value: { accessToken: "jwt-1" } as object | null }));
 vi.mock("@/auth", () => ({ auth: async () => session.value }));
 
+vi.mock("@/lib/server-token", () => ({ getAccessToken: async () => "jwt-1" }));
+
 import { POST } from "./route";
 
 afterEach(() => {
