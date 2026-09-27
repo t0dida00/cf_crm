@@ -2,7 +2,8 @@ import { ArrowLeft, SquaresFour } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
-import { SignupCard } from "@/components/signup-card";
+import { SignupCard, type SignupState } from "@/components/signup-card";
+import { notifyNewAccount } from "@/lib/notify";
 import { registerAccount } from "@/lib/register";
 
 export default async function SignupPage({
@@ -12,7 +13,7 @@ export default async function SignupPage({
 }) {
   const { error, message } = await searchParams;
 
-  async function signUp(formData: FormData) {
+  async function signUp(_prev: SignupState, formData: FormData): Promise<SignupState> {
     "use server";
     const fullName = String(formData.get("fullName") ?? "");
     const email = String(formData.get("email") ?? "");
@@ -24,8 +25,13 @@ export default async function SignupPage({
       if (result.message) params.set("message", result.message);
       redirect(`/signup?${params}`);
     }
+    // Only the admin is emailed, whether or not the account needs review.
+    await notifyNewAccount({ fullName: fullName.trim(), email: email.trim(), pendingApproval: result.pendingApproval });
+    // Waiting for review: it can't sign in yet, so the card says so instead.
+    if (result.pendingApproval) return { pending: { fullName: fullName.trim(), email: email.trim() } };
     // New accounts have no business yet: "/" shows the workspace setup.
     await signIn("credentials", { email, password, redirectTo: "/" });
+    return null;
   }
 
   return (

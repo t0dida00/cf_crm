@@ -1,5 +1,8 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
+
+const push = vi.hoisted(() => vi.fn());
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace: vi.fn(), refresh: vi.fn() }) }));
 import { MIN_PASSWORD_LENGTH, SignupCard, signupErrorMessage } from "./signup-card";
 
 afterEach(cleanup);
@@ -65,5 +68,20 @@ describe("SignupCard", () => {
   test("shows the error as an alert", () => {
     render(<SignupCard signUp={vi.fn()} error="exists" />);
     expect(screen.getByRole("alert").textContent).toMatch(/already exists/);
+  });
+
+  test("an account waiting for review gets the review banner, and OK goes to sign in", async () => {
+    const signUp = vi.fn(async () => ({ pending: { fullName: "Ana Ruiz", email: "ana@example.com" } }));
+    render(<SignupCard signUp={signUp} />);
+    fireEvent.change(screen.getByLabelText(/^Full name/), { target: { value: "Ana Ruiz" } });
+    fireEvent.change(screen.getByLabelText(/^Email/), { target: { value: "ana@example.com" } });
+    fireEvent.change(screen.getByLabelText(/^Password/), { target: { value: "longenough" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Create account" }).closest("form")!);
+
+    await waitFor(() => expect(screen.getByText("Dear Ana Ruiz,")).toBeTruthy());
+    expect(screen.getByRole("status").textContent).toMatch(/being reviewed.*ana@example\.com/);
+    expect(screen.queryByLabelText(/^Password/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "OK" }));
+    expect(push).toHaveBeenCalledWith("/login");
   });
 });

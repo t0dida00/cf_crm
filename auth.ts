@@ -9,6 +9,11 @@ class AccountDisabledError extends CredentialsSignin {
   code = "account_disabled";
 }
 
+/** A new owner account still waiting for review (REQUIRE_ACCOUNT_APPROVAL). */
+class AccountPendingError extends CredentialsSignin {
+  code = "account_pending";
+}
+
 export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
   providers: [
     Credentials({
@@ -32,6 +37,7 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           if (body?.error === "ACCOUNT_DISABLED") throw new AccountDisabledError();
+          if (body?.error === "ACCOUNT_PENDING_APPROVAL") throw new AccountPendingError();
           return null;
         }
 

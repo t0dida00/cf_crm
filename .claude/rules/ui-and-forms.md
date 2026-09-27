@@ -11,4 +11,5 @@
   - Each form keeps a `FieldErrors` object from its `validateX()`, checks on save and on blur (`withFieldError`; not on dropdowns, whose focus moves into the list), and renders `<FieldError>` plus `fieldErrorProps()` on the input.
   - Mandatory fields use `RequiredLabel` (red `*`, hidden from screen readers) with `required` on the input. Tests find those fields with `getByLabelText(/^Label/)`.
   - `components/ui/input.tsx` caps every input at 250 characters (`INPUT_MAX_LENGTH`), except where a field passes its own `maxLength`, e.g. the database URL. Text areas aren't capped.
+- **Notices: warning vs error.** A "not yet" state that isn't the user's mistake (e.g. an account under review) uses the amber warning style (`border-amber-200 bg-amber-50 text-amber-800`, icon `text-amber-600`) with `role="status"`. Errors keep the red `destructive` style with `role="alert"`. See `loginNotice()` in `components/login-card.tsx`.
 - **Save feedback.** Every successful save shows the "Saved successfully" toast: pass `SAVED_MESSAGE` as `run()`'s fourth argument (`hooks/use-async-action.ts`), or call `toast.success(SAVED_MESSAGE)` where a save doesn't go through `run()`.

@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, type FocusEvent, type FormEvent } from "react";
+import { useActionState, useState, type FocusEvent, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Hourglass } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
 import { FieldError, fieldErrorProps } from "@/components/field-error";
 import { validateSignup, withFieldError, type FieldErrors } from "@/lib/validation";
 import { Input } from "@/components/ui/input";
@@ -10,6 +13,9 @@ import { LoginSubmitButton } from "@/components/login-submit-button";
 
 export const MIN_PASSWORD_LENGTH = 8;
 
+/** What the signup action answers: the account waiting for review, or null (it redirected). */
+export type SignupState = { pending: { fullName: string; email: string } } | null;
+
 export function signupErrorMessage(error?: string, message?: string): string | null {
   if (!error) return null;
   if (error === "exists") return "An account with this email already exists. Sign in instead.";
@@ -17,16 +23,41 @@ export function signupErrorMessage(error?: string, message?: string): string | n
   return "Something went wrong creating your account. Please try again.";
 }
 
-/** Owner signup: the new account then sets up its business on "/". */
+/** Shown instead of the form once an account is waiting for review; OK goes to sign in. */
+function PendingReview({ fullName, email }: { fullName: string; email: string }) {
+  const router = useRouter();
+  return (
+    <div role="status" className="rounded-xl border bg-card p-10">
+      <span className="mb-5 flex size-11 items-center justify-center rounded-full bg-brand-500/10 text-brand-700">
+        <Hourglass size={22} weight="bold" />
+      </span>
+      <h1 className="text-2xl font-bold">Dear {fullName},</h1>
+      <p className="mt-3 text-sm text-muted-foreground text-pretty">
+        Your request is being reviewed. We&apos;ll notify you at <strong className="text-foreground">{email}</strong>{" "}
+        once your account is approved. Then you can sign in and set up your business.
+      </p>
+      <Button className="mt-8 h-11 w-full text-base" size="lg" onClick={() => router.push("/login")}>
+        OK
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * Owner signup: the new account then sets up its business on "/". When new
+ * accounts need review, the action answers `pending` and the card shows
+ * PendingReview instead of signing in.
+ */
 export function SignupCard({
   signUp,
   error,
   message,
 }: {
-  signUp: (formData: FormData) => Promise<void>;
+  signUp: (prev: SignupState, formData: FormData) => Promise<SignupState>;
   error?: string;
   message?: string;
 }) {
+  const [state, formAction] = useActionState(signUp, null);
   const errorText = signupErrorMessage(error, message);
   const [errors, setErrors] = useState<FieldErrors<"fullName" | "email" | "password">>({});
 
@@ -55,6 +86,8 @@ export function SignupCard({
     setErrors((prev) => withFieldError(prev, field, message));
   };
 
+  if (state?.pending) return <PendingReview {...state.pending} />;
+
   return (
     <div className="rounded-xl border bg-card p-10">
       <h1 className="text-2xl font-bold">Create your owner account</h1>
@@ -71,7 +104,7 @@ export function SignupCard({
         </p>
       )}
 
-      <form action={signUp} onSubmit={check} noValidate className="space-y-4">
+      <form action={formAction} onSubmit={check} noValidate className="space-y-4">
         <div className="space-y-1.5">
           <RequiredLabel htmlFor="fullName">Full name</RequiredLabel>
           <Input

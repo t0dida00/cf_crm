@@ -2,11 +2,27 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, PaperPlaneTilt } from "@phosphor-icons/react";
+import { ArrowLeft, Hourglass, PaperPlaneTilt } from "@phosphor-icons/react";
 import { ContactForm } from "@/components/contact-form";
 import { Input } from "@/components/ui/input";
 import { RequiredLabel } from "@/components/required-label";
 import { LoginSubmitButton } from "@/components/login-submit-button";
+
+/** What to tell the user after a failed sign-in. `warning`: not an error, just not yet (the account is under review). */
+export function loginNotice(error?: string, code?: string): { text: string; tone: "error" | "warning" } | null {
+  if (!error) return null;
+  if (code === "account_pending") {
+    return {
+      text: "Your account is still being reviewed. We'll notify you at your registered email once it's approved.",
+      tone: "warning",
+    };
+  }
+  if (code === "account_disabled") {
+    return { text: "Your account is disabled temporarily. Please contact your owner(s).", tone: "error" };
+  }
+  if (error === "CredentialsSignin") return { text: "Invalid email or password.", tone: "error" };
+  return { text: "Something went wrong signing in. Please try again.", tone: "error" };
+}
 
 export function LoginCard({
   loginWithCredentials,
@@ -18,6 +34,7 @@ export function LoginCard({
   code?: string;
 }) {
   const [view, setView] = useState<"sign-in" | "contact">("sign-in");
+  const notice = loginNotice(error, code);
 
   if (view === "contact") {
     return (
@@ -48,13 +65,21 @@ export function LoginCard({
         Access to the admin and staff dashboards is restricted.
       </p>
 
-      {error && (
-        <p className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
-          {code === "account_disabled"
-            ? "Your account is disabled temporarily. Please contact your owner(s)."
-            : error === "CredentialsSignin"
-              ? "Invalid email or password."
-              : "Something went wrong signing in. Please try again."}
+      {notice?.tone === "warning" && (
+        <p
+          role="status"
+          className="mb-6 flex gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800"
+        >
+          <Hourglass size={18} weight="bold" className="mt-px shrink-0 text-amber-600" aria-hidden />
+          {notice.text}
+        </p>
+      )}
+      {notice?.tone === "error" && (
+        <p
+          role="alert"
+          className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+        >
+          {notice.text}
         </p>
       )}
 
