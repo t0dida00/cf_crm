@@ -13,13 +13,12 @@ interface ApiOrder {
   total: string | number;
 }
 
-/** Live-updates on orders placed or added to from other sessions (e.g. the
- * customer-facing /client flow). Toasts on order:created, and on
+/** Toasts (and a sound) for orders placed or added to from other sessions
+ * (e.g. the customer-facing /client flow): on order:created, and on
  * order:updated only when the total actually changed (new items) — a plain
- * status advance (e.g. staff moving a card along the flow) touches the same
- * event but not the total, and shouldn't toast "new order" for that.
- * `onNewOrder` lets the caller refresh its own order list so counts/panels
- * stay in sync with what triggered the toast.
+ * status advance touches the same event but not the total. The order lists
+ * themselves are kept current by WorkspaceProvider, which applies each
+ * event's order; `onNewOrder` is only for extra work on a new order.
  * `knownOrders` seeds the last-known total for orders already on screen when
  * this mounts — without it, the first order:updated event for any
  * already-open order (e.g. a plain status advance right after page load)
@@ -28,7 +27,7 @@ interface ApiOrder {
 export function useNewOrderNotifications(
   enabled: boolean,
   platformId: string | null,
-  onNewOrder: () => void,
+  onNewOrder: (() => void) | undefined,
   fmt: (value: number) => string,
   knownOrders?: { id: string; total: number }[],
   onToastClick?: () => void,
@@ -58,7 +57,7 @@ export function useNewOrderNotifications(
           : {}),
       });
       playNotificationSound();
-      onNewOrder();
+      onNewOrder?.();
     };
 
     const onCreated = ({ order }: { order: ApiOrder }) => {
@@ -70,7 +69,6 @@ export function useNewOrderNotifications(
       const changed = lastTotals.current.get(order.id) !== total;
       lastTotals.current.set(order.id, total);
       if (changed) notify(order);
-      else onNewOrder();
     };
 
     channel.bind("order:created", onCreated);

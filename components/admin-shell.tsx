@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 import { useNewOrderNotifications } from "@/hooks/use-new-order-notifications";
 import { useSidebarCollapse } from "@/hooks/use-sidebar-collapse";
 import { MobileNavDrawer, SkipToContent } from "@/components/mobile-nav-drawer";
+import { SidebarClock } from "@/components/sidebar-clock";
 
 const NAV: { id: TabId; label: string; Icon: PhosphorIcon }[] = [
   { id: "dash", label: "Dashboard", Icon: ChartBar },
@@ -100,7 +101,6 @@ function SidebarBody({
   tab,
   setTab,
   counts,
-  clock,
   onToggle,
 }: {
   collapsed: boolean;
@@ -111,7 +111,6 @@ function SidebarBody({
   tab: TabId;
   setTab: (next: TabId) => void;
   counts: Partial<Record<TabId, number>>;
-  clock: string;
   onToggle: () => void;
 }) {
   return (
@@ -146,7 +145,7 @@ function SidebarBody({
           )}
         </button>
       </div>
-      {!collapsed && <div className="px-2 text-[13px] text-white/55">{clock}</div>}
+      {!collapsed && <SidebarClock className="px-2 text-[13px] text-white/55" />}
 
       <nav className="flex flex-col gap-1">
         {!collapsed && (
@@ -225,7 +224,7 @@ function SidebarBody({
 }
 
 export function AdminShell() {
-  const { workspace, fmt, refreshOrders } = useWorkspace();
+  const { workspace, fmt } = useWorkspace();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const tab: TabId = isTabId(tabParam) ? tabParam : "dash";
@@ -233,7 +232,6 @@ export function AdminShell() {
     document.title = `${TITLES[tab]} · Admin · Tably`;
   }, [tab]);
   const [createSignal, setCreateSignal] = useState(0);
-  const [now, setNow] = useState(() => Date.now());
   const { collapsed, isNarrow, mobileOpen, closeMobile, toggle: toggleCollapsed } =
     useSidebarCollapse();
 
@@ -255,12 +253,8 @@ export function AdminShell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
 
-  useEffect(() => {
-    const i = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(i);
-  }, []);
 
-  useNewOrderNotifications(true, workspace.id, refreshOrders, fmt, workspace.orders, undefined, workspace.pusher);
+  useNewOrderNotifications(true, workspace.id, undefined, fmt, workspace.orders, undefined, workspace.pusher);
 
 
   const startOfToday = new Date().setHours(0, 0, 0, 0);
@@ -273,18 +267,6 @@ export function AdminShell() {
 
   const actionLabel = ACTION_LABELS[tab];
 
-  const clock =
-    new Date(now).toLocaleDateString("en-GB", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-    }) +
-    " · " +
-    new Date(now).toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
 
   return (
     <div className="flex min-h-screen">
@@ -303,7 +285,6 @@ export function AdminShell() {
           tab={tab}
           setTab={setTab}
           counts={counts}
-          clock={clock}
           onToggle={toggleCollapsed}
         />
       </aside>
@@ -320,7 +301,6 @@ export function AdminShell() {
             closeMobile();
           }}
           counts={counts}
-          clock={clock}
           onToggle={closeMobile}
         />
       </MobileNavDrawer>

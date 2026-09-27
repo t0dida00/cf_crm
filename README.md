@@ -173,6 +173,7 @@ components/
   image-dropzone.tsx          drag-and-drop image picker; uploads, or hands the
                              file over (onFile) when the business doesn't exist
   order-detail-dialog.tsx    line items + net/tax breakdown for one order
+  sidebar-clock.tsx           the sidebar clock, ticking on its own
   bill-receipt.tsx            the bill on screen (BillReceipt), its printable
                              copy, and PrintReceiptButton (paper width + Print)
   qr-generation-view.tsx      QR code grid + downloadable SVGs
@@ -186,6 +187,8 @@ hooks/
   use-connections.ts          the owner's connections: load, check, save
   use-new-order-notifications.ts / use-table-request-notifications.ts
   use-sidebar-collapse.ts      localStorage-persisted sidebar state
+  use-now.ts                  the current time on an interval (for a clock
+                             component only, so ticks don't re-render pages)
 lib/
   types.ts                    Workspace, Order, Dish, Booking, Settings…
   api.ts / public-api.ts      fetch wrappers for the two proxy routes
@@ -206,6 +209,8 @@ lib/
   guest-routes.ts             the only backend routes /api/proxy-public forwards
   table-events.ts             eventIsForTable(): guest phones skip other
                              tables' real-time events
+  live-merge.ts               upsertById / removeById / isNewer: applying
+                             real-time events to the workspace without refetching
   focus.ts                    focusFirstInvalid(): failed submits focus the
                              first field with an error
 test/

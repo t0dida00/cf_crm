@@ -29,6 +29,8 @@ import type {
   Workspace,
 } from "@/lib/types";
 import { LEXICON } from "@/lib/lexicon";
+import { usePlatformSocket } from "@/hooks/use-platform-socket";
+import { isNewer, removeById, upsertById } from "@/lib/live-merge";
 
 interface WorkspaceContextValue {
   workspace: Workspace;
@@ -307,8 +309,10 @@ export function WorkspaceProvider({
 
   // Order history/stats are cached reads (TanStack Query) — any change to the
   // live order list (a mutation or a real-time refetch) makes them stale.
+  // Debounced: a burst of order events (busy service) refreshes them once.
   useEffect(() => {
-    void queryClient.invalidateQueries({ queryKey: ["orders"] });
+    const t = setTimeout(() => void queryClient.invalidateQueries({ queryKey: ["orders"] }), 1500);
+    return () => clearTimeout(t);
   }, [workspace.orders, queryClient]);
 
   useEffect(() => {
@@ -375,6 +379,64 @@ export function WorkspaceProvider({
     [],
   );
 
+  // Real-time: apply what each event carries (the order or table row) instead
+  // of refetching every order on every device. A device's own echo changes
+  // nothing (upsertById returns the same list). Only check-out, which closes a
+  // table's orders without per-order events, refetches.
+  const channel = usePlatformSocket(status === "success" && workspace.id ? workspace.id : null, workspace.pusher);
+  const orderSeen = useRef(new Map<string, number>());
+  useEffect(() => {
+    if (!channel) return;
+    const setList = <K extends "orders" | "tables">(key: K, next: (list: Workspace[K]) => Workspace[K]) =>
+      setWorkspace((w) => {
+        const list = next(w[key]);
+        return list === w[key] ? w : { ...w, [key]: list };
+      });
+    const onOrder = ({ order }: { order?: ApiOrder & { updated_at?: string } }) => {
+      if (!order?.id || !isNewer(orderSeen.current, order.id, order.updated_at)) return;
+      const mapped = mapOrder(order);
+      setList("orders", (orders) => upsertById(orders, mapped));
+    };
+    const onOrderDeleted = ({ id }: { id?: string }) => {
+      if (id) setList("orders", (orders) => removeById(orders, id));
+    };
+    const onTable = ({ table }: { table?: ApiTable }) => {
+      if (!table?.id) return;
+      const mapped = mapTable(table);
+      setList("tables", (tables) => upsertById(tables, mapped));
+    };
+    let checkoutTimer: ReturnType<typeof setTimeout> | undefined;
+    const onCheckedOut = () => {
+      clearTimeout(checkoutTimer); // a burst of check-outs → one refetch
+      checkoutTimer = setTimeout(() => {
+        ordersRefetch.current?.abort();
+        const controller = new AbortController();
+        ordersRefetch.current = controller;
+        void Promise.all([
+          apiFetch<{ orders: ApiOrder[] }>("/orders", { signal: controller.signal }),
+          apiFetch<{ tables: ApiTable[] }>("/tables", { signal: controller.signal }),
+        ])
+          .then(([o, t]) => setWorkspace((w) => ({ ...w, orders: o.orders.map(mapOrder), tables: t.tables.map(mapTable) })))
+          .catch((err) => {
+            if (!isAbortError(err)) console.error("Refetch after check-out failed:", err);
+          });
+      }, 300);
+    };
+    channel.bind("order:created", onOrder);
+    channel.bind("order:updated", onOrder);
+    channel.bind("order:deleted", onOrderDeleted);
+    channel.bind("table:updated", onTable);
+    channel.bind("table:checked_out", onCheckedOut);
+    return () => {
+      clearTimeout(checkoutTimer);
+      channel.unbind("order:created", onOrder);
+      channel.unbind("order:updated", onOrder);
+      channel.unbind("order:deleted", onOrderDeleted);
+      channel.unbind("table:updated", onTable);
+      channel.unbind("table:checked_out", onCheckedOut);
+    };
+  }, [channel]);
+
   const value = useMemo<WorkspaceContextValue>(() => {
     const patch = (fn: (w: Workspace) => Partial<Workspace>) =>
       setWorkspace((w) => ({ ...w, ...fn(w) }));
@@ -399,6 +461,10 @@ export function WorkspaceProvider({
       } catch (err) {
         if (!isAbortError(err)) throw err; // superseded by a newer refetch
       }
+    };
+    const refetchTables = async () => {
+      const { tables } = await apiFetch<{ tables: ApiTable[] }>("/tables");
+      patch(() => ({ tables: tables.map(mapTable) }));
     };
     const refetchTablesAndBookings = async () => {
       const signal = restart(bookingsRefetch);
@@ -520,14 +586,14 @@ export function WorkspaceProvider({
       },
 
       addOrder: async ({ tableName, itemId, qty }) => {
-        await apiFetch<{ order: ApiOrder }>("/orders", {
+        const { order } = await apiFetch<{ order: ApiOrder }>("/orders", {
           method: "POST",
           body: JSON.stringify({ tableName, status: flow[0], lines: [{ itemId, qty }] }),
         });
-        // Repeat order rounds merge into the table's existing open order rather than
-        // creating a new one, and the first round seats the table — refetch both
-        // rather than hand-patching so local state always matches the merge outcome.
-        await refetchOrdersAndTables();
+        // Each round is its own order: apply it, and refetch only the tables
+        // (a first round seats the table), not every order.
+        patch((w) => ({ orders: upsertById(w.orders, mapOrder(order)) }));
+        await refetchTables();
       },
       placeOrder: async (tableName, lines) => {
         if (!lines.length) throw new Error("placeOrder called with no lines");
@@ -535,8 +601,10 @@ export function WorkspaceProvider({
           method: "POST",
           body: JSON.stringify({ tableName, status: flow[0], lines }),
         });
-        await refetchOrdersAndTables();
-        return mapOrder(order);
+        const placed = mapOrder(order);
+        patch((w) => ({ orders: upsertById(w.orders, placed) }));
+        await refetchTables();
+        return placed;
       },
       advanceOrder: async (id) => {
         const current = workspace.orders.find((o) => o.id === id);

@@ -51,8 +51,6 @@ export function StaffTablesPanel() {
   const net = tableOrders.reduce((a, o) => a + o.total / (1 + o.taxRate / 100), 0);
   const tax = total - net;
 
-  const mins = (seatedAt: number | null) =>
-    seatedAt ? Math.max(0, Math.round((Date.now() - seatedAt) / 60000)) : 0;
 
   return (
     <>
@@ -81,7 +79,7 @@ export function StaffTablesPanel() {
           const booking = workspace.bookings.find((b) => b.tableName === t.name);
           const detail =
             t.state === "Seated"
-              ? `Seated ${mins(t.seatedAt)} min · ${hhmm(t.seatedAt as number)}`
+              ? "Guests seated"
               : t.state === "Booked"
                 ? booking
                   ? `${booking.time} · ${booking.name}`
@@ -127,11 +125,6 @@ export function StaffTablesPanel() {
                   {table.seats} seats{table.zone ? ` · ${table.zone}` : ""}
                 </span>
                 <span className="flex-1" />
-                {table.seatedAt && (
-                  <span className="text-[13px] font-semibold">
-                    Seated {mins(table.seatedAt)} min (since {hhmm(table.seatedAt)})
-                  </span>
-                )}
               </div>
 
               {tableOrders.length === 0 ? (

@@ -36,6 +36,7 @@ import { useTableRequestNotifications } from "@/hooks/use-table-request-notifica
 import { useSidebarCollapse } from "@/hooks/use-sidebar-collapse";
 import type { TableRequest, TableRequestType } from "@/lib/types";
 import { MobileNavDrawer, SkipToContent } from "@/components/mobile-nav-drawer";
+import { SidebarClock } from "@/components/sidebar-clock";
 
 const PENDING_REQUESTS_KEY = ["table-requests", "pending"] as const;
 
@@ -90,7 +91,6 @@ function SidebarBody({
   tab,
   setTab,
   counts,
-  clock,
   onToggle,
 }: {
   collapsed: boolean;
@@ -101,7 +101,6 @@ function SidebarBody({
   tab: StaffTab;
   setTab: (next: StaffTab) => void;
   counts: Record<StaffTab, number>;
-  clock: string;
   onToggle: () => void;
 }) {
   return (
@@ -136,7 +135,7 @@ function SidebarBody({
           )}
         </button>
       </div>
-      {!collapsed && <div className="px-2 text-[13px] text-white/55">{clock}</div>}
+      {!collapsed && <SidebarClock className="px-2 text-[13px] text-white/55" />}
 
       <nav className="flex flex-col gap-1">
         {!collapsed && (
@@ -213,14 +212,13 @@ function SidebarBody({
 }
 
 export function StaffShell() {
-  const { workspace, fmt, refreshOrders } = useWorkspace();
+  const { workspace, fmt } = useWorkspace();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const tab: StaffTab = isStaffTab(tabParam) ? tabParam : "orders";
   useEffect(() => {
     document.title = `${TITLES[tab]} · Staff · Tably`;
   }, [tab]);
-  const [now, setNow] = useState(() => Date.now());
   const [requestsModalOpen, setRequestsModalOpen] = useState(false);
   const { collapsed, isNarrow, mobileOpen, closeMobile, toggle: toggleCollapsed } =
     useSidebarCollapse();
@@ -242,10 +240,6 @@ export function StaffShell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabParam]);
 
-  useEffect(() => {
-    const i = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(i);
-  }, []);
 
   const queryClient = useQueryClient();
   const [createSignal, setCreateSignal] = useState(0);
@@ -262,7 +256,7 @@ export function StaffShell() {
   useNewOrderNotifications(
     true,
     workspace.id,
-    refreshOrders,
+    undefined, // WorkspaceProvider applies the order itself
     fmt,
     workspace.orders,
     () => setTab("orders"),
@@ -297,18 +291,6 @@ export function StaffShell() {
     history: closedOrders.length,
   };
 
-  const clock =
-    new Date(now).toLocaleDateString("en-GB", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-    }) +
-    " · " +
-    new Date(now).toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
 
   return (
     <div className="flex min-h-screen">
@@ -327,7 +309,6 @@ export function StaffShell() {
           tab={tab}
           setTab={setTab}
           counts={counts}
-          clock={clock}
           onToggle={toggleCollapsed}
         />
       </aside>
@@ -344,7 +325,6 @@ export function StaffShell() {
             closeMobile();
           }}
           counts={counts}
-          clock={clock}
           onToggle={closeMobile}
         />
       </MobileNavDrawer>
