@@ -356,7 +356,8 @@ export function AdminShell() {
           {tab === "bookings" && <BookingsPanel createSignal={createSignal} />}
           {tab === "staff" && <StaffPanel createSignal={createSignal} />}
           {tab === "settings" && (
-            <div className="space-y-4">
+            // Side by side on desktop, stacked below xl.
+            <div className="grid items-start gap-4 xl:grid-cols-2">
               <SettingsPanel />
               <ConnectionsPanel />
             </div>

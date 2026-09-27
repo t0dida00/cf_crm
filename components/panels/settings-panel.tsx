@@ -120,7 +120,7 @@ export function SettingsPanel() {
   const taxOnHundred = 100 - 100 / (1 + Number(billingDraft.taxRate || 0) / 100);
 
   return (
-    <Card className="max-w-xl">
+    <Card className="max-w-xl xl:max-w-none">
       <CardContent className="space-y-5">
         <div>
           <p className="text-lg font-semibold">Restaurant</p>

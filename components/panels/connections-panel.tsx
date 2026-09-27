@@ -8,7 +8,7 @@ import { useWorkspace } from "@/components/workspace-provider";
 export function ConnectionsPanel() {
   const { refresh } = useWorkspace();
   return (
-    <Card className="max-w-xl">
+    <Card className="max-w-xl xl:max-w-none">
       <CardContent className="space-y-5">
         <div>
           <p className="text-lg font-semibold">Connections</p>
