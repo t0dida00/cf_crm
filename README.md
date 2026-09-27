@@ -173,6 +173,8 @@ components/
   image-dropzone.tsx          drag-and-drop image picker; uploads, or hands the
                              file over (onFile) when the business doesn't exist
   order-detail-dialog.tsx    line items + net/tax breakdown for one order
+  bill-receipt.tsx            the bill on screen (BillReceipt), its printable
+                             copy, and PrintReceiptButton (paper width + Print)
   qr-generation-view.tsx      QR code grid + downloadable SVGs
   panels/                     one file per admin/staff tab
     staff/                    staff-specific panel variants (simpler than admin's);
@@ -195,6 +197,9 @@ lib/
   best-sellers.ts             bestSellerIds(): the top 5 dishes by soldCount
                              (mirrors the backend's rule for the guest menu)
   upload-image.ts             uploadImage(file): 5 MB check, POST /api/upload
+  print-receipt.ts            printReceipt(): prints a bill in a hidden frame
+                             as one page sized to the receipt (80 or 58 mm
+                             paper, remembered per browser)
   register.ts                 registerAccount(): POST /auth/register (server-side)
   notify.ts                   notifyNewAccount(): Resend email to the admin only
   tone.ts                     status/state -> badge color mapping

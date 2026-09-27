@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BillReceipt, PrintableBillReceipt } from "@/components/bill-receipt";
+import { BillReceipt, PrintReceiptButton } from "@/components/bill-receipt";
 import { useWorkspace } from "@/components/workspace-provider";
 import { formatStamp } from "@/lib/range";
 import { orderTone } from "@/lib/tone";
@@ -165,33 +165,21 @@ export function SessionDetailDialog({
               <Button variant="secondary" onClick={() => setBillOpen(false)}>
                 Back
               </Button>
-              <Button
-                onClick={() => window.print()}
-                style={{ backgroundColor: "#232F3F", color: "#FFF" }}
-              >
-                <Printer size={15} weight="bold" />
-                Print
-              </Button>
+              <PrintReceiptButton
+                workspaceName={workspace.name}
+                workspaceAddress={workspace.address}
+                workspacePhone={workspace.phone}
+                tableName={tableName}
+                orders={session.orders}
+                net={breakdown.net}
+                tax={tax}
+                total={session.total}
+                fmt={fmt}
+              />
             </div>
           </div>
         </DialogContent>
       </Dialog>
-
-      {billOpen && (
-        <div id="bill-print-area" className="hidden">
-          <PrintableBillReceipt
-            workspaceName={workspace.name}
-            workspaceAddress={workspace.address}
-            workspacePhone={workspace.phone}
-            tableName={tableName}
-            orders={session.orders}
-            net={breakdown.net}
-            tax={tax}
-            total={session.total}
-            fmt={fmt}
-          />
-        </div>
-      )}
     </>
   );
 }
