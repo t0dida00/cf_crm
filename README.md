@@ -167,8 +167,10 @@ components/                   one folder per part of the UI; one PascalCase
                               workspace, CRUD actions, applies real-time
                               events), ClientWorkspaceProvider (guest side,
                               public endpoints only), QueryProvider
-  layout/                     AdminShell / StaffShell (sidebar + header +
-                              panel switch, collapsible sidebar),
+  layout/                     AppShell (the shared frame: collapsible
+                              sidebar / mobile drawer, header, footer) and
+                              useShellTab (?tab= handling); AdminShell /
+                              StaffShell only add their tabs and panels;
                               MobileNavDrawer, SidebarClock
   auth/                       LoginCard (Owner / Staff choice), SignupCard,
                               LoginSubmitButton

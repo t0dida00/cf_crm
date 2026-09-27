@@ -4,7 +4,7 @@
   - `ui/`: shadcn primitives (`Button`, `Input`, `Select`, `Dialog`…).
   - `common/`: building blocks used across areas (`DataTable`, `DishImage`, `FieldError`, `ImageDropzone`, `PaginationBar`, `RequestState`, `RequiredLabel`, `ContactForm`).
   - `providers/`: React context providers (`WorkspaceProvider`, `ClientWorkspaceProvider`, `QueryProvider`).
-  - `layout/`: app chrome (`AdminShell`, `StaffShell`, `MobileNavDrawer`, `SidebarClock`).
+  - `layout/`: app chrome. `AppShell` is the one frame (sidebar, drawer, header, footer) and `useShellTab` the `?tab=` handling; `AdminShell` and `StaffShell` only supply their tabs, counts, header `actions`, `overlays` and panels. Change the frame in `AppShell`, never by copying it into a shell.
   - Areas: `auth/`, `onboarding/`, `marketing/`, `client/` (guest app), `orders/`, `bookings/` (shared by admin and staff), `admin/` (admin tab panels), `staff/` (staff tab panels).
   - A new component goes in the area that uses it; move it to `common/` once a second area needs it.
 - **Hooks, utilities, helpers and services are camelCase**: `hooks/useOrderHistory.ts`, `lib/printReceipt.ts`, `lib/orderMath.ts`. Single words stay lowercase (`lib/api.ts`).
