@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const API_URL = process.env.API_URL || "http://localhost:3000";
+import { guestTarget } from "@/lib/guestRoutes";
 
 // Deliberately no auth() call here — this proxy exists specifically to serve
 // anonymous guests on /client with zero session, unlike app/api/proxy/[...path].
 async function proxy(req: NextRequest, platformId: string, path: string[]) {
-  const targetUrl = `${API_URL}/public/platforms/${platformId}/${path.join("/")}${req.nextUrl.search}`;
+  // Only the guest routes, so a crafted path (e.g. encoded "../") can't reach
+  // the rest of the backend.
+  const targetUrl = guestTarget(platformId, path, req.method, req.nextUrl.search);
+  if (!targetUrl) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const hasBody = req.method !== "GET" && req.method !== "HEAD";
 
   let res: Response;

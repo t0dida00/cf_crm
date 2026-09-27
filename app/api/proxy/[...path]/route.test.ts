@@ -3,6 +3,8 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("@/auth", () => ({ auth: async () => ({ accessToken: "jwt-1" }) }));
 
+vi.mock("@/lib/serverToken", () => ({ getAccessToken: async () => "jwt-1" }));
+
 import * as route from "./route";
 
 afterEach(() => vi.restoreAllMocks());

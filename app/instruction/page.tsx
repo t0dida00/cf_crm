@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { InstructionPage } from "@/components/instruction-page";
+import { InstructionPage } from "@/components/marketing/InstructionPage";
 
 export const metadata: Metadata = {
   title: "How Tably works",

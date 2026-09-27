@@ -2,11 +2,11 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { StaffShell } from "@/components/staff-shell";
-import { BuildingScreen } from "@/components/building-screen";
-import { useWorkspace } from "@/components/workspace-provider";
-import { ErrorState, LoadingState } from "@/components/request-state";
-import { DATABASE_NOT_CONNECTED } from "@/lib/request-status";
+import { StaffShell } from "@/components/layout/StaffShell";
+import { BuildingScreen } from "@/components/onboarding/BuildingScreen";
+import { useWorkspace } from "@/components/providers/WorkspaceProvider";
+import { ErrorState, LoadingState } from "@/components/common/RequestState";
+import { DATABASE_NOT_CONNECTED } from "@/lib/requestStatus";
 
 const BUILDING_SEEN_KEY = "tably:building-seen";
 

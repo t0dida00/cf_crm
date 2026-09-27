@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { signOutAction } from "@/app/actions";
 
 export default function UnauthorizedPage() {

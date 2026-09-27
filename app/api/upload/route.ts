@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { getAccessToken } from "@/lib/serverToken";
 
 const API_URL = process.env.API_URL || "http://localhost:3000";
 
@@ -10,8 +11,7 @@ const API_URL = process.env.API_URL || "http://localhost:3000";
  * through here.
  */
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  const accessToken = (session as { accessToken?: string } | null)?.accessToken;
+  const accessToken = (await auth()) ? await getAccessToken() : null;
   if (!accessToken) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

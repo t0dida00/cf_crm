@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getAccessToken } from "@/lib/serverToken";
 import { auth, signOut, unstable_update } from "@/auth";
-import { createPlatform, updatePlatform } from "@/lib/platform-api";
+import { createPlatform, updatePlatform } from "@/lib/platformApi";
 import type { Domain } from "@/lib/types";
 
 export async function signOutAction() {
@@ -18,7 +19,7 @@ export async function createPlatformAction(input: {
   logoUrl?: string;
 }) {
   const session = await auth();
-  const accessToken = (session as { accessToken?: string } | null)?.accessToken;
+  const accessToken = session ? await getAccessToken() : null;
   if (!accessToken) throw new Error("Not authenticated");
 
   await createPlatform(accessToken, input);
@@ -38,7 +39,7 @@ export async function updatePlatformAction(input: {
   logoUrl?: string;
 }) {
   const session = await auth();
-  const accessToken = (session as { accessToken?: string } | null)?.accessToken;
+  const accessToken = session ? await getAccessToken() : null;
   if (!accessToken) throw new Error("Not authenticated");
 
   await updatePlatform(accessToken, input);

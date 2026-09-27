@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { fetchRole } from "@/lib/session-role";
+import { fetchRole } from "@/lib/sessionRole";
 
 const API_URL = process.env.API_URL || "http://localhost:3000";
 
@@ -80,9 +80,8 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
       return token;
     },
     session({ session, token }) {
-      if (token.accessToken) {
-        (session as { accessToken?: string }).accessToken = token.accessToken as string;
-      }
+      // The backend JWT stays in the encrypted cookie (server code reads it
+      // with getAccessToken()); the session the browser can fetch never has it.
       if ("role" in token) {
         (session as { role?: string | null }).role = token.role as string | null;
       }

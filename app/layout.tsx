@@ -3,8 +3,8 @@ import { Nunito_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import { auth } from "@/auth";
-import { QueryProvider } from "@/components/query-provider";
-import { WorkspaceProvider } from "@/components/workspace-provider";
+import { QueryProvider } from "@/components/providers/QueryProvider";
+import { WorkspaceProvider } from "@/components/providers/WorkspaceProvider";
 import "../node_modules/tw-animate-css/dist/tw-animate.css";
 import "./globals.scss";
 
@@ -15,7 +15,8 @@ const nunito = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Tably",
+  // Pages set their own title ("Sign in · Tably"); WCAG 2.4.2.
+  title: { default: "Tably", template: "%s · Tably" },
   description: "Set up a restaurant or café workspace and manage it.",
   icons: {
     icon: "/icons/favicon.ico",
@@ -27,14 +28,14 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const session = await auth();
-  const accessToken = (session as { accessToken?: string } | null)?.accessToken;
+  // Only whether someone is signed in: the backend JWT never goes to the browser.
+  const signedIn = !!(await auth());
 
   return (
     <html lang="en" className={nunito.variable}>
       <body>
         <QueryProvider>
-          <WorkspaceProvider accessToken={accessToken ?? null}>
+          <WorkspaceProvider signedIn={signedIn}>
             {children}
           </WorkspaceProvider>
         </QueryProvider>

@@ -24,13 +24,19 @@
   --secondary: #f9fafb;
   --secondary-foreground: #374151;
   --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
+  /* 5.2:1 on --muted, 5.8:1 on white (WCAG AA text). */
+  --muted-foreground: #5f6673;
   --accent: #f3f4f6;
   --accent-foreground: #111827;
-  --destructive: #ef4444;
+  /* Error text: 6.5:1 on white, 5.7:1 on the destructive/10 notice background. */
+  --destructive: #b91c1c;
   --border: #e5e7eb;
   --input: #e5e7eb;
-  --ring: var(--brand-500);
+  /* Form field borders only: 3.3:1, so fields are visible (WCAG 1.4.11).
+   * Kept apart from --input, which the ui/ primitives also use as a tint. */
+  --input-border: #868d99;
+  /* Focus ring: 5.1:1, drawn solid (never at 50% opacity). */
+  --ring: var(--brand-700);
 }
 
 @theme inline {
@@ -51,6 +57,7 @@
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-input-border: var(--input-border);
   --color-ring: var(--ring);
   --color-ink: var(--ink);
   --color-brand-50: var(--brand-50);
@@ -68,7 +75,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
   html,
   body {
@@ -100,4 +107,16 @@
 @keyframes grow-bar {
   from { width: 0%; }
   to { width: 100%; }
+}
+
+/* People who ask their system to reduce motion get no animations (WCAG 2.3.3). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { getAccessToken } from "@/lib/serverToken";
 
 const API_URL = process.env.API_URL || "http://localhost:3000";
 
 async function proxy(req: NextRequest, path: string[]) {
-  const session = await auth();
-  const accessToken = (session as { accessToken?: string } | null)?.accessToken;
+  const accessToken = (await auth()) ? await getAccessToken() : null;
   if (!accessToken) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
