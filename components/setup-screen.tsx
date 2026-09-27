@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight, CheckCircle, Coffee, ForkKnife, SignOut, SquaresFour } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowRight, CheckCircle, Coffee, ForkKnife, SignOut, SquaresFour } from "@phosphor-icons/react";
 import { signOutAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { ImageDropzone } from "@/components/image-dropzone";
@@ -27,18 +27,26 @@ export interface SetupDetails {
   logoUrl: string;
 }
 
+/**
+ * Onboarding step 2: the business's details. A logo picked here isn't
+ * uploaded yet (the business and its storage don't exist): it's previewed
+ * locally and handed to `onSubmit` as `logoFile`, with `logoUrl` left as the
+ * logo saved before, if any.
+ */
 export function SetupScreen({
   onSubmit,
+  onBack,
   error,
   initial,
 }: {
   onSubmit: (
     name: string,
     domain: Domain,
-    contact: { phone: string; address: string; logoUrl: string },
+    contact: { phone: string; address: string; logoUrl: string; logoFile: File | null },
   ) => void | Promise<void>;
+  onBack?: () => void;
   error?: string | null;
-  /** Values to start from, e.g. when coming back from step 2. */
+  /** Values to start from, e.g. when coming back to this step. */
   initial?: SetupDetails | null;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
@@ -46,6 +54,10 @@ export function SetupScreen({
   const [phone, setPhone] = useState(initial?.phone ?? "");
   const [address, setAddress] = useState(initial?.address ?? "");
   const [logoUrl, setLogoUrl] = useState(initial?.logoUrl ?? "");
+  // The picked logo, and its local preview URL (shown instead of logoUrl).
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  useEffect(() => () => void (logoPreview && URL.revokeObjectURL(logoPreview)), [logoPreview]);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<FieldErrors<"name" | "phone" | "address">>({});
 
@@ -57,7 +69,7 @@ export function SetupScreen({
             <SquaresFour size={15} weight="bold" />
           </span>
           <span className="text-xs font-semibold tracking-wide text-muted-foreground">
-            WORKSPACE SETUP · STEP 1 OF 2
+            WORKSPACE SETUP · STEP 2 OF 2
           </span>
           <span className="flex-1" />
           <form action={signOutAction}>
@@ -81,8 +93,12 @@ export function SetupScreen({
           <div className="space-y-1.5">
             <Label className="block text-sm font-semibold">Logo</Label>
             <ImageDropzone
-              value={logoUrl}
+              value={logoPreview ?? logoUrl}
               onChange={setLogoUrl}
+              onFile={(file) => {
+                setLogoFile(file);
+                setLogoPreview(URL.createObjectURL(file));
+              }}
               className="size-[200px] max-w-full"
               placeholder="Drop a logo, or click to browse"
             />
@@ -182,8 +198,14 @@ export function SetupScreen({
             </p>
           )}
 
-          <div className="mt-8 flex items-center justify-between border-t pt-6">
-            <span className="text-xs text-muted-foreground">
+          <div className="mt-8 flex items-center gap-3 border-t pt-6">
+            {onBack && (
+              <Button variant="outline" onClick={onBack} disabled={submitting}>
+                <ArrowLeft size={14} weight="bold" />
+                Back
+              </Button>
+            )}
+            <span className="flex-1 text-xs text-muted-foreground">
               You can change all of this later.
             </span>
             <Button
@@ -198,6 +220,7 @@ export function SetupScreen({
                     phone: phone.trim(),
                     address: address.trim(),
                     logoUrl: logoUrl.trim(),
+                    logoFile,
                   });
                 } finally {
                   setSubmitting(false);

@@ -1,19 +1,79 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { CheckCircle, Database, Lightning } from "@phosphor-icons/react";
+import { CheckCircle, Database, ImageSquare, Lightning } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RequiredLabel } from "@/components/required-label";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorState, LoadingState } from "@/components/request-state";
-import { useConnections, type Connections } from "@/hooks/use-connections";
+import {
+  useConnections,
+  type Connections,
+  type ConnectionsInput,
+  type StorageInput,
+  type StorageProvider,
+} from "@/hooks/use-connections";
 import { toast } from "sonner";
 import { SAVED_MESSAGE } from "@/hooks/use-async-action";
 import { parsePusherSnippet, type PusherFields } from "@/lib/pusher-snippet";
 
-const EMPTY = { databaseUrl: "", appId: "", key: "", secret: "", cluster: "" };
+const EMPTY = {
+  databaseUrl: "",
+  appId: "",
+  key: "",
+  secret: "",
+  cluster: "",
+  storageProvider: "vercel_blob" as StorageProvider,
+  blobToken: "",
+  s3Endpoint: "",
+  s3Region: "",
+  s3Bucket: "",
+  s3PublicUrl: "",
+  s3AccessKeyId: "",
+  s3SecretAccessKey: "",
+};
+
+const STORAGE_PROVIDERS: [StorageProvider, string][] = [
+  ["vercel_blob", "Vercel Blob"],
+  ["s3", "S3-compatible"],
+];
+
+/** The form's fields back from a request, e.g. to fill it in again after going back. */
+function fromInput(input: ConnectionsInput): typeof EMPTY {
+  const { databaseUrl, pusher, storage } = input;
+  return {
+    ...EMPTY,
+    databaseUrl,
+    ...pusher,
+    storageProvider: storage.provider,
+    ...(storage.provider === "vercel_blob"
+      ? { blobToken: storage.token }
+      : {
+          s3Endpoint: storage.endpoint,
+          s3Region: storage.region,
+          s3Bucket: storage.bucket,
+          s3PublicUrl: storage.publicUrl,
+          s3AccessKeyId: storage.accessKeyId,
+          s3SecretAccessKey: storage.secretAccessKey,
+        }),
+  };
+}
+
+/** The storage part of the save request, for the chosen provider only. */
+function toStorageInput(form: typeof EMPTY): StorageInput {
+  if (form.storageProvider === "vercel_blob") return { provider: "vercel_blob", token: form.blobToken.trim() };
+  return {
+    provider: "s3",
+    endpoint: form.s3Endpoint.trim(),
+    region: form.s3Region.trim(),
+    bucket: form.s3Bucket.trim(),
+    accessKeyId: form.s3AccessKeyId.trim(),
+    secretAccessKey: form.s3SecretAccessKey.trim(),
+    publicUrl: form.s3PublicUrl.trim(),
+  };
+}
 
 // These fields hold passwords and secrets: keep writing assistants such as
 // Grammarly (which send text to their servers) and autofill out of them.
@@ -36,9 +96,11 @@ const listNames = (names: string[]) =>
 const checkedOn = (at: string | null) =>
   at ? ` · checked ${new Date(at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : "";
 
+/** True once the business's database, Pusher and storage are all its own. */
+export const connectedAll = (c: Connections | null) => !!c?.database && !!c.pusher && !!c.storage;
+
 /** True once the business can run on its own infrastructure, or may use the shared one. */
-export const connectionsReady = (c: Connections | null) =>
-  !!c && (c.sharedInfraAllowed || (c.database !== null && c.pusher !== null));
+export const connectionsReady = (c: Connections | null) => !!c && (c.sharedInfraAllowed || connectedAll(c));
 
 function Status({ icon, title, connected }: { icon: React.ReactNode; title: string; connected: string | null }) {
   return (
@@ -60,23 +122,37 @@ function Status({ icon, title, connected }: { icon: React.ReactNode; title: stri
 }
 
 /**
- * Lets the owner connect their business's own Postgres database and Pusher
- * app together: one "Test & save" checks both, and nothing is saved unless
- * both pass. Secrets are never shown again once saved. `onSaved` runs after
- * a successful save.
+ * Lets the owner connect their business's own Postgres database, Pusher app
+ * and image storage (Vercel Blob or S3-compatible) together: one "Test &
+ * save" checks all three, and nothing is saved unless all pass. Secrets are
+ * never shown again once saved. `onSaved` runs after a successful save.
+ *
+ * With `onChecked` (onboarding, before the business exists) it only checks:
+ * "Test & continue" runs the same checks, saves nothing, and hands the input
+ * over to be saved once the business is created. `initial` fills the form.
  */
-export function ConnectionsForm({ onSaved, inSettings = false }: { onSaved?: () => void; inSettings?: boolean }) {
-  const { connections, status, error, retry, saveConnections } = useConnections();
-  const [form, setForm] = useState(EMPTY);
+export function ConnectionsForm({
+  onSaved,
+  onChecked,
+  initial,
+  inSettings = false,
+}: {
+  onSaved?: () => void;
+  onChecked?: (input: ConnectionsInput) => void;
+  initial?: ConnectionsInput | null;
+  inSettings?: boolean;
+}) {
+  const { connections, status, error, retry, saveConnections, checkConnections } = useConnections();
+  const [form, setForm] = useState(() => (initial ? fromInput(initial) : EMPTY));
+  const submitting = onChecked ? checkConnections : saveConnections;
   const [editing, setEditing] = useState(false);
   const [pasteNote, setPasteNote] = useState<string | null>(null);
 
   if (status === "error") return <ErrorState message={error ?? undefined} onRetry={retry} />;
   if (!connections) return <LoadingState />;
 
-  const connectedBoth = !!connections.database && !!connections.pusher;
-  const showForm = !connectedBoth || editing;
-  const set = (field: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const showForm = !connectedAll(connections) || editing;
+  const set = (field: Exclude<keyof typeof EMPTY, "storageProvider">) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
 
   // Fills the Pusher fields from the snippet Pusher's App Keys "Copy" button
@@ -95,21 +171,24 @@ export function ConnectionsForm({ onSaved, inSettings = false }: { onSaved?: () 
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    saveConnections.mutate(
-      {
-        databaseUrl: form.databaseUrl.trim(),
-        pusher: { appId: form.appId, key: form.key, secret: form.secret, cluster: form.cluster },
+    const input: ConnectionsInput = {
+      databaseUrl: form.databaseUrl.trim(),
+      pusher: { appId: form.appId, key: form.key, secret: form.secret, cluster: form.cluster },
+      storage: toStorageInput(form),
+    };
+    if (onChecked) {
+      checkConnections.mutate(input, { onSuccess: () => onChecked(input) });
+      return;
+    }
+    saveConnections.mutate(input, {
+      onSuccess: () => {
+        toast.success(SAVED_MESSAGE);
+        setForm(EMPTY);
+        setPasteNote(null);
+        setEditing(false);
+        onSaved?.();
       },
-      {
-        onSuccess: () => {
-          toast.success(SAVED_MESSAGE);
-          setForm(EMPTY);
-          setPasteNote(null);
-          setEditing(false);
-          onSaved?.();
-        },
-      },
-    );
+    });
   };
 
   return (
@@ -134,6 +213,11 @@ export function ConnectionsForm({ onSaved, inSettings = false }: { onSaved?: () 
               ? `App ${connections.pusher.appId} · ${connections.pusher.cluster}${checkedOn(connections.pusher.verifiedAt)}`
               : null
           }
+        />
+        <Status
+          icon={<ImageSquare size={18} weight="bold" className="text-brand-700" />}
+          title="Images (storage)"
+          connected={connections.storage ? `${connections.storage.label}${checkedOn(connections.storage.verifiedAt)}` : null}
         />
       </div>
 
@@ -206,14 +290,97 @@ export function ConnectionsForm({ onSaved, inSettings = false }: { onSaved?: () 
             </div>
           </div>
 
-          {saveConnections.error && (
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <p id="storage-provider-label" className="text-sm font-medium">
+                Image storage
+              </p>
+              <div role="radiogroup" aria-labelledby="storage-provider-label" className="flex gap-2">
+                {STORAGE_PROVIDERS.map(([provider, label]) => (
+                  <Button
+                    key={provider}
+                    type="button"
+                    role="radio"
+                    aria-checked={form.storageProvider === provider}
+                    variant={form.storageProvider === provider ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setForm((f) => ({ ...f, storageProvider: provider }))}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Where dish photos and your logo are stored. It must allow public reads, since guests&apos; browsers load
+                the images.
+                {inSettings && connections.storage && " Switching storage doesn't move images already uploaded."}
+              </p>
+            </div>
+
+            {form.storageProvider === "vercel_blob" ? (
+              <div className="space-y-1.5">
+                <RequiredLabel htmlFor="blob-token">Vercel Blob read-write token</RequiredLabel>
+                <Input
+                  id="blob-token"
+                  type="text"
+                  {...SECRET_FIELD_PROPS}
+                  required
+                  value={form.blobToken}
+                  onChange={set("blobToken")}
+                  placeholder="vercel_blob_rw_…"
+                  aria-describedby="blob-token-help"
+                />
+                <p id="blob-token-help" className="text-xs text-muted-foreground">
+                  In Vercel, open <strong>Storage</strong>, pick your public Blob store and copy{" "}
+                  <strong>BLOB_READ_WRITE_TOKEN</strong> from its <strong>.env.local</strong> tab.
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(
+                  [
+                    ["s3Endpoint", "Endpoint", "https://<account>.r2.cloudflarestorage.com", true],
+                    ["s3Region", "Region", "auto", false],
+                    ["s3Bucket", "Bucket", "menu-photos", true],
+                    ["s3PublicUrl", "Public URL", "https://pub-….r2.dev", true],
+                    ["s3AccessKeyId", "Access key ID", "", true],
+                    ["s3SecretAccessKey", "Secret access key", "", true],
+                  ] as const
+                ).map(([field, label, placeholder, required]) => (
+                  <div key={field} className="space-y-1.5">
+                    {required ? (
+                      <RequiredLabel htmlFor={`storage-${field}`}>{label}</RequiredLabel>
+                    ) : (
+                      <Label htmlFor={`storage-${field}`}>{label}</Label>
+                    )}
+                    <Input
+                      id={`storage-${field}`}
+                      type="text"
+                      {...SECRET_FIELD_PROPS}
+                      required={required}
+                      placeholder={placeholder}
+                      value={form[field]}
+                      onChange={set(field)}
+                    />
+                  </div>
+                ))}
+                <p className="text-xs text-muted-foreground sm:col-span-2">
+                  Works with AWS S3, Cloudflare R2, Backblaze B2, DigitalOcean Spaces, Supabase Storage and MinIO. On AWS,
+                  the endpoint is <code>https://s3.&lt;region&gt;.amazonaws.com</code> and the region is required. The
+                  public URL is the address the bucket&apos;s files are served from.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {submitting.error && (
             <p role="alert" className="text-sm text-destructive">
-              {saveConnections.error.message}
+              {submitting.error.message}
             </p>
           )}
           <div className="flex gap-2">
-            <Button type="submit" loading={saveConnections.isPending} disabled={!connections.canStoreCredentials}>
-              {saveConnections.isPending ? "Checking…" : "Test & save"}
+            <Button type="submit" loading={submitting.isPending} disabled={!connections.canStoreCredentials}>
+              {submitting.isPending ? "Checking…" : onChecked ? "Test & continue" : "Test & save"}
             </Button>
             {editing && (
               <Button type="button" variant="outline" onClick={() => setEditing(false)}>
@@ -222,7 +389,10 @@ export function ConnectionsForm({ onSaved, inSettings = false }: { onSaved?: () 
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            Both are checked before anything is saved. Passwords and secrets are stored encrypted and never shown again.
+            {onChecked
+              ? "All three are checked now (storage with a small test file, deleted again) and saved once your business is created in the next step. "
+              : "All three are checked before anything is saved (storage with a small test file, deleted again). "}
+            Passwords and secrets are stored encrypted and never shown again.
           </p>
         </form>
       ) : (

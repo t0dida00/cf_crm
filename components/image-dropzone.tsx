@@ -3,11 +3,14 @@
 import { useRef, useState } from "react";
 import { ImageSquare } from "@phosphor-icons/react";
 import { useAsyncAction } from "@/hooks/use-async-action";
+import { uploadImage } from "@/lib/upload-image";
 import { cn } from "@/lib/utils";
 
 /** Drag-and-drop image uploader — click or drop a file, uploads it to
- * /api/upload, and reports the resulting URL back via onChange. Used for both
- * dish photos and the workspace logo. */
+ * /api/upload (the business's own storage, or the shared one), and reports
+ * the resulting URL back via onChange. Used for both dish photos and the
+ * workspace logo. With `onFile`, it hands over the file instead of uploading
+ * (for onboarding, before the business and its storage exist). */
 export function ImageDropzone({
   value,
   onChange,
@@ -15,6 +18,7 @@ export function ImageDropzone({
   imageClassName,
   placeholder = "Drag & drop an image, or click to browse",
   compact = false,
+  onFile,
 }: {
   value: string;
   onChange: (url: string) => void;
@@ -24,24 +28,22 @@ export function ImageDropzone({
   /** Icon-only, no placeholder text — for small inline pickers where a full
    * sentence would overflow (e.g. a 44px badge next to a form field). */
   compact?: boolean;
+  /** Called with the chosen file instead of uploading it; the parent sets `value` (e.g. a preview URL). */
+  onFile?: (file: File) => void;
 }) {
   const { run, isPending } = useAsyncAction();
   const [dragActive, setDragActive] = useState(false);
   const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const uploadImage = async (file: File) => {
+  const pickFile = async (file: File) => {
+    if (onFile) {
+      setImageError(false);
+      onFile(file);
+      return;
+    }
     await run("upload-image", async () => {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": file.type, "X-Filename": file.name },
-        body: file,
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error || "Failed to upload image.");
-      }
-      const { url } = await res.json();
+      const url = await uploadImage(file);
       setImageError(false);
       onChange(url);
     }, "Failed to upload image.");
@@ -67,7 +69,7 @@ export function ImageDropzone({
           e.preventDefault();
           setDragActive(false);
           const file = e.dataTransfer.files?.[0];
-          if (file) uploadImage(file);
+          if (file) pickFile(file);
         }}
         className={cn(
           "relative flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed text-center transition-colors",
@@ -110,7 +112,7 @@ export function ImageDropzone({
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) uploadImage(file);
+          if (file) pickFile(file);
           e.target.value = "";
         }}
       />

@@ -2,7 +2,7 @@
 
 - **Admin shell tabs** are driven by `?tab=` (`TabId` in `lib/types.ts`, `TITLES`/`SUBTITLES` in `admin-shell.tsx`). Table QR codes is the `qr` tab. Its LAN-address detection runs in `app/api/qr-origin`; `/qr-generation` just redirects there.
 - **Formatting.** Money and counts go through `lib/format.ts` (`money()`, re-exported from `lib/range.ts`; `formatNumber()`), usually via `useWorkspace().fmt`. Don't format numbers ad hoc.
-- **Images.** Dish photos render through `components/dish-image.tsx` (`next/image`, AVIF/WebP, lazy). Vercel Blob is the allowed remote host in `next.config.ts`; other hosts are passed through unoptimized. Give its parent `relative` and a fixed size.
+- **Images.** Uploads go through `components/image-dropzone.tsx` → `app/api/upload` → the backend's `POST /platforms/me/uploads`, which stores them in the business's own storage or the shared Vercel Blob. The frontend holds no storage credentials. Dish photos render through `components/dish-image.tsx` (`next/image`, AVIF/WebP, lazy). Vercel Blob is the allowed remote host in `next.config.ts`; other hosts are passed through unoptimized. Give its parent `relative` and a fixed size.
 - **Buttons on a white or near-white background need a border.** The `outline` and `secondary` variants in `components/ui/button.tsx` already have one; hand-built light buttons (e.g. quantity-stepper "−" buttons) add `border`. Transparent icon buttons that only tint on hover don't.
 - **Forms and validation.** Rules live in `lib/validation.ts`, mirrored by the backend's `src/lib/validation.ts`; change both together.
   - Phone: digits with an optional leading `+`, filtered as typed with `sanitizePhone`.
