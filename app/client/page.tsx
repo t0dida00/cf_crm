@@ -15,6 +15,7 @@ import {
 import { usePlatformSocket } from "@/hooks/use-platform-socket";
 import { apiFetch } from "@/lib/api";
 import type { TableRequestType } from "@/lib/types";
+import { eventIsForTable } from "@/lib/table-events";
 
 function GuestClientPage({
   platformId,
@@ -54,7 +55,10 @@ function GuestClientPage({
     // history) and a new order round can be placed by another device at the
     // same table — refetch this table's history on either so the guest sees
     // it live instead of needing to reload.
-    const refresh = () => refreshTableOrders(tableName);
+    // The channel is the whole restaurant's: only this table's events refetch.
+    const refresh = (payload: unknown) => {
+      if (eventIsForTable(payload, tableName)) refreshTableOrders(tableName);
+    };
     channel.bind("order:created", refresh);
     channel.bind("order:updated", refresh);
     channel.bind("table:checked_out", refresh);

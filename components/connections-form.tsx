@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { CheckCircle, Database, ImageSquare, Lightning } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RequiredLabel } from "@/components/required-label";
@@ -291,23 +292,30 @@ export function ConnectionsForm({
           </div>
 
           <div className="space-y-3">
-            <div className="space-y-1.5">
-              <p id="storage-provider-label" className="text-sm font-medium">
-                Image storage
-              </p>
-              <div role="radiogroup" aria-labelledby="storage-provider-label" className="flex gap-2">
+            <fieldset className="space-y-1.5">
+              <legend className="mb-1.5 text-sm font-medium">Image storage</legend>
+              <div className="flex gap-2">
                 {STORAGE_PROVIDERS.map(([provider, label]) => (
-                  <Button
+                  <label
                     key={provider}
-                    type="button"
-                    role="radio"
-                    aria-checked={form.storageProvider === provider}
-                    variant={form.storageProvider === provider ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setForm((f) => ({ ...f, storageProvider: provider }))}
+                    className={cn(
+                      "flex h-8 cursor-pointer items-center rounded-md border px-3 text-sm font-medium transition-colors",
+                      "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-1",
+                      form.storageProvider === provider
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input-border bg-background hover:bg-secondary",
+                    )}
                   >
+                    <input
+                      type="radio"
+                      name="storage-provider"
+                      value={provider}
+                      checked={form.storageProvider === provider}
+                      onChange={() => setForm((f) => ({ ...f, storageProvider: provider }))}
+                      className="sr-only"
+                    />
                     {label}
-                  </Button>
+                  </label>
                 ))}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -315,7 +323,7 @@ export function ConnectionsForm({
                 the images.
                 {inSettings && connections.storage && " Switching storage doesn't move images already uploaded."}
               </p>
-            </div>
+            </fieldset>
 
             {form.storageProvider === "vercel_blob" ? (
               <div className="space-y-1.5">

@@ -124,7 +124,7 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
                   onClick={() =>
                     run(`delete-${table.id}`, () => deleteTable(table.id), "Failed to delete table.")
                   }
-                  className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
+                  className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
                   aria-label={`Delete ${table.name}`}
                 >
                   <Trash size={15} weight="bold" />

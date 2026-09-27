@@ -6,6 +6,8 @@ import { SignupCard, type SignupState } from "@/components/signup-card";
 import { notifyNewAccount } from "@/lib/notify";
 import { registerAccount } from "@/lib/register";
 
+export const metadata = { title: "Create account" };
+
 export default async function SignupPage({
   searchParams,
 }: {
@@ -35,7 +37,7 @@ export default async function SignupPage({
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-6 py-12">
+    <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
         <Link
           href="/login"
@@ -54,6 +56,6 @@ export default async function SignupPage({
 
         <SignupCard signUp={signUp} error={error} message={message} />
       </div>
-    </div>
+    </main>
   );
 }

@@ -135,12 +135,12 @@ describe("WorkspaceSetupFlow", () => {
 
   test("a failed logo upload doesn't stop setup", async () => {
     logoFile = new File(["png"], "logo.png", { type: "image/png" });
-    uploadImage.mockRejectedValueOnce(new Error("Image must be smaller than 5MB."));
+    uploadImage.mockRejectedValueOnce(new Error("Image must be smaller than 4MB."));
     render(<WorkspaceSetupFlow />);
     await click("Use the shared service for now");
     await click("Build my workspace");
 
-    expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/Couldn't upload your logo.*5MB.*later in Settings/));
+    expect(toastError).toHaveBeenCalledWith(expect.stringMatching(/Couldn't upload your logo.*4MB.*later in Settings/));
     expect(screen.getByText("Finish building")).toBeTruthy();
   });
 

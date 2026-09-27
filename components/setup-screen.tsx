@@ -11,6 +11,7 @@ import { RequiredLabel } from "@/components/required-label";
 import { LEXICON } from "@/lib/lexicon";
 import type { Domain } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { focusFirstInvalid } from "@/lib/focus";
 import { FieldError, fieldErrorProps } from "@/components/field-error";
 import { sanitizePhone, validateBusiness, type FieldErrors, withFieldError } from "@/lib/validation";
 
@@ -62,7 +63,7 @@ export function SetupScreen({
   const [errors, setErrors] = useState<FieldErrors<"name" | "phone" | "address">>({});
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-6 py-12">
+    <main className="flex min-h-screen items-center justify-center px-6 py-12">
       <div className="w-full max-w-2xl">
         <div className="mb-7 flex items-center gap-2.5">
           <span className="flex size-7 items-center justify-center rounded-lg bg-brand-500 text-white">
@@ -93,6 +94,7 @@ export function SetupScreen({
           <div className="space-y-1.5">
             <Label className="block text-sm font-semibold">Logo</Label>
             <ImageDropzone
+              label="logo"
               value={logoPreview ?? logoUrl}
               onChange={setLogoUrl}
               onFile={(file) => {
@@ -160,25 +162,33 @@ export function SetupScreen({
             </p>
           </div>
 
-          <p className="mt-8 mb-3 text-sm font-semibold">What kind of business is it?</p>
+          <fieldset className="mt-8">
+          <legend className="mb-3 text-sm font-semibold">What kind of business is it?</legend>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(Object.keys(LEXICON) as Domain[]).map((key) => {
               const Icon = ICONS[key];
               const selected = domain === key;
               return (
-                <button
+                <label
                   key={key}
-                  type="button"
-                  onClick={() => setDomain(key)}
                   className={cn(
-                    "rounded-xl border p-4 text-left transition-colors",
-                    selected ? "border-brand-500 bg-brand-50" : "bg-card hover:border-input",
+                    "cursor-pointer rounded-xl border p-4 text-left transition-colors",
+                    "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-1",
+                    selected ? "border-brand-700 bg-brand-50" : "bg-card hover:border-input-border",
                   )}
                 >
+                  <input
+                    type="radio"
+                    name="business-type"
+                    value={key}
+                    checked={selected}
+                    onChange={() => setDomain(key)}
+                    className="sr-only"
+                  />
                   <span className="flex items-center justify-between">
-                    <Icon size={22} weight="bold" className="text-brand-500" />
+                    <Icon size={22} weight="bold" className="text-brand-700" aria-hidden />
                     {selected && (
-                      <CheckCircle size={18} weight="fill" className="text-brand-500" />
+                      <CheckCircle size={18} weight="fill" className="text-brand-700" aria-hidden />
                     )}
                   </span>
                   <span className="mt-3 block text-sm font-semibold">
@@ -187,13 +197,14 @@ export function SetupScreen({
                   <span className="mt-0.5 block text-xs text-muted-foreground">
                     {LEXICON[key].blurb}
                   </span>
-                </button>
+                </label>
               );
             })}
           </div>
+          </fieldset>
 
           {error && (
-            <p className="mt-6 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
+            <p role="alert" className="mt-6 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
               {error}
             </p>
           )}
@@ -213,7 +224,10 @@ export function SetupScreen({
               onClick={async () => {
                 const found = validateBusiness({ name, phone, address });
                 setErrors(found);
-                if (Object.keys(found).length) return;
+                if (Object.keys(found).length) {
+                  focusFirstInvalid(document);
+                  return;
+                }
                 setSubmitting(true);
                 try {
                   await onSubmit(name.trim(), domain, {
@@ -233,6 +247,6 @@ export function SetupScreen({
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

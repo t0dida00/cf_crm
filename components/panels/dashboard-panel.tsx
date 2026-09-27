@@ -188,6 +188,7 @@ export function DashboardPanel() {
             key={r.id}
             type="button"
             onClick={() => setRange((s) => ({ ...s, id: r.id }))}
+            aria-pressed={range.id === r.id}
             className={cn(
               "rounded-full border px-3.5 py-1.5 text-[13px] transition-colors",
               range.id === r.id
@@ -202,6 +203,7 @@ export function DashboardPanel() {
           <span className="ml-1 inline-flex items-center gap-2">
             <Input
               type="date"
+              aria-label="From date"
               value={range.from}
               onChange={(e) => setRange((s) => ({ ...s, from: e.target.value }))}
               className="h-8.5 w-auto text-[13px]"
@@ -209,6 +211,7 @@ export function DashboardPanel() {
             <span className="text-[13px] text-muted-foreground">to</span>
             <Input
               type="date"
+              aria-label="To date"
               value={range.to}
               onChange={(e) => setRange((s) => ({ ...s, to: e.target.value }))}
               className="h-8.5 w-auto text-[13px]"

@@ -136,6 +136,7 @@ function SidebarBody({
           onClick={onToggle}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
           className="flex size-6 shrink-0 items-center justify-center rounded-md text-white/55 transition-colors hover:text-white"
         >
           {collapsed ? (
@@ -156,13 +157,13 @@ function SidebarBody({
         {/* The business's database, styled like a tab row but not clickable. */}
         <div
           title={databaseName ? `Database: ${databaseName}` : "Using the shared database"}
-          aria-label={collapsed ? (databaseName ? `Database: ${databaseName}` : "Using the shared database") : undefined}
           className={cn(
             "flex items-center gap-2.5 rounded-lg py-2.5 text-sm font-bold text-white/65",
             collapsed ? "justify-center px-0" : "px-3",
           )}
         >
-          <Database size={17} weight="bold" className="shrink-0" />
+          <Database size={17} weight="bold" className="shrink-0" aria-hidden />
+          {collapsed && <span className="sr-only">{databaseName ? `Database: ${databaseName}` : "Using the shared database"}</span>}
           {!collapsed && <span className="min-w-0 flex-1 [overflow-wrap:anywhere] text-white">{databaseName ?? "Shared database"}</span>}
         </div>
         {NAV.map(({ id, label, Icon }) => {
@@ -174,6 +175,7 @@ function SidebarBody({
               onClick={() => setTab(id)}
               title={collapsed ? label : undefined}
               aria-label={collapsed ? label : undefined}
+              aria-current={active ? "page" : undefined}
               className={cn(
                 "flex items-center gap-2.5 rounded-lg py-2.5 text-sm transition-colors",
                 collapsed ? "justify-center px-0" : "px-3",
@@ -227,6 +229,9 @@ export function AdminShell() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const tab: TabId = isTabId(tabParam) ? tabParam : "dash";
+  useEffect(() => {
+    document.title = `${TITLES[tab]} · Admin · Tably`;
+  }, [tab]);
   const [createSignal, setCreateSignal] = useState(0);
   const [now, setNow] = useState(() => Date.now());
   const { collapsed, isNarrow, mobileOpen, closeMobile, toggle: toggleCollapsed } =

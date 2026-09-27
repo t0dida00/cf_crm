@@ -62,6 +62,7 @@ export function StaffTablesPanel() {
             key={s}
             type="button"
             onClick={() => setStateFilter(s)}
+            aria-pressed={stateFilter === s}
             className={cn(
               "shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors",
               stateFilter === s

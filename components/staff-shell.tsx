@@ -126,6 +126,7 @@ function SidebarBody({
           onClick={onToggle}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
           className="flex size-6 shrink-0 items-center justify-center rounded-md text-white/55 transition-colors hover:text-white"
         >
           {collapsed ? (
@@ -146,13 +147,13 @@ function SidebarBody({
         {/* The business's database, styled like a tab row but not clickable. */}
         {/* <div
           title={databaseName ? `Database: ${databaseName}` : "Using the shared database"}
-          aria-label={collapsed ? (databaseName ? `Database: ${databaseName}` : "Using the shared database") : undefined}
           className={cn(
             "flex items-center gap-2.5 rounded-lg py-2.5 text-sm font-bold text-white/65",
             collapsed ? "justify-center px-0" : "px-3",
           )}
         >
-          <Database size={17} weight="bold" className="shrink-0" />
+          <Database size={17} weight="bold" className="shrink-0" aria-hidden />
+          {collapsed && <span className="sr-only">{databaseName ? `Database: ${databaseName}` : "Using the shared database"}</span>}
           {!collapsed && <span className="min-w-0 flex-1 [overflow-wrap:anywhere] text-white">{databaseName ?? "Shared database"}</span>}
         </div> */}
         {NAV.map(({ id, label, Icon }) => {
@@ -164,6 +165,7 @@ function SidebarBody({
               onClick={() => setTab(id)}
               title={collapsed ? label : undefined}
               aria-label={collapsed ? label : undefined}
+              aria-current={active ? "page" : undefined}
               className={cn(
                 "flex items-center gap-2.5 rounded-lg py-2.5 text-sm transition-colors",
                 collapsed ? "justify-center px-0" : "px-3",
@@ -215,6 +217,9 @@ export function StaffShell() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const tab: StaffTab = isStaffTab(tabParam) ? tabParam : "orders";
+  useEffect(() => {
+    document.title = `${TITLES[tab]} · Staff · Tably`;
+  }, [tab]);
   const [now, setNow] = useState(() => Date.now());
   const [requestsModalOpen, setRequestsModalOpen] = useState(false);
   const { collapsed, isNarrow, mobileOpen, closeMobile, toggle: toggleCollapsed } =
@@ -372,11 +377,13 @@ export function StaffShell() {
             type="button"
             onClick={() => setRequestsModalOpen(true)}
             className="relative flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            aria-label="Table requests"
+            aria-label={
+              pendingRequests.length ? `Table requests, ${pendingRequests.length} waiting` : "Table requests"
+            }
           >
-            <BellRinging size={18} weight="bold" />
+            <BellRinging size={18} weight="bold" aria-hidden />
             {pendingRequests.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-brand-700 text-[10px] font-bold text-white">
+              <span aria-hidden className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-brand-700 text-[10px] font-bold text-white">
                 {pendingRequests.length}
               </span>
             )}

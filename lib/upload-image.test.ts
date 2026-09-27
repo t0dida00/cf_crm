@@ -16,11 +16,11 @@ describe("uploadImage", () => {
     expect(init?.headers).toEqual({ "Content-Type": "image/png", "X-Filename": "latte.png" });
   });
 
-  test("refuses files over 5MB without sending them", async () => {
+  test("refuses files over 4MB without sending them", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const big = png();
-    Object.defineProperty(big, "size", { value: 5 * 1024 * 1024 + 1 });
-    await expect(uploadImage(big)).rejects.toThrow("Image must be smaller than 5MB.");
+    Object.defineProperty(big, "size", { value: 4 * 1024 * 1024 + 1 });
+    await expect(uploadImage(big)).rejects.toThrow("Image must be smaller than 4MB.");
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 

@@ -123,7 +123,7 @@ export function LoginCard({
                   "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
                   signInAs === value
                     ? "border-primary bg-primary text-primary-foreground"
-                    : "border-input bg-background text-muted-foreground hover:text-foreground",
+                    : "border-input-border bg-background text-muted-foreground hover:text-foreground",
                 )}
               >
                 <input

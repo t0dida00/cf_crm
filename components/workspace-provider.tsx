@@ -42,9 +42,6 @@ interface WorkspaceContextValue {
   /** Reloads the workspace in the background: the current data stays on screen
    * until the new data arrives, and a failure only shows a toast. */
   refresh: () => void;
-  /** Session JWT, exposed for the direct browser->backend WebSocket connection
-   * (REST calls go through the server-side proxy and don't need this). */
-  accessToken: string | null;
   flow: string[];
   currency: string;
   fmt: (value: number) => string;
@@ -293,13 +290,14 @@ async function fetchWorkspaceData(id: string, domain: "restaurant" | "cafe", nam
  */
 export function WorkspaceProvider({
   children,
-  accessToken = null,
+  signedIn = false,
 }: {
   children: ReactNode;
-  accessToken?: string | null;
+  /** Whether someone is signed in (the token itself stays on the server). */
+  signedIn?: boolean;
 }) {
   const [workspace, setWorkspace] = useState<Workspace>(emptyWorkspace);
-  const [status, setStatus] = useState<RequestStatus>(accessToken ? "loading" : "idle");
+  const [status, setStatus] = useState<RequestStatus>(signedIn ? "loading" : "idle");
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   // Set by refresh(): the next load keeps the current workspace on screen.
@@ -317,7 +315,7 @@ export function WorkspaceProvider({
     // Aborted on sign-out, reload or unmount, so a stale load never lands.
     const controller = new AbortController();
     const cancelled = () => controller.signal.aborted;
-    if (!accessToken) {
+    if (!signedIn) {
       setWorkspace(emptyWorkspace);
       setStatus("idle");
       return;
@@ -363,7 +361,7 @@ export function WorkspaceProvider({
         setStatus("error");
       });
     return () => controller.abort();
-  }, [accessToken, reloadKey]);
+  }, [signedIn, reloadKey]);
 
   // Real-time refetches: a newer refetch aborts the one still in flight, so a
   // burst of order events results in one up-to-date response, not a queue.
@@ -433,7 +431,6 @@ export function WorkspaceProvider({
         backgroundLoad.current = true;
         setReloadKey((k) => k + 1);
       },
-      accessToken,
       flow,
       currency,
       fmt: (v: number) => money(v, currency),
@@ -688,7 +685,7 @@ export function WorkspaceProvider({
         }));
       },
     };
-  }, [workspace, hydrated, status, error, accessToken]);
+  }, [workspace, hydrated, status, error, signedIn]);
 
   return (
     <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>

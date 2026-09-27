@@ -193,7 +193,7 @@ export function StaffMenuPanel() {
                           {dish.imageUrl ? (
                             <DishImage
                               src={dish.imageUrl}
-                              alt={dish.name}
+                              alt="" // the name is shown right beside it
                               sizes="80px"
                               fallback={<Icon size={28} weight="fill" />}
                             />
@@ -246,13 +246,14 @@ export function StaffMenuPanel() {
                           {noteOpen ? (
                             <div className="mt-2">
                               <textarea
+                                aria-label={`Note for the kitchen: ${dish.name}`}
                                 value={noteText}
                                 onChange={(e) =>
                                   setNotes((n) => ({ ...n, [dish.id]: e.target.value }))
                                 }
                                 placeholder="Note for the kitchen"
                                 rows={2}
-                                className="w-full resize-none rounded-lg border bg-background p-2 text-sm outline-none focus:border-brand-500"
+                                className="w-full resize-none rounded-lg border border-input-border bg-background p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
                               />
                               <div className="mt-1.5 flex justify-end gap-3">
                                 <button
@@ -413,9 +414,9 @@ export function StaffMenuPanel() {
               ))}
 
               <div className="space-y-1.5 border-t pt-3.5">
-                <Label>Table</Label>
+                <Label htmlFor="staff-menu-table">Table</Label>
                 <Select value={tableName} onValueChange={setTableName}>
-                  <SelectTrigger className="w-full" aria-label="Table">
+                  <SelectTrigger id="staff-menu-table" className="w-full">
                     <SelectValue placeholder="Pick a table" />
                   </SelectTrigger>
                   <SelectContent>

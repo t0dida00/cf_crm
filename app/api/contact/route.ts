@@ -2,15 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { ADMIN_EMAIL } from "@/lib/notify";
 
-export async function POST(req: NextRequest) {
-  const { name, email, message } = await req.json();
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const LIMITS = { name: 120, email: 254, message: 5000 };
 
-  if (
-    typeof name !== "string" || !name.trim() ||
-    typeof email !== "string" || !email.trim() ||
-    typeof message !== "string" || !message.trim()
-  ) {
+/** One line, trimmed: a name goes into the email subject, so no line breaks. */
+const oneLine = (v: string) => v.replace(/[\r\n\t]+/g, " ").trim();
+
+export async function POST(req: NextRequest) {
+  const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+  const name = typeof body?.name === "string" ? oneLine(body.name) : "";
+  const email = typeof body?.email === "string" ? body.email.trim() : "";
+  const message = typeof body?.message === "string" ? body.message.trim() : "";
+
+  if (!name || !email || !message) {
     return NextResponse.json({ error: "Name, email, and message are required." }, { status: 400 });
+  }
+  if (!EMAIL.test(email) || email.length > LIMITS.email) {
+    return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });
+  }
+  if (name.length > LIMITS.name || message.length > LIMITS.message) {
+    return NextResponse.json({ error: "That's too long." }, { status: 400 });
   }
 
   const apiKey = process.env.RESEND_API_KEY;

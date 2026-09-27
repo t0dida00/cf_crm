@@ -253,7 +253,7 @@ export function BookingsPanel({
                     onClick={() =>
                       run(`delete-${booking.id}`, () => deleteBooking(booking.id), "Failed to delete booking.")
                     }
-                    className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
+                    className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
                     aria-label={`Delete booking for ${booking.name} at ${booking.time}`}
                   >
                     <Trash size={15} weight="bold" />
@@ -400,9 +400,9 @@ export function BookingsPanel({
               <FieldError id="booking-party" message={errors.party} />
             </div>
             <div className="space-y-1.5">
-              <Label>Table</Label>
+              <Label htmlFor="bookings-panel-table">Table</Label>
               <Select value={form.tableName} onValueChange={(tableName) => setForm((f) => ({ ...f, tableName }))}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="bookings-panel-table" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

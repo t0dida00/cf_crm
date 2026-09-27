@@ -80,9 +80,8 @@ export const { handlers, signIn, signOut, auth, unstable_update } = NextAuth({
       return token;
     },
     session({ session, token }) {
-      if (token.accessToken) {
-        (session as { accessToken?: string }).accessToken = token.accessToken as string;
-      }
+      // The backend JWT stays in the encrypted cookie (server code reads it
+      // with getAccessToken()); the session the browser can fetch never has it.
       if ("role" in token) {
         (session as { role?: string | null }).role = token.role as string | null;
       }

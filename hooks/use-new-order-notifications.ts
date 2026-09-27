@@ -53,7 +53,8 @@ export function useNewOrderNotifications(
       toast(`New order ${order.code}`, {
         description: `${order.table_name} · ${fmt(Number(order.total))}`,
         ...(onToastClick
-          ? { action: { label: "View", onClick: onToastClick } }
+          ? // With an action, stay until dismissed: staff may not reach "View" in 4 s (WCAG 2.2.1).
+            { action: { label: "View", onClick: onToastClick }, duration: Infinity }
           : {}),
       });
       playNotificationSound();
