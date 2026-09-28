@@ -21,6 +21,8 @@ Requires `CRM_backend` running (default `http://localhost:3000`) and its
 database seeded (`npm run prisma:seed` in that repo) — sign in with
 `admin@example.com` / `password123` unless you've changed it.
 
+To run it in Docker instead (no Node.js needed), see [Docker](#docker).
+
 ## Environment
 
 Next.js auto-selects the env file by mode, so **don't use `.env.local`** —
@@ -134,6 +136,8 @@ endpoints with just that id.
 ## Structure
 
 ```
+Dockerfile                   production image (standalone server, port 3001)
+docker-compose.yml           builds and runs that image with .env.production.local
 app/
   layout.tsx                Nunito Sans font, WorkspaceProvider, page <title>
   page.tsx                  setup form -> build animation -> /admin
@@ -262,6 +266,63 @@ test/
     the count.
 - The staff History tab shows only sessions checked out today or yesterday
   (`GET /orders/history?from=`). The admin Orders tab keeps the full history.
+
+## Docker
+
+Runs the production build in a container on **http://localhost:3001**, with
+no Node.js install needed. `Dockerfile` builds the image (Node 22 Alpine,
+Next.js `standalone` output, non-root user); `docker-compose.yml` runs it.
+
+### Install with Docker
+
+1. **Install Docker** ([Docker Desktop](https://www.docker.com/products/docker-desktop/)
+   on macOS/Windows) and make sure it's running: `docker info`.
+2. **Create the env file.** It's gitignored, so every developer makes their own:
+   ```bash
+   cp .env.production.local.example .env.production.local
+   ```
+3. **Fill it in** (see Environment above):
+   | Var | Value |
+   |---|---|
+   | `AUTH_SECRET` | Generate your own: `openssl rand -base64 32` |
+   | `API_URL` | The team's backend URL, or `http://host.docker.internal:3000` for a local `CRM_backend` (not `localhost`, which inside the container is the container itself) |
+   | `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER` | The shared Pusher app's public key/cluster; ask the team |
+   | `RESEND_API_KEY` | Optional; only the contact form and signup emails need it |
+
+   Real keys are shared privately (e.g. a password manager), never committed.
+4. **If you use a local backend**, start `CRM_backend` first (`npm run dev` in
+   that repo, port 3000).
+5. **Build and run:**
+   ```bash
+   docker compose --env-file .env.production.local up --build
+   ```
+   Open http://localhost:3001.
+
+### Everyday commands
+
+| What | Command |
+|---|---|
+| Run in the background | add `-d` to the `up` command |
+| Follow the logs | `docker compose logs -f` |
+| Stop | `docker compose down` (or Ctrl+C in the foreground) |
+| Start again without rebuilding | `docker compose --env-file .env.production.local up` |
+| Point at another backend for one run | `API_URL=http://host.docker.internal:3000 docker compose --env-file .env.production.local up` |
+
+Rebuild (`--build`) after pulling code changes or changing the Pusher vars.
+
+### How it works
+
+- `NEXT_PUBLIC_PUSHER_KEY`/`CLUSTER` are **build args**: Next.js inlines them
+  into the browser bundle at build time. `--env-file` feeds them from
+  `.env.production.local`.
+- `AUTH_SECRET`, `API_URL` and `RESEND_API_KEY` are read at **runtime**
+  (`env_file: .env.production.local`). A shell `API_URL` overrides the file's;
+  with neither, it defaults to `http://host.docker.internal:3000`.
+- `AUTH_TRUST_HOST=true` is set in the image, which NextAuth needs outside
+  Vercel. `NEXT_OUTPUT=standalone` is set only inside the image, so Vercel
+  builds are unchanged.
+- Without Compose: `docker build --build-arg NEXT_PUBLIC_PUSHER_KEY=… --build-arg NEXT_PUBLIC_PUSHER_CLUSTER=… -t crm-frontend .`
+  then `docker run -p 3001:3001 --env-file .env.production.local crm-frontend`.
 
 ## Deployment
 
