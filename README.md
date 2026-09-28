@@ -8,18 +8,85 @@ the `CRM_backend` Express + Prisma API.
 Stack: **Next.js 15 · TypeScript · Tailwind CSS v4 · shadcn/ui · NextAuth v5
 (credentials) · Pusher Channels** (real-time) · Phosphor Icons.
 
-## Install
+## Running locally
+
+There are two ways to run the frontend: with Docker (easiest, no Node.js
+needed) or directly with Node. Either way it serves on
+**http://localhost:3001** and needs the API running first: start
+[`crm_backend`](https://github.com/t0dida00/crm_backend) (its README's
+"Running locally", port 3000).
+
+Once both are up, sign in with the backend's seeded login:
+**`admin@example.com` / `password123`**.
+
+### Option A — Docker Compose
+
+Requires Docker (Docker Desktop on macOS/Windows).
 
 ```bash
-npm install
-cp .env.development.local.example .env.development.local
-# fill in AUTH_SECRET, API_URL, NEXT_PUBLIC_PUSHER_KEY/CLUSTER — see Environment below
-npm run dev   # next dev -p 3001
+git clone https://github.com/t0dida00/cf_crm.git
+cd cf_crm
+
+cp .env.production.local.example .env.production.local   # then fill it in (see below)
+
+docker compose --env-file .env.production.local up -d --build   # builds and starts the app (port 3001)
+
+curl -I http://localhost:3001/login   # → HTTP/1.1 200 OK
 ```
 
-Requires `CRM_backend` running (default `http://localhost:3000`) and its
-database seeded (`npm run prisma:seed` in that repo) — sign in with
-`admin@example.com` / `password123` unless you've changed it.
+What goes in `.env.production.local` (gitignored, so every developer makes
+their own; real keys are shared privately, never committed):
+
+| Var | Value |
+|---|---|
+| `AUTH_SECRET` | Generate your own: `openssl rand -base64 32` |
+| `API_URL` | `http://host.docker.internal:3000` for a backend on your machine (not `localhost`, which inside the container is the container itself), or the team's backend URL |
+| `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER` | The shared Pusher app's public key/cluster; ask the team |
+| `RESEND_API_KEY` | Optional; only the contact form and signup emails need it |
+
+Useful commands:
+
+```bash
+docker compose logs -f              # follow the app's logs
+docker compose down                 # stop
+docker compose --env-file .env.production.local up -d --build   # rebuild after pulling code or changing Pusher vars
+API_URL=http://host.docker.internal:3000 docker compose --env-file .env.production.local up -d
+                                    # override the backend for one run
+```
+
+`NEXT_PUBLIC_PUSHER_*` are baked into the image at build time (Next.js inlines
+them into the browser bundle), so changing them needs `--build`. `AUTH_SECRET`,
+`API_URL` and `RESEND_API_KEY` are read when the container starts. The image
+(`Dockerfile`: Node 22 Alpine, Next.js `standalone` output, non-root) sets
+`AUTH_TRUST_HOST=true`, which NextAuth needs outside Vercel;
+`NEXT_OUTPUT=standalone` is set only inside it, so Vercel builds are unchanged.
+
+To build and run just the image, without Compose:
+
+```bash
+docker build -t crm-frontend \
+  --build-arg NEXT_PUBLIC_PUSHER_KEY=your-key \
+  --build-arg NEXT_PUBLIC_PUSHER_CLUSTER=your-cluster .
+docker run -p 3001:3001 --env-file .env.production.local crm-frontend
+```
+
+### Option B — Node directly
+
+Requires **Node.js 20+**.
+
+```bash
+git clone https://github.com/t0dida00/cf_crm.git
+cd cf_crm
+
+npm install
+cp .env.development.local.example .env.development.local   # then fill in AUTH_SECRET, API_URL,
+                                                            # NEXT_PUBLIC_PUSHER_KEY/CLUSTER (see Environment)
+npm run dev                          # next dev -p 3001, reloads on change
+```
+
+Here `API_URL` is `http://localhost:3000` for a local backend. To try the
+production build instead: `npm run build && npm start -- -p 3001` (reads
+`.env.production.local`).
 
 ## Environment
 
@@ -134,6 +201,8 @@ endpoints with just that id.
 ## Structure
 
 ```
+Dockerfile                   production image (standalone server, port 3001)
+docker-compose.yml           builds and runs that image with .env.production.local
 app/
   layout.tsx                Nunito Sans font, WorkspaceProvider, page <title>
   page.tsx                  setup form -> build animation -> /admin
