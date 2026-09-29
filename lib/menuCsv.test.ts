@@ -1,40 +1,10 @@
 import { describe, expect, test } from "vitest";
 import type { Category, Dish } from "./types";
-import {
-  decodeCsvFile,
-  MENU_CSV_COLUMNS,
-  NotUtf8Error,
-  menuToCsv,
-  parseCsv,
-  parseMenuCsv,
-  planMenuImport,
-  SAMPLE_MENU_CSV,
-  toCsv,
-} from "./menuCsv";
+import { decodeCsvFile, NotUtf8Error } from "./csv";
+import { MENU_CSV_COLUMNS, menuToCsv, parseMenuCsv, planMenuImport, SAMPLE_MENU_CSV } from "./menuCsv";
 
 const HEADER = MENU_CSV_COLUMNS.join(",");
 const file = (...lines: string[]) => [HEADER, ...lines].join("\n");
-
-describe("parseCsv / toCsv", () => {
-  test("reads quoted fields with commas, quotes and line breaks", () => {
-    expect(parseCsv('a,"b, c","say ""hi""","two\nlines"\r\n1,2,3,4\n')).toEqual([
-      ["a", "b, c", 'say "hi"', "two\nlines"],
-      ["1", "2", "3", "4"],
-    ]);
-  });
-
-  test("skips blank lines and a leading byte-order mark", () => {
-    expect(parseCsv("﻿a,b\n\n,\nc,d")).toEqual([
-      ["a", "b"],
-      ["c", "d"],
-    ]);
-  });
-
-  test("round-trips through toCsv", () => {
-    const rows = [["plain", "with, comma", 'a "quote"', "multi\nline"]];
-    expect(parseCsv(toCsv(rows))).toEqual(rows);
-  });
-});
 
 describe("parseMenuCsv", () => {
   test("reads every column and its codes", () => {

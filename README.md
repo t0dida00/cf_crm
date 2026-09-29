@@ -324,6 +324,8 @@ test/
   register.ts                 registerAccount(): POST /auth/register (server-side)
   notify.ts                   notifyNewAccount(): Resend email to the admin only
   tone.ts                     status/state -> badge color mapping
+  csv.ts                      parseCsv(), toCsv(), UTF8_BOM, decodeCsvFile()
+                              (strict UTF-8): shared by every CSV
   menuCsv.ts                  the menu CSV (import, export, sample): parseMenuCsv(),
                               planMenuImport(), menuToCsv(), SAMPLE_MENU_CSV
   downloadFile.ts             downloadFile(): save text as a file in the browser

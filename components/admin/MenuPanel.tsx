@@ -39,7 +39,8 @@ import { DishImage } from "@/components/common/DishImage";
 import { FieldError, fieldErrorProps } from "@/components/common/FieldError";
 import { blockInvalidNumberKeys, validateDish, type FieldErrors, acceptNumberInput, MAX_SPECIAL_TAX, withFieldError } from "@/lib/validation";
 import { formatNumber } from "@/lib/format";
-import { COMMON_TAX, decodeCsvFile, menuToCsv, SAMPLE_MENU_CSV } from "@/lib/menuCsv";
+import { COMMON_TAX, menuToCsv, SAMPLE_MENU_CSV } from "@/lib/menuCsv";
+import { decodeCsvFile } from "@/lib/csv";
 import { downloadFile } from "@/lib/downloadFile";
 import { MenuImportDialog, type MenuFile } from "./MenuImportDialog";
 

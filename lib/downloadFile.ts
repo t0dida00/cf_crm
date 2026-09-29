@@ -1,4 +1,4 @@
-const UTF8_BOM = "\uFEFF";
+import { UTF8_BOM } from "./csv";
 
 /**
  * Saves text as a file in the browser (a temporary link, clicked and removed).
