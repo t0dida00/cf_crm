@@ -117,7 +117,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
         header: "Checkout time",
         cell: ({ row }) => (
           <span className="text-muted-foreground">
-            {row.original.closedTs ? formatStamp(row.original.closedTs) : "—"}
+            {row.original.closedTs ? formatStamp(row.original.closedTs) : "Not checked out"}
           </span>
         ),
         size: 160,

@@ -146,7 +146,7 @@ export function BookingsPanel({
 
             <div className="grid grid-cols-7 gap-1 text-center">
               {WEEKDAYS.map((d) => (
-                <span key={d} className="py-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                <span key={d} className="py-1 text-xs font-semibold text-muted-foreground">
                   {d}
                 </span>
               ))}
@@ -167,18 +167,14 @@ export function BookingsPanel({
                     }`}
                     className={cn(
                       "flex h-14 flex-col items-center justify-start gap-0.5 rounded-lg border pt-1.5 text-sm transition-colors",
-                      // Days with bookings are solid tiles; the selected day gets a single,
-                      // thicker border (near-black on a solid tile, brand on an empty day).
-                      // Out-of-month booked days use a light tile: fading a solid one would
-                      // drop its white text below readable contrast.
-                      info && inMonth
-                        ? "border-brand-700 bg-brand-700 font-bold text-white hover:bg-brand-800"
-                        : info
-                          ? "border-brand-700/40 bg-brand-50 font-bold text-brand-700 hover:bg-brand-100"
-                          : isSelected
-                            ? "bg-brand-50 font-bold text-brand-700"
-                            : "border-transparent hover:bg-secondary",
-                      isSelected && (info && inMonth ? "border-2 border-foreground" : "border-2 border-brand-700"),
+                      // Days with bookings are light brand tiles (brand-800 on brand-50 is
+                      // 6.9:1); the selected day gets a thicker brand border.
+                      info
+                        ? "border-brand-600/50 bg-brand-50 font-bold text-brand-800 hover:bg-brand-100"
+                        : isSelected
+                          ? "bg-brand-50 font-bold text-brand-700"
+                          : "border-transparent hover:bg-secondary",
+                      isSelected && "border-2 border-brand-700",
                       !info && !inMonth && !isSelected && "text-muted-foreground",
                       isToday && !info && !isSelected && "border-brand-500 font-bold",
                     )}
@@ -186,7 +182,7 @@ export function BookingsPanel({
                     {d.getDate()}
                     {info && (
                       <span
-                        className={cn("text-[11px] leading-4 font-semibold", inMonth ? "text-white" : "text-brand-700")}
+                        className="rounded-full bg-brand-700 px-1.5 text-[11px] leading-4 font-semibold text-white"
                       >
                         {info.bookings}
                       </span>
@@ -196,7 +192,7 @@ export function BookingsPanel({
               })}
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              Blue days have bookings; the number shows how many.
+              Tinted days have bookings; the number shows how many.
             </p>
           </CardContent>
         </Card>
@@ -209,7 +205,7 @@ export function BookingsPanel({
               </p>
               <p className="text-sm text-muted-foreground">
                 {summary
-                  ? `${summary.bookings} booking${summary.bookings === 1 ? "" : "s"} · ${summary.guests} guests`
+                  ? `${summary.bookings} booking${summary.bookings === 1 ? "" : "s"}, ${summary.guests} guests`
                   : "No bookings"}
               </p>
             </div>
@@ -217,15 +213,21 @@ export function BookingsPanel({
               <p className="py-10 text-center text-sm text-muted-foreground">No reservations on this day.</p>
             ) : (
               dayBookings.map((booking) => (
-                <div key={booking.id} className="flex items-center gap-4 border-t py-3.5">
+                <div
+                  key={booking.id}
+                  className={cn(
+                    "-mx-6 flex items-center gap-4 border-t px-6 py-3.5",
+                    booking.status === "Arrived" && ARRIVED_ROW,
+                  )}
+                >
                   <span className="w-14 text-base font-bold">{booking.time}</span>
                   <div className="flex-1">
                     <p className="text-[15px]">{booking.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {booking.party} guests · {booking.tableName ?? "Not assigned"}
+                      {partyLine(booking)}
                     </p>
                   </div>
-                  <Badge className={booking.status === "Arrived" ? TONE_CLASSES.green : TONE_CLASSES.sky}>
+                  <Badge className={booking.status === "Arrived" ? ARRIVED_BADGE : TONE_CLASSES.sky}>
                     {booking.status}
                   </Badge>
                   {allowTableAssign && (
@@ -268,8 +270,8 @@ export function BookingsPanel({
       <Card className="mt-4 overflow-hidden">
         <CardContent className="px-0">
           <div className="flex items-baseline gap-3 px-6 pb-3">
-            <p className="text-xs font-semibold tracking-wide text-muted-foreground">BOOKING HISTORY</p>
-            <p className="text-xs text-muted-foreground">{history.length} past bookings · newest first</p>
+            <h2 className="font-semibold">Past bookings</h2>
+            <p className="text-sm text-muted-foreground">{history.length} {history.length === 1 ? "booking" : "bookings"}, newest first</p>
           </div>
           {history.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">No past bookings yet.</p>
@@ -280,7 +282,10 @@ export function BookingsPanel({
                   key={booking.id}
                   type="button"
                   onClick={() => selectDay(parseDayKey(booking.date))}
-                  className="flex w-full items-center gap-4 border-t px-6 py-3 text-left transition-colors hover:bg-secondary"
+                  className={cn(
+                    "flex w-full items-center gap-4 border-t px-6 py-3 text-left transition-colors",
+                    booking.status === "Arrived" ? `${ARRIVED_ROW} hover:bg-green-100` : "hover:bg-secondary",
+                  )}
                 >
                   <span className="w-36 shrink-0 text-sm font-semibold">
                     {parseDayKey(booking.date).toLocaleDateString("en-GB", {
@@ -294,10 +299,10 @@ export function BookingsPanel({
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[15px]">{booking.name}</span>
                     <span className="block text-xs text-muted-foreground">
-                      {booking.party} guests · {booking.tableName ?? "Not assigned"}
+                      {partyLine(booking)}
                     </span>
                   </span>
-                  <Badge className={booking.status === "Arrived" ? TONE_CLASSES.green : TONE_CLASSES.gray}>
+                  <Badge className={booking.status === "Arrived" ? ARRIVED_BADGE : TONE_CLASSES.gray}>
                     {booking.status}
                   </Badge>
                 </button>
@@ -449,4 +454,15 @@ export function BookingsPanel({
       </Dialog>
     </>
   );
+}
+
+/* An arrived party's whole row takes the "Arrived" green; its tag steps one
+ * shade darker so it still stands out on the row. green-800 on green-100 is 6.8:1. */
+const ARRIVED_ROW = "bg-green-50";
+const ARRIVED_BADGE = "bg-green-100 text-green-800";
+
+/** "4 guests at Table 2", or "4 guests, no table yet". */
+export function partyLine(booking: { party: number; tableName: string | null }): string {
+  const guests = `${booking.party} ${booking.party === 1 ? "guest" : "guests"}`;
+  return booking.tableName ? `${guests} at ${booking.tableName}` : `${guests}, no table yet`;
 }
