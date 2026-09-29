@@ -24,6 +24,9 @@ vi.mock("@/lib/api", () => ({
   }),
 }));
 
+const downloadFile = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/downloadFile", () => ({ downloadFile }));
+
 import { QrPanel } from "./QrPanel";
 
 afterEach(cleanup);
@@ -47,6 +50,16 @@ describe("QrPanel", () => {
     renderPanel();
     expect(await screen.findByText("4 seats, Terrace")).toBeTruthy();
     expect(screen.getByText("10 seats")).toBeTruthy();
+  });
+
+  test("the table card downloads as an SVG that declares UTF-8", async () => {
+    renderPanel();
+    const [card] = await screen.findAllByRole("button", { name: "Download the table card for Table 4" });
+    card.click();
+    const [xml, fileName, type] = downloadFile.mock.calls[0];
+    expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
+    expect(fileName).toBe("table-4-card.svg");
+    expect(type).toBe("image/svg+xml;charset=utf-8");
   });
 
   test("has no axe violations", async () => {

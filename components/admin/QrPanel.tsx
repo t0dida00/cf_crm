@@ -14,6 +14,7 @@ import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { ErrorState, LoadingState } from "@/components/common/RequestState";
 import { errorMessage, toRequestStatus } from "@/lib/requestStatus";
 import { hasZone } from "@/lib/zone";
+import { downloadFile } from "@/lib/downloadFile";
 
 function buildClientUrl(origin: string, token: string): string | null {
   try {
@@ -67,16 +68,9 @@ export function QrPanel() {
   const downloadSvg = (elementId: string, fileName: string) => {
     const svg = document.getElementById(elementId);
     if (!(svg instanceof SVGSVGElement)) return;
-    const svgString = new XMLSerializer().serializeToString(svg);
-    const blob = new Blob([svgString], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    // Declared UTF-8, so a Vietnamese restaurant or table name prints as written.
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLSerializer().serializeToString(svg)}`;
+    downloadFile(xml, fileName, "image/svg+xml;charset=utf-8");
   };
   const fileBase = (tableName: string) => tableName.replace(/\s+/g, "-").toLowerCase();
 

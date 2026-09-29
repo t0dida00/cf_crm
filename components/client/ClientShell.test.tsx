@@ -10,7 +10,7 @@ afterEach(cleanup);
 
 const categories: Category[] = [{ id: "c1", name: "Drinks", valid: true }];
 const dishes = [
-  { id: "d1", name: "Coca cola", price: 3, catId: "c1", status: "valid", taxMode: "none" },
+  { id: "d1", name: "Coca cola", price: 3, catId: "c1", status: "valid", taxMode: "none", isVegan: true, isBestSeller: true },
   { id: "d2", name: "Pepsi", price: 3, catId: "c1", status: "valid", taxMode: "none" },
 ] as Dish[];
 
@@ -68,5 +68,23 @@ describe("ClientShell keyboard focus", () => {
     fireEvent.click(screen.getByRole("button", { name: "Add Coca cola" }));
     fireEvent.click(screen.getByRole("button", { name: /Order · 1 item/ }));
     expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("ClientShell dish tags", () => {
+  test("Vegan and Best seller sit on their own line below the dish name", () => {
+    renderShell();
+    const name = screen.getAllByText("Coca cola").find((el) => el.tagName === "SPAN")!;
+    const tags = screen.getByText("Vegan").parentElement!;
+    expect(tags.textContent).toBe("VeganBest seller");
+    // Not beside the name: the tag row is the name's next sibling.
+    expect(name.contains(tags)).toBe(false);
+    expect(name.nextElementSibling).toBe(tags);
+  });
+
+  test("a dish without tags has no tag row", () => {
+    renderShell();
+    const name = screen.getAllByText("Pepsi").find((el) => el.tagName === "SPAN")!;
+    expect(name.nextElementSibling?.textContent ?? "").not.toMatch(/Vegan|Best seller/);
   });
 });

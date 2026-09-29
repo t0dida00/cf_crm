@@ -33,6 +33,8 @@ import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/useAsyncAction";
 import { summariseLines, type OrderSession } from "@/lib/orderMath";
 import { orderTone } from "@/lib/tone";
 import { formatStamp } from "@/lib/range";
+import { toCsv } from "@/lib/csv";
+import { downloadFile } from "@/lib/downloadFile";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useOrderHistory } from "@/hooks/useOrderHistory";
 
@@ -154,17 +156,11 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
         s.orders[0].status,
       ]),
     ];
-    const csv = rows
-      .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${(workspace.name || "orders").replace(/\s+/g, "-").toLowerCase()}-orders-page-${page}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    // UTF-8 with a byte-order mark (downloadFile), so Excel keeps accented names.
+    downloadFile(
+      toCsv(rows.map((r) => r.map(String))),
+      `${(workspace.name || "orders").replace(/\s+/g, "-").toLowerCase()}-orders-page-${page}.csv`,
+    );
   };
 
   return (
