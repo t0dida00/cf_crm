@@ -49,7 +49,7 @@ export function DataTable<T>({
                 <TableHead
                   key={header.id}
                   style={{ width: header.getSize() === 150 ? undefined : header.getSize() }}
-                  className="text-xs font-semibold tracking-wide text-muted-foreground uppercase first:pl-4 last:pr-4"
+                  className="text-[13px] font-semibold text-muted-foreground first:pl-4 last:pr-4"
                 >
                   {header.isPlaceholder
                     ? null

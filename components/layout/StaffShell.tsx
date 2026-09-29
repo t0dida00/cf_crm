@@ -15,7 +15,9 @@ import { StaffMenuPanel } from "@/components/staff/StaffMenuPanel";
 import { StaffOrdersPanel } from "@/components/staff/StaffOrdersPanel";
 import { BookingsPanel } from "@/components/bookings/BookingsPanel";
 import { StaffTablesPanel } from "@/components/staff/StaffTablesPanel";
-import { StaffHistoryPanel } from "@/components/staff/StaffHistoryPanel";
+import { HISTORY_DAYS, StaffHistoryPanel } from "@/components/staff/StaffHistoryPanel";
+import { closedSessionCount } from "@/lib/orderMath";
+import { daysAgoStart } from "@/lib/range";
 import { TableRequestsModal } from "@/components/staff/TableRequestsModal";
 import { apiFetch } from "@/lib/api";
 import { errorMessage, toRequestStatus } from "@/lib/requestStatus";
@@ -112,7 +114,8 @@ export function StaffShell() {
     orders: workspace.orders.filter((o) => !o.closedTs).length,
     bookings: workspace.bookings.filter((b) => b.ts >= startOfToday).length,
     tables: workspace.tables.filter((t) => t.state === "Free").length,
-    history: workspace.orders.filter((o) => o.closedTs).length,
+    // What the History tab lists: sessions checked out today or yesterday.
+    history: closedSessionCount(workspace.orders, daysAgoStart(HISTORY_DAYS - 1)),
   };
 
   return (

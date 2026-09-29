@@ -11,7 +11,7 @@ export function ConnectionsPanel() {
     <Card className="max-w-xl xl:max-w-none">
       <CardContent className="space-y-5">
         <div>
-          <p className="text-lg font-semibold">Connections</p>
+          <h2 className="text-lg font-semibold">Connections</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Your own database, live-update service and image storage. Only you, the owner, can see or change these.
           </p>

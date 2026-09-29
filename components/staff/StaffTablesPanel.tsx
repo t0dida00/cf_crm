@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { CalendarCheck, CheckCircle, Clock, ClockCounterClockwise, Receipt } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent } from "@/components/ui/Card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { BillReceipt, PrintReceiptButton } from "@/components/orders/BillReceipt";
 import { SessionDetailDialog } from "@/components/orders/SessionDetailDialog";
@@ -14,7 +13,9 @@ import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { formatTaxRates, groupOrdersIntoSessions, type OrderSession } from "@/lib/orderMath";
 import { formatStamp, hhmm } from "@/lib/range";
 import { tableStateTone, orderTone } from "@/lib/tone";
-import type { TableState } from "@/lib/types";
+import { groupByZone, hasZone } from "@/lib/zone";
+import { TableTile } from "@/components/common/TableTile";
+import type { TableRec, TableState } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const STATES: (TableState | "All")[] = ["All", "Free", "Booked", "Seated", "Finished"];
@@ -35,6 +36,18 @@ export function StaffTablesPanel() {
     (t) => stateFilter === "All" || t.state === stateFilter,
   );
   const table = workspace.tables.find((t) => t.id === tableId) ?? null;
+  const groups = groupByZone(tables, workspace.zones);
+
+  // The line under each table: what's happening there now.
+  const tableDetail = (t: TableRec) => {
+    if (t.state === "Seated") return "Guests seated";
+    if (t.state === "Finished") return "Awaiting reset";
+    if (t.state === "Booked") {
+      const booking = workspace.bookings.find((b) => b.tableName === t.name);
+      return booking ? `${booking.name} at ${booking.time}` : "Reserved";
+    }
+    return "Ready for guests";
+  };
 
   const tableOrders = useMemo(
     () => (table ? workspace.orders.filter((o) => o.tableName === table.name && !o.closedTs) : []),
@@ -73,43 +86,48 @@ export function StaffTablesPanel() {
         ))}
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
-        {tables.map((t) => {
-          const Icon = STATE_ICON[t.state];
-          const booking = workspace.bookings.find((b) => b.tableName === t.name);
-          const detail =
-            t.state === "Seated"
-              ? "Guests seated"
-              : t.state === "Booked"
-                ? booking
-                  ? `${booking.time} · ${booking.name}`
-                  : "Reserved"
-                : t.state === "Finished"
-                  ? "Awaiting reset"
-                  : "Ready for guests";
+      {/* The same floor plan as the admin Tables tab, coloured by each table's state. */}
+      <div className="space-y-8">
+        {groups.map(({ zone, tables: zoneTables }) => {
+          const heading = zone || (groups.length > 1 ? "No zone" : "");
           return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTableId(t.id)}
-              className="rounded-xl border bg-white p-4.5 text-left transition-colors hover:border-gray-300"
-            >
-              <span className="flex items-start justify-between">
-                <span>
-                  <span className="block text-[17px] font-bold">{t.name}</span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                    {t.seats} seats{t.zone ? ` · ${t.zone}` : ""}
+            <section key={zone || "no-zone"} aria-label={heading || "Tables"}>
+              {heading && (
+                <h2 className="mb-3 flex items-baseline gap-3">
+                  <span className="text-lg font-bold">{heading}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {zoneTables.length} {zoneTables.length === 1 ? "table" : "tables"}
                   </span>
-                </span>
-                <Badge className={tableStateTone(t.state)}>{t.state}</Badge>
-              </span>
-              <span className="mt-4.5 flex items-center gap-1.5 text-sm">
-                <Icon size={15} weight="bold" className="text-muted-foreground" />
-                {detail}
-              </span>
-            </button>
+                </h2>
+              )}
+              <ul className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(150px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(200px,1fr))]">
+                {zoneTables.map((t) => {
+                  const Icon = STATE_ICON[t.state];
+                  return (
+                    <TableTile
+                      key={t.id}
+                      table={t}
+                      tone={t.state}
+                      aside={<Badge className={tableStateTone(t.state)}>{t.state}</Badge>}
+                      footer={
+                        <span className="flex items-center gap-1.5 border-t pt-2.5 text-sm">
+                          <Icon size={15} weight="bold" className="shrink-0 text-muted-foreground" aria-hidden />
+                          <span className="min-w-0 truncate">{tableDetail(t)}</span>
+                        </span>
+                      }
+                      onOpen={() => setTableId(t.id)}
+                    />
+                  );
+                })}
+              </ul>
+            </section>
           );
         })}
+        {groups.length === 0 && (
+          <p className="py-12 text-center text-sm text-muted-foreground">
+            {stateFilter === "All" ? "No tables yet. The owner adds them in the admin Tables tab." : `No ${stateFilter.toLowerCase()} tables right now.`}
+          </p>
+        )}
       </div>
 
       <Dialog open={!!table} onOpenChange={(o) => !o && setTableId(null)}>
@@ -122,7 +140,7 @@ export function StaffTablesPanel() {
               <div className="flex items-center gap-4 border-b pb-3.5">
                 <Badge className={tableStateTone(table.state)}>{table.state}</Badge>
                 <span className="text-[13px] text-muted-foreground">
-                  {table.seats} seats{table.zone ? ` · ${table.zone}` : ""}
+                  {table.seats} seats{hasZone(table.zone) ? `, ${table.zone}` : ""}
                 </span>
                 <span className="flex-1" />
               </div>

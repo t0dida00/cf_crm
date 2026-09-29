@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  closedSessionCount,
   formatTaxRates,
   groupIntoSessions,
   lineTotal,
@@ -88,5 +89,19 @@ describe("groupIntoSessions", () => {
       order({ id: "c", sessionId: null, ts: 3 }),
     ]);
     expect(sessions.map((s) => s.orders.map((o) => o.id))).toEqual([["c"], ["b", "a"]]);
+  });
+});
+
+describe("closedSessionCount", () => {
+  test("counts sessions checked out since the start, not open or older orders", () => {
+    const orders = [
+      order({ id: "a", sessionId: "s1", closedTs: 200 }),
+      order({ id: "b", sessionId: "s1", closedTs: 210 }),
+      order({ id: "c", closedTs: 300 }),
+      order({ id: "d", closedTs: 50 }),
+      order({ id: "e", closedTs: null }),
+    ];
+    expect(closedSessionCount(orders, 100)).toBe(2);
+    expect(closedSessionCount(orders, 1000)).toBe(0);
   });
 });

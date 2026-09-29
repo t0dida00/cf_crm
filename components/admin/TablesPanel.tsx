@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ClockCounterClockwise, PencilSimple, Plus, Trash, UsersThree } from "@phosphor-icons/react";
+import { ClockCounterClockwise, PencilSimple, Plus } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent } from "@/components/ui/Card";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +30,9 @@ import { groupOrdersIntoSessions, type OrderSession } from "@/lib/orderMath";
 import { formatStamp } from "@/lib/range";
 import { orderTone } from "@/lib/tone";
 import type { TableRec } from "@/lib/types";
+import { TableTile } from "@/components/common/TableTile";
+import { groupByZone } from "@/lib/zone";
+import { cn } from "@/lib/utils";
 
 const NEW_ZONE = "__new";
 // Zone is optional; a Select item can't have an empty value, so "no zone" has its own.
@@ -46,6 +48,7 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
   const [historyTable, setHistoryTable] = useState<TableRec | null>(null);
   const [session, setSession] = useState<OrderSession | null>(null);
 
+  const groups = groupByZone(workspace.tables, workspace.zones);
   const tableSessions = (table: TableRec) => groupOrdersIntoSessions(workspace.orders, table.name);
 
   const startCreate = () => {
@@ -91,57 +94,46 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
 
   return (
     <>
-      <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
-        {workspace.tables.map((table) => (
-          <Card key={table.id}>
-            <CardContent>
-              <p className="text-base font-bold">{table.name}</p>
-              {table.zone && <p className="mt-0.5 text-xs text-muted-foreground">{table.zone}</p>}
-              <p className="mt-4 flex items-center gap-1.5 text-sm">
-                <UsersThree size={16} weight="bold" className="text-muted-foreground" />
-                {table.seats} seats
-              </p>
-              <div className="mt-4 flex justify-end gap-3.5 border-t pt-3.5">
-                <button
-                  type="button"
-                  onClick={() => setHistoryTable(table)}
-                  className="mr-auto text-muted-foreground transition-colors hover:text-foreground"
-                  aria-label={`History for ${table.name}`}
-                >
-                  <ClockCounterClockwise size={15} weight="bold" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => startEdit(table)}
-                  className="text-muted-foreground transition-colors hover:text-foreground"
-                  aria-label={`Edit ${table.name}`}
-                >
-                  <PencilSimple size={15} weight="bold" />
-                </button>
-                <button
-                  type="button"
-                  disabled={isPending(`delete-${table.id}`)}
-                  onClick={() =>
-                    run(`delete-${table.id}`, () => deleteTable(table.id), "Failed to delete table.")
-                  }
-                  className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
-                  aria-label={`Delete ${table.name}`}
-                >
-                  <Trash size={15} weight="bold" />
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-
-        <button
-          type="button"
-          onClick={startCreate}
-          className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-        >
-          <Plus size={18} weight="bold" />
-          Add table
-        </button>
+      {/* The floor plan: one section per zone, each table drawn with its chairs. */}
+      <div className="space-y-8">
+        {groups.map(({ zone, tables }, i) => {
+          const seats = tables.reduce((n, t) => n + t.seats, 0);
+          const last = i === groups.length - 1;
+          const heading = zone || (groups.length > 1 ? "No zone" : "");
+          return (
+            <section key={zone || NO_ZONE} aria-label={heading || "Tables"}>
+              {heading && (
+                <h2 className="mb-3 flex items-baseline gap-3">
+                  <span className="text-lg font-bold">{heading}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {tables.length} {tables.length === 1 ? "table" : "tables"}, {seats} {seats === 1 ? "seat" : "seats"}
+                  </span>
+                </h2>
+              )}
+              <ul className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(130px,1fr))] sm:[grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]">
+                {tables.map((table) => (
+                  <TableTile
+                    key={table.id}
+                    table={table}
+                    footer={<TileActions name={table.name} onHistory={() => setHistoryTable(table)} onEdit={() => startEdit(table)} />}
+                  />
+                ))}
+                {last && <li><AddTableButton onClick={startCreate} /></li>}
+              </ul>
+            </section>
+          );
+        })}
+        {groups.length === 0 && (
+          <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed p-6">
+            <p className="text-sm text-muted-foreground">
+              No tables yet. Add the tables guests sit at; each one gets its own QR code.
+            </p>
+            <Button onClick={startCreate}>
+              <Plus size={16} weight="bold" aria-hidden />
+              Add table
+            </Button>
+          </div>
+        )}
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -237,7 +229,7 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
       <Dialog open={!!historyTable} onOpenChange={(o) => !o && setHistoryTable(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{historyTable?.name} — order history</DialogTitle>
+            <DialogTitle>Orders at {historyTable?.name}</DialogTitle>
           </DialogHeader>
           <div className="max-h-[60vh] space-y-2 overflow-y-auto">
             {historyTable && tableSessions(historyTable).length === 0 ? (
@@ -276,5 +268,38 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
 
       <SessionDetailDialog session={session} onClose={() => setSession(null)} />
     </>
+  );
+}
+
+function AddTableButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-full min-h-44 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input-border text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+    >
+      <Plus size={18} weight="bold" aria-hidden />
+      Add table
+    </button>
+  );
+}
+
+const TILE_ACTION =
+  "flex h-8 min-w-8 items-center justify-center gap-1.5 rounded-md px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
+
+/** A table tile's admin actions: its order history and Edit (Delete is in Edit). */
+function TileActions({ name, onHistory, onEdit }: { name: string; onHistory: () => void; onEdit: () => void }) {
+  return (
+    <span className="-mx-1 -mb-1 flex gap-1 border-t pt-2">
+      <button type="button" onClick={onHistory} className={TILE_ACTION} aria-label={`Orders at ${name}`}>
+        <ClockCounterClockwise size={15} weight="bold" aria-hidden />
+        {/* Icons only on phones, where two tiles share a row. */}
+        <span className="hidden sm:inline">Orders</span>
+      </button>
+      <button type="button" onClick={onEdit} className={cn(TILE_ACTION, "ml-auto")} aria-label={`Edit ${name}`}>
+        <PencilSimple size={15} weight="bold" aria-hidden />
+        <span className="hidden sm:inline">Edit</span>
+      </button>
+    </span>
   );
 }

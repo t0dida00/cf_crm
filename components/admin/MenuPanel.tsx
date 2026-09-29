@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ImageSquare, MagnifyingGlass, PencilSimple, Trash } from "@phosphor-icons/react";
+import { EyeSlash, ImageSquare, MagnifyingGlass, PencilSimple, Trash } from "@phosphor-icons/react";
 import { ImageDropzone } from "@/components/common/ImageDropzone";
 import {
   Accordion,
@@ -42,28 +42,30 @@ import { formatNumber } from "@/lib/format";
 
 const COMMON_TAX = "Common tax";
 
+// The same words as the staff menu.
 const STATUS_LABEL: Record<DishStatus, string> = {
-  valid: "Valid",
+  valid: "Available",
   sold_out: "Sold out",
   hidden: "Hidden",
 };
 
-const STATUS_TONE: Record<DishStatus, string> = {
-  valid: "bg-green-50 text-green-700",
+/* Only what needs attention gets a tag: available dishes show none. Hidden is
+ * a choice, not a fault, so it's grey rather than red. */
+const STATUS_TONE: Record<Exclude<DishStatus, "valid">, string> = {
   sold_out: "bg-amber-50 text-amber-700",
-  hidden: "bg-red-50 text-red-700",
+  hidden: "bg-secondary text-muted-foreground",
 };
 
 const STATUS_RADIO_TONE: Record<DishStatus, string> = {
   valid: "border-green-500 has-checked:bg-green-50 has-checked:text-green-700",
   sold_out: "border-amber-500 has-checked:bg-amber-50 has-checked:text-amber-700",
-  hidden: "border-red-500 has-checked:bg-red-50 has-checked:text-red-700",
+  hidden: "border-input-border has-checked:bg-secondary has-checked:text-foreground",
 };
 
 const STATUS_DOT_TONE: Record<DishStatus, string> = {
   valid: "bg-green-500",
   sold_out: "bg-amber-500",
-  hidden: "bg-red-500",
+  hidden: "bg-muted-foreground",
 };
 
 interface DishForm {
@@ -238,15 +240,12 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
             <AccordionTrigger className="px-5 py-4 hover:no-underline">
               <span className="flex flex-1 items-center gap-3">
                 <span className="text-lg font-semibold">{category.name}</span>
-                <Badge
-                  className={
-                    category.valid
-                      ? "bg-green-50 text-green-700"
-                      : "bg-secondary text-muted-foreground"
-                  }
-                >
-                  {category.valid ? "Valid" : "Hidden"}
-                </Badge>
+                {!category.valid && (
+                  <Badge className="gap-1 bg-secondary text-muted-foreground">
+                    <EyeSlash size={12} weight="bold" aria-hidden />
+                    Hidden
+                  </Badge>
+                )}
                 <span className="flex-1" />
                 <span className="text-[13px] font-normal text-muted-foreground">
                   {items.length} {items.length === 1 ? "dish" : "dishes"}
@@ -277,13 +276,23 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                           <ImageSquare size={48} />
                         )}
                       </span>
-                      <span className="flex flex-col items-start gap-1.5">
-                        <span>{dish.name}</span>
-                        {dish.isVegan && (
-                          <Badge className="rounded-md bg-green-50 text-green-700">Vegan</Badge>
-                        )}
+                      <span className="flex min-w-0 flex-col items-start gap-1.5">
+                        <span className="flex flex-col">
+                          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            {dish.name}
+                            {dish.isVegan && (
+                              <Badge className="rounded-md bg-green-50 text-green-700">Vegan</Badge>
+                            )}
+                          </span>
+                          {/* What guests read under the name; two lines at most here. */}
+                          {dish.description && (
+                            <span className="line-clamp-2 max-w-prose text-sm text-muted-foreground">
+                              {dish.description}
+                            </span>
+                          )}
+                        </span>
                         {taxBadge(dish) && (
-                          <Badge className="rounded-md bg-amber-50 text-amber-700">
+                          <Badge className="rounded-md border border-input-border bg-transparent text-muted-foreground">
                             {taxBadge(dish)}
                           </Badge>
                         )}
@@ -296,9 +305,17 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                       </span>
                     </span>
                     <span>
-                      <Badge className={STATUS_TONE[category.valid ? dish.status : "hidden"]}>
-                        {category.valid ? STATUS_LABEL[dish.status] : "Hidden (category)"}
-                      </Badge>
+                      {!category.valid ? (
+                        <Badge className={cn("gap-1", STATUS_TONE.hidden)}>
+                          <EyeSlash size={12} weight="bold" aria-hidden />
+                          Hidden with category
+                        </Badge>
+                      ) : dish.status !== "valid" ? (
+                        <Badge className={cn("gap-1", STATUS_TONE[dish.status])}>
+                          {dish.status === "hidden" && <EyeSlash size={12} weight="bold" aria-hidden />}
+                          {STATUS_LABEL[dish.status]}
+                        </Badge>
+                      ) : null}
                     </span>
                     <span className="flex justify-end gap-3.5">
                       <button

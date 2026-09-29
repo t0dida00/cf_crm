@@ -34,7 +34,7 @@ const NAV: NavItem<TabId>[] = [
   { id: "menu", label: "Menu", Icon: ForkKnife },
   { id: "orders", label: "Orders", Icon: Receipt },
   { id: "bookings", label: "Bookings", Icon: CalendarCheck },
-  { id: "staff", label: "Staffs", Icon: Users },
+  { id: "staff", label: "Staff", Icon: Users },
   { id: "qr", label: "Table QR codes", Icon: QrCode },
   { id: "settings", label: "Settings", Icon: Gear },
 ];
@@ -46,7 +46,7 @@ const TITLES: Record<TabId, string> = {
   menu: "Menu",
   orders: "Orders",
   bookings: "Bookings",
-  staff: "Staffs",
+  staff: "Staff",
   settings: "Settings",
   qr: "Table QR codes",
 };
@@ -54,13 +54,13 @@ const TITLES: Record<TabId, string> = {
 const SUBTITLES: Record<TabId, string> = {
   dash: "Financial performance for the selected period.",
   tables: "Create, edit and remove the tables guests are seated at.",
-  categories: "Group your dishes. Invalid categories stay hidden from the menu.",
+  categories: "Group your dishes. Hidden categories stay off the guest menu.",
   menu: "Every dish, its price and the category it belongs to.",
   orders: "Full order history. Filter, page through and export.",
   bookings: "Pick a day on the calendar to see its reservations.",
   staff: "Staff accounts for this workspace. Disable an account to revoke access.",
-  settings: "Tax and currency applied across the workspace.",
-  qr: "Print one of these per table. Scanning opens the menu for that exact table — no app or login needed.",
+  settings: "Your restaurant's details, taxes and currency, and where its data is kept.",
+  qr: "Print one per table. Scanning opens the menu for that table, with no app or sign-in needed.",
 };
 
 const ACTION_LABELS: Partial<Record<TabId, string>> = {

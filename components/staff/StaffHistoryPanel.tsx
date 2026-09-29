@@ -17,8 +17,9 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useOrderHistory } from "@/hooks/useOrderHistory";
 
 const PAGE_SIZE = 20;
-/** Staff only see recent history: today and yesterday. */
-const HISTORY_DAYS = 2;
+/** Staff only see recent history: today and yesterday (by checkout time). The
+ * sidebar count uses the same window. */
+export const HISTORY_DAYS = 2;
 
 const sessionLabel = (s: OrderSession) =>
   s.orders.length > 1 ? `${s.orders.length} orders` : s.orders[0].code;
@@ -63,7 +64,7 @@ export function StaffHistoryPanel() {
       <Card className="overflow-hidden">
         <CardContent className="overflow-x-auto px-0">
           <div className="min-w-[670px]">
-            <div className="grid grid-cols-[140px_120px_minmax(200px,1fr)_110px_170px_110px] items-center gap-3 border-b bg-secondary py-3 pr-5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            <div className="grid grid-cols-[140px_120px_minmax(200px,1fr)_110px_170px_110px] items-center gap-3 border-b bg-secondary py-3 pr-5 text-[13px] font-semibold text-muted-foreground">
               <span className="sticky left-0 -my-3 bg-secondary py-3 pl-5">Session</span>
               <span className="bg-secondary">Table</span>
               <span className="bg-secondary">Items</span>

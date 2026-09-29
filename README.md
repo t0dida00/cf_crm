@@ -234,7 +234,9 @@ components/                   one folder per part of the UI; one PascalCase
                               FieldError, ImageDropzone (uploads, or hands the
                               file over with onFile before the business exists),
                               PaginationBar, RequestState, RequiredLabel,
-                              ContactForm
+                              ContactForm, TableTile (a table drawn with its
+                              chairs, coloured by state; the admin and staff
+                              floor plans)
   providers/                  WorkspaceProvider (staff-side data: loads the
                               workspace, CRUD actions, applies real-time
                               events), ClientWorkspaceProvider (guest side,
@@ -267,7 +269,12 @@ components/                   one folder per part of the UI; one PascalCase
                               allowTableAssign), BookingAssignDialog
   admin/                      one panel per admin tab (Dashboard, Tables,
                               Categories, Menu, Orders, Staff, Settings,
-                              Connections, QR codes) and TakingsChart
+                              Connections, QR codes), TakingsChart,
+                              BestSellers (dashboard bars), StaffSeats
+                              (accounts used of the plan's limit),
+                              TableTentCard (the
+                              printable QR card, one SVG) and ReceiptPreview
+                              (Settings' live sample bill)
   staff/                      staff-specific panel variants (simpler than
                               admin's) and TableRequestsModal
 hooks/
@@ -312,6 +319,8 @@ test/
   register.ts                 registerAccount(): POST /auth/register (server-side)
   notify.ts                   notifyNewAccount(): Resend email to the admin only
   tone.ts                     status/state -> badge color mapping
+  zone.ts                     hasZone() (blank and "—" both mean no zone),
+                              groupByZone() for the floor plans
   utils.ts                    cn()
 ```
 

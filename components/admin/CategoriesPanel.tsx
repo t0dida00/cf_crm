@@ -6,7 +6,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { PencilSimple, Trash } from "@phosphor-icons/react";
+import { EyeSlash, PencilSimple, Trash } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -90,15 +90,16 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
           id: "valid",
           header: "Status",
           cell: (c) => (
-            <Badge
-              className={
-                c.getValue() ? "bg-green-50 text-green-700" : "bg-secondary text-muted-foreground"
-              }
-            >
-              {c.getValue() ? "Valid" : "Hidden"}
-            </Badge>
+            c.getValue() ? (
+              <span className="text-sm text-muted-foreground">On the menu</span>
+            ) : (
+              <Badge className="gap-1 bg-secondary text-muted-foreground">
+                <EyeSlash size={12} weight="bold" aria-hidden />
+                Hidden
+              </Badge>
+            )
           ),
-          size: 110,
+          size: 130,
         }),
         helper.display({
           id: "actions",
@@ -181,7 +182,7 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
                 checked={form.valid}
                 onCheckedChange={(valid) => setForm((f) => ({ ...f, valid: valid === true }))}
               />
-              Valid — show on the menu
+              Show on the menu
             </Label>
           </div>
           <DialogFooter>

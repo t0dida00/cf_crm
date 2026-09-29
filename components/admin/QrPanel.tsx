@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { QRCodeSVG } from "qrcode.react";
-import { DownloadSimple } from "@phosphor-icons/react";
+import { DownloadSimple, QrCode } from "@phosphor-icons/react";
+import { TableTentCard } from "./TableTentCard";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -13,6 +13,7 @@ import { fetchJson } from "@/lib/http";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { ErrorState, LoadingState } from "@/components/common/RequestState";
 import { errorMessage, toRequestStatus } from "@/lib/requestStatus";
+import { hasZone } from "@/lib/zone";
 
 function buildClientUrl(origin: string, token: string): string | null {
   try {
@@ -61,21 +62,23 @@ export function QrPanel() {
   const tokensByTableId = tokensQuery.data ?? {};
   const tokensStatus = toRequestStatus(tokensQuery);
 
-  const downloadQr = (tableName: string) => {
-    const svg = document.getElementById(`qr-${tableName}`);
+  // Saves one of the page's SVGs as a file. By table id: two tables can share
+  // a name, and each must download its own code.
+  const downloadSvg = (elementId: string, fileName: string) => {
+    const svg = document.getElementById(elementId);
     if (!(svg instanceof SVGSVGElement)) return;
-    const serializer = new XMLSerializer();
-    const svgString = serializer.serializeToString(svg);
+    const svgString = new XMLSerializer().serializeToString(svg);
     const blob = new Blob([svgString], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${tableName.replace(/\s+/g, "-").toLowerCase()}-qr.svg`;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
+  const fileBase = (tableName: string) => tableName.replace(/\s+/g, "-").toLowerCase();
 
   return (
     <div className="space-y-4">
@@ -91,7 +94,7 @@ export function QrPanel() {
             />
             <p className="text-xs text-muted-foreground">
               {detected === false
-                ? "Couldn't auto-detect a LAN address — enter one your phone can reach."
+                ? "Couldn't detect this network's address. Enter one your phone can reach."
                 : "Auto-detected from this server. Edit if your phone can't reach this address."}
             </p>
           </div>
@@ -120,38 +123,52 @@ export function QrPanel() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <ul className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {workspace.tables.map((table) => {
             const token = tokensByTableId[table.id];
             const url = origin && token ? buildClientUrl(origin, token) : null;
-            const zone = table.zone && table.zone !== "—" ? table.zone : null;
+            const zone = hasZone(table.zone) ? table.zone : null;
             return (
-              <Card key={table.id}>
-                <CardContent className="flex flex-col items-center gap-3.5 text-center">
-                  <div>
-                    <p className="text-base font-bold">{table.name}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {table.seats} seats{zone ? ` · ${zone}` : ""}
-                    </p>
+              <li key={table.id} className="flex flex-col items-center gap-3">
+                {url ? (
+                  <TableTentCard id={`tent-${table.id}`} qrId={`qr-${table.id}`} restaurant={workspace.name} table={table.name} url={url} />
+                ) : (
+                  <div
+                    className="flex aspect-[3/4] w-full max-w-[240px] items-center justify-center rounded-[14px] border bg-white p-4 text-center text-sm text-muted-foreground"
+                  >
+                    Enter an address above to make this table&apos;s code.
                   </div>
-                  <div className="flex size-[186px] items-center justify-center rounded-xl border bg-white p-3">
-                    {url && <QRCodeSVG id={`qr-${table.name}`} value={url} size={160} level="M" title={`QR code for ${table.name}`} />}
-                  </div>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  {table.seats} seats{zone ? `, ${zone}` : ""}
+                </p>
+                <div className="flex w-full max-w-[240px] gap-2">
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    disabled={!url}
+                    onClick={() => downloadSvg(`tent-${table.id}`, `${fileBase(table.name)}-card.svg`)}
+                    aria-label={`Download the table card for ${table.name}`}
+                  >
+                    <DownloadSimple size={14} weight="bold" aria-hidden />
+                    Card
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full"
+                    className="flex-1"
                     disabled={!url}
-                    onClick={() => downloadQr(table.name)}
+                    onClick={() => downloadSvg(`qr-${table.id}`, `${fileBase(table.name)}-qr.svg`)}
+                    aria-label={`Download the QR code for ${table.name}`}
                   >
-                    <DownloadSimple size={14} weight="bold" />
-                    Download
+                    <QrCode size={14} weight="bold" aria-hidden />
+                    Code only
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </div>
   );

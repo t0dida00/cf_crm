@@ -77,3 +77,9 @@ export function groupIntoSessions(orders: Order[]): OrderSession[] {
 
   return sessions.sort((a, b) => b.ts - a.ts);
 }
+
+/** How many sessions were checked out since `from` (ms): what a history list
+ * starting at `from` shows, for its sidebar count. */
+export function closedSessionCount(orders: Order[], from: number): number {
+  return groupIntoSessions(orders.filter((o) => o.closedTs && o.closedTs >= from)).length;
+}

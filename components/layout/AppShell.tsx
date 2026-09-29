@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/Button";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
 import { cn } from "@/lib/utils";
+import { formatBadgeCount } from "@/lib/format";
 import { MobileNavDrawer, SkipToContent } from "./MobileNavDrawer";
 import { SidebarClock } from "./SidebarClock";
 
@@ -185,7 +186,7 @@ function SidebarBody<T extends string>({
                         active ? "bg-brand-700" : "bg-white/12",
                       )}
                     >
-                      {counts[id]}
+                      {formatBadgeCount(counts[id])}
                     </span>
                   )}
                 </>

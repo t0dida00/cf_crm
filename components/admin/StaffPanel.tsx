@@ -7,7 +7,9 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { PencilSimple } from "@phosphor-icons/react";
+import { PencilSimple, Prohibit } from "@phosphor-icons/react";
+import { StaffSeats } from "./StaffSeats";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -136,7 +138,12 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
       () => [
         helper.accessor("fullName", {
           header: "Name",
-          cell: (c) => <span className="font-semibold">{c.getValue()}</span>,
+          // A disabled account's row reads dimmer: it can't sign in.
+          cell: (c) => (
+            <span className={cn("font-semibold", !c.row.original.isActive && "text-muted-foreground")}>
+              {c.getValue()}
+            </span>
+          ),
         }),
         helper.accessor("email", {
           header: "Email",
@@ -154,15 +161,15 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
         }),
         helper.accessor("isActive", {
           header: "Status",
-          cell: (c) => (
-            <Badge
-              className={
-                c.getValue() ? "bg-green-50 text-green-700" : "bg-secondary text-muted-foreground"
-              }
-            >
-              {c.getValue() ? "Active" : "Disabled"}
-            </Badge>
-          ),
+          cell: (c) =>
+            c.getValue() ? (
+              <span className="text-sm text-muted-foreground">Active</span>
+            ) : (
+              <Badge className="gap-1 bg-secondary text-muted-foreground">
+                <Prohibit size={12} weight="bold" aria-hidden />
+                Disabled
+              </Badge>
+            ),
           size: 110,
         }),
         helper.display({
@@ -242,10 +249,7 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
   return (
     <>
       {loaded && (
-        <p className="mb-3.5 text-xs text-muted-foreground">
-          {staff.length} / {limit} staff accounts used
-          {atCapacity && " — maximum reached. Remove an account to add a new one."}
-        </p>
+        <StaffSeats used={staff.length} limit={limit} />
       )}
       <Card className="overflow-hidden">
         <CardContent className="px-0">
