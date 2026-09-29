@@ -2,10 +2,9 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { axeViolations } from "@/test/axe";
 
-vi.mock("next/font/google", () => ({ Archivo: () => ({ className: "font-archivo", variable: "--font-archivo" }) }));
+vi.mock("next/font/google", () => ({ Nunito_Sans: () => ({ className: "font-nunito-sans", variable: "--font-nunito-marketing" }) }));
 vi.mock("@/components/common/ContactForm", () => ({ ContactForm: () => null }));
 
-import { DEMO_ACCOUNT } from "@/lib/demoAccount";
 import { LandingPage } from "./LandingPage";
 import { InstructionPage } from "./InstructionPage";
 import { TICKETS } from "./TicketRail";
@@ -18,11 +17,11 @@ describe("LandingPage", () => {
     expect(await axeViolations(container)).toEqual([]);
   });
 
-  test("shows the demo credentials", () => {
-    render(<LandingPage />);
-    const demo = within(screen.getByRole("region", { name: "Try it with the demo account" }));
-    expect(demo.getByText(DEMO_ACCOUNT.email)).toBeTruthy();
-    expect(demo.getByText(DEMO_ACCOUNT.password)).toBeTruthy();
+  test("asks visitors to get in touch for a demo instead of showing credentials", () => {
+    const { container } = render(<LandingPage />);
+    const demo = within(screen.getByRole("region", { name: "Want a demo?" }));
+    expect(demo.getByRole("link", { name: "Contact me" }).getAttribute("href")).toBe("#contact");
+    expect(container.textContent).not.toMatch(/password/i);
   });
 
   test("sends the demo to sign-in and new owners to sign-up", () => {
