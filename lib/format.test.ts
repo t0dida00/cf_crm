@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { formatNumber, money, moneyCompact } from "./format";
+import { formatBadgeCount, formatNumber, money, moneyCompact } from "./format";
 
 describe("money", () => {
   test("adds thousands separators and two decimals", () => {
@@ -37,5 +37,14 @@ describe("moneyCompact", () => {
     expect(moneyCompact(0, "€")).toBe("€0");
     expect(moneyCompact(1500000000, "$")).toBe("$1.5B");
     expect(moneyCompact(-2500, "€")).toBe("€-2.5K");
+  });
+});
+
+describe("formatBadgeCount", () => {
+  test("shows the count up to 100, then 100+", () => {
+    expect(formatBadgeCount(0)).toBe("0");
+    expect(formatBadgeCount(100)).toBe("100");
+    expect(formatBadgeCount(101)).toBe("100+");
+    expect(formatBadgeCount(500)).toBe("100+");
   });
 });

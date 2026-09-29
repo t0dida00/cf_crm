@@ -9,6 +9,13 @@ const moneyFormat = new Intl.NumberFormat(LOCALE, {
 /** Whole numbers with thousands separators: 1000006 → "1,000,006". */
 export const formatNumber = (value: number) => integerFormat.format(value);
 
+/** Above this, a sidebar count shows "100+": the exact number stops mattering. */
+export const MAX_BADGE_COUNT = 100;
+
+/** A sidebar count: 42 → "42", 500 → "100+". */
+export const formatBadgeCount = (value: number) =>
+  value > MAX_BADGE_COUNT ? `${MAX_BADGE_COUNT}+` : formatNumber(value);
+
 /** An amount in the workspace currency with thousands separators and two
  * decimals: (66312720, "€") → "€66,312,720.00". */
 export const money = (value: number, currency: string) =>

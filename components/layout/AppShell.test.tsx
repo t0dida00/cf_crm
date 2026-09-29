@@ -57,6 +57,11 @@ describe("AppShell", () => {
     expect(screen.getByText("panel content")).toBeTruthy();
   });
 
+  test("a count over 100 shows as 100+", () => {
+    renderShell({ counts: { orders: 500 } });
+    expect(screen.getByRole("button", { name: /^Orders/ }).textContent).toContain("100+");
+  });
+
   test("shows the database row only when asked (owners)", () => {
     renderShell();
     expect(screen.queryByText("crm_shop")).toBeNull();
