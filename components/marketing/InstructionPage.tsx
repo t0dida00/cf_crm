@@ -1,6 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
-import { Lora } from "next/font/google";
 import {
   ArrowLeft,
   Bell,
@@ -20,14 +18,7 @@ import {
   UserPlus,
   Users,
 } from "@phosphor-icons/react/ssr";
-import { MarketingShell, MarketingFooter } from "./MarketingTheme";
-
-const lora = Lora({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-lora",
-});
+import { DISPLAY, MarketingFooter, MarketingHeader, MarketingShell } from "./MarketingTheme";
 
 const ROLES = [
   {
@@ -180,152 +171,147 @@ const WORKFLOW_STEPS = [
 
 export function InstructionPage() {
   return (
-    <MarketingShell fontVariable={lora.variable}>
-      <header className="border-b" style={{ borderColor: "var(--landing-border)" }}>
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-lg">
-              <Image src="/icons/bell_master.png" alt="" fill sizes="28px" className="object-cover" />
-            </span>
-            <span className={`${lora.className} text-base font-semibold`}>Tably</span>
-          </Link>
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 text-sm font-medium transition-colors hover:opacity-70"
-            style={{ color: "var(--landing-muted)" }}
+    <MarketingShell>
+      <MarketingHeader>
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 rounded-sm text-sm font-medium text-(--landing-muted) hover:text-(--landing-ink)"
+        >
+          <ArrowLeft size={15} weight="bold" aria-hidden />
+          Back to home
+        </Link>
+      </MarketingHeader>
+
+      <main>
+
+        <section className="mx-auto max-w-3xl px-6 py-16 text-center sm:py-20">
+          <span
+            className="mx-auto flex size-11 items-center justify-center rounded-xl"
+            style={{ backgroundColor: "var(--landing-card)", border: "1px solid var(--landing-border)" }}
           >
-            <ArrowLeft size={15} weight="bold" />
-            Back to home
-          </Link>
-        </div>
-      </header>
+            <BookOpen size={20} weight="bold" style={{ color: "var(--landing-accent)" }} />
+          </span>
+          <p
+            className="mt-5 text-sm font-semibold"
+            style={{ color: "var(--landing-accent)" }}
+          >
+            How Tably works
+          </p>
+          <h1 className={`${DISPLAY} mx-auto mt-4 max-w-2xl text-6xl text-balance sm:text-7xl`}>
+            One app, three roles
+          </h1>
+          <p className="mx-auto mt-5 max-w-xl text-lg text-pretty" style={{ color: "var(--landing-muted)" }}>
+            Every table interaction in Tably flows through one of three views. Here&apos;s what each
+            one can do.
+          </p>
+        </section>
 
-      <section className="mx-auto max-w-3xl px-6 py-16 text-center sm:py-20">
-        <span
-          className="mx-auto flex size-11 items-center justify-center rounded-xl"
-          style={{ backgroundColor: "var(--landing-card)", border: "1px solid var(--landing-border)" }}
-        >
-          <BookOpen size={20} weight="bold" style={{ color: "var(--landing-accent)" }} />
-        </span>
-        <p
-          className="mt-5 text-xs font-semibold tracking-[0.25em] uppercase"
-          style={{ color: "var(--landing-accent)" }}
-        >
-          How Tably works
-        </p>
-        <h1 className={`${lora.className} mx-auto mt-4 max-w-2xl text-4xl font-semibold text-balance sm:text-5xl`}>
-          One app, three roles
-        </h1>
-        <p className="mx-auto mt-5 max-w-xl text-lg text-pretty" style={{ color: "var(--landing-muted)" }}>
-          Every table interaction in Tably flows through one of three views. Here&apos;s what each
-          one can do.
-        </p>
-      </section>
+        {ROLES.map((role, index) => (
+          <section
+            key={role.id}
+            id={role.id}
+            className="border-t py-14"
+            style={{
+              borderColor: "var(--landing-border)",
+              backgroundColor: index % 2 === 1 ? "var(--landing-bg-alt)" : undefined,
+            }}
+          >
+            <div className="mx-auto max-w-6xl px-6">
+              <div className="mx-auto max-w-2xl text-center">
+                <span
+                  className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold"
+                  style={{ backgroundColor: "var(--landing-card)", border: "1px solid var(--landing-border)", color: "var(--landing-accent)" }}
+                >
+                  {role.label}: {role.eyebrow.toLowerCase()}
+                </span>
+                <h2 className={`${DISPLAY} mt-4 text-5xl text-balance`}>
+                  {role.title}
+                </h2>
+                <p className="mt-2.5 text-pretty" style={{ color: "var(--landing-muted)" }}>
+                  {role.description}
+                </p>
+              </div>
 
-      {ROLES.map((role, index) => (
+              <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {role.features.map(({ icon: Icon, title, description }) => (
+                  <div
+                    key={title}
+                    className="rounded-2xl border p-6"
+                    style={{ borderColor: "var(--landing-border)", backgroundColor: "var(--landing-card)" }}
+                  >
+                    <span
+                      className="flex size-10 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: "var(--landing-bg-alt)", color: "var(--landing-accent)" }}
+                    >
+                      <Icon size={20} weight="bold" />
+                    </span>
+                    <h3 className="mt-4 text-base font-semibold">{title}</h3>
+                    <p className="mt-1.5 text-sm text-pretty" style={{ color: "var(--landing-muted)" }}>
+                      {description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        ))}
+
         <section
-          key={role.id}
-          id={role.id}
           className="border-t py-14"
           style={{
             borderColor: "var(--landing-border)",
-            backgroundColor: index % 2 === 1 ? "var(--landing-bg-alt)" : undefined,
+            backgroundColor: ROLES.length % 2 === 1 ? "var(--landing-bg-alt)" : undefined,
           }}
         >
           <div className="mx-auto max-w-6xl px-6">
             <div className="mx-auto max-w-2xl text-center">
               <span
-                className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase"
+                className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold"
                 style={{ backgroundColor: "var(--landing-card)", border: "1px solid var(--landing-border)", color: "var(--landing-accent)" }}
               >
-                {role.eyebrow}
+                <Flag size={13} weight="bold" />
+                End to end
               </span>
-              <h2 className={`${lora.className} mt-4 text-3xl font-semibold text-balance`}>
-                {role.label} — {role.title}
+              <h2 className={`${DISPLAY} mt-4 text-5xl text-balance`}>
+                From sign-up to a paid order
               </h2>
               <p className="mt-2.5 text-pretty" style={{ color: "var(--landing-muted)" }}>
-                {role.description}
+                Here&apos;s the full loop, start to finish.
               </p>
             </div>
 
-            <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {role.features.map(({ icon: Icon, title, description }) => (
-                <div
+            <ol className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {WORKFLOW_STEPS.map(({ icon: Icon, title, description }, i) => (
+                <li
                   key={title}
-                  className="rounded-2xl border p-6"
+                  className="relative rounded-2xl border p-6"
                   style={{ borderColor: "var(--landing-border)", backgroundColor: "var(--landing-card)" }}
                 >
-                  <span
-                    className="flex size-10 items-center justify-center rounded-lg"
-                    style={{ backgroundColor: "var(--landing-bg-alt)", color: "var(--landing-accent)" }}
-                  >
-                    <Icon size={20} weight="bold" />
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="flex size-10 shrink-0 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: "var(--landing-bg-alt)", color: "var(--landing-accent)" }}
+                    >
+                      <Icon size={20} weight="bold" />
+                    </span>
+                    <span
+                      className="text-xs font-semibold tracking-wide"
+                      style={{ color: "var(--landing-muted)" }}
+                    >
+                      Step {i + 1}
+                    </span>
+                  </div>
                   <h3 className="mt-4 text-base font-semibold">{title}</h3>
                   <p className="mt-1.5 text-sm text-pretty" style={{ color: "var(--landing-muted)" }}>
                     {description}
                   </p>
-                </div>
+                </li>
               ))}
-            </div>
+            </ol>
           </div>
         </section>
-      ))}
 
-      <section
-        className="border-t py-14"
-        style={{
-          borderColor: "var(--landing-border)",
-          backgroundColor: ROLES.length % 2 === 1 ? "var(--landing-bg-alt)" : undefined,
-        }}
-      >
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <span
-              className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase"
-              style={{ backgroundColor: "var(--landing-card)", border: "1px solid var(--landing-border)", color: "var(--landing-accent)" }}
-            >
-              <Flag size={13} weight="bold" />
-              End to end
-            </span>
-            <h2 className={`${lora.className} mt-4 text-3xl font-semibold text-balance`}>
-              From sign-up to a paid order
-            </h2>
-            <p className="mt-2.5 text-pretty" style={{ color: "var(--landing-muted)" }}>
-              Here&apos;s the full loop, start to finish.
-            </p>
-          </div>
-
-          <ol className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {WORKFLOW_STEPS.map(({ icon: Icon, title, description }, i) => (
-              <li
-                key={title}
-                className="relative rounded-2xl border p-6"
-                style={{ borderColor: "var(--landing-border)", backgroundColor: "var(--landing-card)" }}
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className="flex size-10 shrink-0 items-center justify-center rounded-lg"
-                    style={{ backgroundColor: "var(--landing-bg-alt)", color: "var(--landing-accent)" }}
-                  >
-                    <Icon size={20} weight="bold" />
-                  </span>
-                  <span
-                    className="text-xs font-semibold tracking-wide"
-                    style={{ color: "var(--landing-muted)" }}
-                  >
-                    Step {i + 1}
-                  </span>
-                </div>
-                <h3 className="mt-4 text-base font-semibold">{title}</h3>
-                <p className="mt-1.5 text-sm text-pretty" style={{ color: "var(--landing-muted)" }}>
-                  {description}
-                </p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
+      </main>
 
       <MarketingFooter />
     </MarketingShell>

@@ -7,6 +7,7 @@ import { ContactForm } from "@/components/common/ContactForm";
 import { Input } from "@/components/ui/Input";
 import { RequiredLabel } from "@/components/common/RequiredLabel";
 import { LoginSubmitButton } from "./LoginSubmitButton";
+import { DISPLAY } from "@/components/marketing/typeScale";
 import { cn } from "@/lib/utils";
 
 export type SignInAs = "owner" | "staff";
@@ -15,6 +16,11 @@ const SIGN_IN_AS: [SignInAs, string][] = [
   ["owner", "Owner"],
   ["staff", "Staff"],
 ];
+/** What each kind of account opens, under the heading. */
+const SIGN_IN_AS_HINT: Record<SignInAs, string> = {
+  owner: "Manage your menu, tables, staff and reports.",
+  staff: "Take orders and look after your tables.",
+};
 /** Remembers this browser's last choice (a convenience only). */
 const SIGN_IN_AS_KEY = "tably:sign-in-as";
 
@@ -66,17 +72,17 @@ export function LoginCard({
 
   if (view === "contact") {
     return (
-      <div className="rounded-xl border bg-card p-6">
+      <div>
         <button
           type="button"
           onClick={() => setView("sign-in")}
-          className="mb-6 flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-6 flex items-center gap-1.5 rounded-sm text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft size={15} weight="bold" />
+          <ArrowLeft size={15} weight="bold" aria-hidden />
           Back to sign in
         </button>
-      
-        <h1 className="mt-4 text-2xl font-bold">Request an account</h1>
+
+        <h1 className={`${DISPLAY} text-5xl`}>Request an account</h1>
         <p className="mt-2 mb-8 text-sm text-muted-foreground text-pretty">
           Tell us a bit about your business and we&apos;ll set you up with staff and admin
           access.
@@ -87,11 +93,9 @@ export function LoginCard({
   }
 
   return (
-    <div className="rounded-xl border bg-card p-10">
-      <h1 className="text-2xl font-bold">Staff &amp; admin sign in</h1>
-      <p className="mt-2 mb-8 text-sm text-muted-foreground text-pretty">
-        Access to the admin and staff dashboards is restricted.
-      </p>
+    <div>
+      <h1 className={`${DISPLAY} text-5xl sm:text-6xl`}>Sign in to Tably</h1>
+      <p className="mt-3 mb-7 text-muted-foreground text-pretty">{SIGN_IN_AS_HINT[signInAs]}</p>
 
       {notice?.tone === "warning" && (
         <p
@@ -165,19 +169,19 @@ export function LoginCard({
       </form>
 
       {signInAs === "owner" ? (
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-sm text-muted-foreground">
           Setting up a new business?{" "}
-          <Link href="/signup" className="font-semibold text-foreground underline-offset-2 hover:underline">
+          <Link href="/signup" className="rounded-sm font-semibold text-primary underline underline-offset-4">
             Create an account
           </Link>
         </p>
       ) : (
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-sm text-muted-foreground">
           No account yet? Ask your owner for one, or{" "}
           <button
             type="button"
             onClick={() => setView("contact")}
-            className="font-semibold text-foreground underline-offset-2 hover:underline"
+            className="rounded-sm font-semibold text-primary underline underline-offset-4"
           >
             contact us
           </button>

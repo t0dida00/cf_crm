@@ -1,9 +1,12 @@
-import { ArrowLeft, SquaresFour } from "@phosphor-icons/react/ssr";
+import { ArrowLeft } from "@phosphor-icons/react/ssr";
 import { AuthError } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { LoginCard } from "@/components/auth/LoginCard";
+import { MarketingFooter, MarketingHeader, MarketingShell } from "@/components/marketing/MarketingTheme";
+import { PassRail, TicketClip } from "@/components/marketing/TicketRail";
+import { DEMO_ACCOUNT } from "@/lib/demoAccount";
 import { safeCallbackPath } from "@/lib/safeRedirect";
 
 export const metadata = { title: "Sign in" };
@@ -47,27 +50,35 @@ export default async function LoginPage({
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md">
+    <MarketingShell>
+      <MarketingHeader>
         <Link
           href="/"
-          className="mb-6 flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="flex items-center gap-1.5 rounded-sm text-sm font-medium text-(--landing-muted) hover:text-(--landing-ink)"
         >
-          <ArrowLeft size={15} weight="bold" />
+          <ArrowLeft size={15} weight="bold" aria-hidden />
           Back to home
         </Link>
+      </MarketingHeader>
 
-        <div className="mb-7 flex items-center gap-2.5">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-brand-500 text-white">
-            <SquaresFour size={15} weight="bold" />
-          </span>
-          <span className="text-xs font-semibold tracking-wide text-muted-foreground">
-            SIGN IN
-          </span>
+      {/* The form is a ticket clipped to the pass rail, like the landing hero. */}
+      <main className="mx-auto w-full max-w-lg px-4 pt-10 pb-16 sm:pt-16">
+        <PassRail />
+        <div className="-mt-1.5 flex justify-between px-10" aria-hidden>
+          <TicketClip />
+          <TicketClip />
         </div>
+        <div className="ticket-torn -mt-1 bg-(--landing-card) px-6 pt-8 pb-12 shadow-[0_14px_24px_-14px_rgb(21_32_45/0.45)] sm:px-10">
+          <LoginCard loginWithCredentials={loginWithCredentials} error={error} code={code} />
+        </div>
+        <p className="mt-6 text-sm text-pretty text-(--landing-muted)">
+          Trying the demo? Sign in as Owner with{" "}
+          <span className="font-semibold text-(--landing-ink) select-all">{DEMO_ACCOUNT.email}</span> and{" "}
+          <span className="font-semibold text-(--landing-ink) select-all">{DEMO_ACCOUNT.password}</span>.
+        </p>
+      </main>
 
-        <LoginCard loginWithCredentials={loginWithCredentials} error={error} code={code} />
-      </div>
-    </main>
+      <MarketingFooter />
+    </MarketingShell>
   );
 }
