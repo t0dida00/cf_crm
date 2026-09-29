@@ -6,7 +6,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { CalendarBlank, CalendarCheck, CurrencyCircleDollar, Receipt } from "@phosphor-icons/react";
+import { CalendarBlank } from "@phosphor-icons/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { DataTable } from "@/components/common/DataTable";
@@ -14,12 +14,13 @@ import { SessionDetailDialog } from "@/components/orders/SessionDetailDialog";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { toSession, type OrderSession } from "@/lib/orderMath";
 import { RANGES, rangeBounds, rangeCaption, formatStamp, type RangeState } from "@/lib/range";
-import type { Order } from "@/lib/types";
+import type { Order, RangeId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/format";
 import { useOrderStats } from "@/hooks/useOrderStats";
 import { ErrorState, LoadingState } from "@/components/common/RequestState";
 import { TakingsChart } from "./TakingsChart";
+import { BestSellers } from "./BestSellers";
 import { useOrderSeries } from "@/hooks/useOrderSeries";
 import { chartPlan } from "@/lib/chartBuckets";
 
@@ -27,15 +28,17 @@ interface DashOrder {
   order: Order;
   items: number;
 }
-interface Bestseller {
-  rank: number;
-  name: string;
-  qty: number;
-  takings: number;
-}
-
 const dashHelper = createColumnHelper<DashOrder>();
-const bestHelper = createColumnHelper<Bestseller>();
+
+/** Heads the takings figure, so the number says which period it covers. */
+export const TAKINGS_HEADING: Record<RangeId, string> = {
+  today: "Takings today",
+  week: "Takings in the last 7 days",
+  month: "Takings this month",
+  year: "Takings this year",
+  all: "Takings since you opened",
+  custom: "Takings in the chosen dates",
+};
 
 export function DashboardPanel() {
   const { workspace, fmt, currency } = useWorkspace();
@@ -77,7 +80,6 @@ export function DashboardPanel() {
 
   const bookingsInRange = workspace.bookings.filter((b) => b.ts >= lo && b.ts <= hi);
   const { orderCount, takings } = orderStats;
-  const rangeLabel = RANGES.find((r) => r.id === range.id)?.label ?? "";
   const oldest = orderStats.oldestTs ?? Date.now();
 
   const dashRows = useMemo<DashOrder[]>(
@@ -87,17 +89,6 @@ export function DashboardPanel() {
         items: order.lines.reduce((a, l) => a + l.qty, 0),
       })),
     [orderStats.recent],
-  );
-
-  const bestsellers = useMemo<Bestseller[]>(
-    () =>
-      orderStats.bestsellers.map((b, i) => ({
-        rank: i + 1,
-        name: b.name,
-        qty: b.qty,
-        takings: b.takings,
-      })),
-    [orderStats.bestsellers],
   );
 
   const dashTable = useReactTable({
@@ -134,73 +125,37 @@ export function DashboardPanel() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const bestTable = useReactTable({
-    data: bestsellers,
-    columns: useMemo(
-      () => [
-        bestHelper.accessor("rank", {
-          header: "#",
-          cell: (c) => <span className="font-bold text-muted-foreground">{c.getValue()}</span>,
-          size: 40,
-        }),
-        bestHelper.accessor("name", { header: "Name" }),
-        bestHelper.accessor("qty", {
-          header: () => <span className="block text-right">Orders</span>,
-          cell: (c) => <span className="block text-right">{formatNumber(c.getValue())}</span>,
-          size: 80,
-        }),
-        bestHelper.accessor("takings", {
-          header: () => <span className="block text-right">Takings</span>,
-          cell: (c) => (
-            <span className="block text-right font-semibold">{fmt(c.getValue())}</span>
-          ),
-          size: 100,
-        }),
-      ],
-      [fmt],
-    ),
-    getCoreRowModel: getCoreRowModel(),
-  });
-
-  const stats = [
-    { Icon: Receipt, label: "ORDERS", value: figure(formatNumber(orderCount)), hint: rangeLabel },
-    {
-      Icon: CalendarCheck,
-      label: "BOOKINGS",
-      value: formatNumber(bookingsInRange.length),
-      hint: `${formatNumber(bookingsInRange.reduce((a, b) => a + b.party, 0))} guests · ${rangeLabel.toLowerCase()}`,
-    },
-    {
-      Icon: CurrencyCircleDollar,
-      label: "TAKINGS",
-      value: figure(fmt(takings)),
-      hint: orderCount
-        ? `Avg ${fmt(takings / orderCount)} per order`
-        : "No orders yet",
-    },
+  const guests = bookingsInRange.reduce((a, b) => a + b.party, 0);
+  // One line under the takings figure: what it's made of, plus the bookings.
+  const figures = [
+    `${figure(formatNumber(orderCount))} ${orderCount === 1 ? "order" : "orders"}`,
+    `${figure(orderCount ? fmt(takings / orderCount) : fmt(0))} average order`,
+    `${formatNumber(bookingsInRange.length)} ${bookingsInRange.length === 1 ? "booking" : "bookings"}, ${formatNumber(guests)} ${guests === 1 ? "guest" : "guests"}`,
   ];
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        {RANGES.map((r) => (
-          <button
-            key={r.id}
-            type="button"
-            onClick={() => setRange((s) => ({ ...s, id: r.id }))}
-            aria-pressed={range.id === r.id}
-            className={cn(
-              "rounded-full border px-3.5 py-1.5 text-[13px] transition-colors",
-              range.id === r.id
-                ? "border-brand-700 bg-brand-700 font-bold text-white"
-                : "bg-card font-medium text-muted-foreground hover:bg-secondary",
-            )}
-          >
-            {r.label}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {RANGES.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => setRange((s) => ({ ...s, id: r.id }))}
+              aria-pressed={range.id === r.id}
+              className={cn(
+                "rounded-full border px-3.5 py-1.5 text-[13px] transition-colors",
+                range.id === r.id
+                  ? "border-brand-700 bg-brand-700 font-bold text-white"
+                  : "bg-card font-medium text-muted-foreground hover:bg-secondary",
+              )}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
         {range.id === "custom" && (
-          <span className="ml-1 inline-flex items-center gap-2">
+          <span className="inline-flex items-center gap-2">
             <Input
               type="date"
               aria-label="From date"
@@ -218,61 +173,62 @@ export function DashboardPanel() {
             />
           </span>
         )}
+        <p className="flex items-center gap-2 text-[13px] text-muted-foreground lg:ml-auto">
+          <CalendarBlank size={14} weight="bold" aria-hidden />
+          {rangeCaption(range, oldest)}
+        </p>
       </div>
 
-      <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
-        <CalendarBlank size={14} weight="bold" />
-        {rangeCaption(range, oldest)}
-      </p>
-
-      {statsStatus === "error" && (
-        <Card>
-          <CardContent className="p-0">
-            <ErrorState message={statsError ?? undefined} onRetry={retryStats} className="py-6" />
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map(({ Icon, label, value, hint }) => (
-          <Card key={label}>
-            <CardContent>
-              <p className="flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground">
-                <Icon size={14} weight="bold" />
-                {label}
+      {/* Takings lead the page: the figure, what it's made of, then how it built up. */}
+      <Card className="gap-0 py-0">
+        <section aria-labelledby="takings-title" className="px-6 pt-6 pb-5 sm:px-8 sm:pt-7">
+          <h2 id="takings-title" className="font-semibold text-muted-foreground">
+            {TAKINGS_HEADING[range.id]}
+          </h2>
+          {statsStatus === "error" ? (
+            <ErrorState message={statsError ?? undefined} onRetry={retryStats} className="items-start py-4 text-left" />
+          ) : (
+            <>
+              <p className="mt-1 text-[clamp(2.25rem,6vw,3.75rem)] leading-[1.05] font-bold [overflow-wrap:anywhere]">
+                {figure(fmt(takings))}
               </p>
-              <p className="mt-2.5 text-3xl leading-none font-bold">{value}</p>
-              <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                {figures.map((f) => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
 
-      {plan && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{chartTitle}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {seriesStatus === "error" ? (
-              <ErrorState message={seriesError ?? undefined} onRetry={retrySeries} className="h-64 py-0" />
-            ) : seriesStatus !== "success" && series.length === 0 ? (
-              <LoadingState className="h-64 py-0" />
-            ) : chartEmpty ? (
-              <p className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-                No orders in this range.
-              </p>
-            ) : (
-              <TakingsChart slots={plan.slots} series={series} currency={currency} fmt={fmt} />
-            )}
-          </CardContent>
-        </Card>
-      )}
+        {plan && (
+          <section aria-labelledby="chart-title" className="border-t px-4 pt-5 pb-5 sm:px-6">
+            <h3 id="chart-title" className="px-2 text-sm font-semibold">
+              {chartTitle}
+            </h3>
+            <div className="mt-3">
+              {seriesStatus === "error" ? (
+                <ErrorState message={seriesError ?? undefined} onRetry={retrySeries} className="h-64 py-0" />
+              ) : seriesStatus !== "success" && series.length === 0 ? (
+                <LoadingState className="h-64 py-0" />
+              ) : chartEmpty ? (
+                <p className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+                  No orders in this range.
+                </p>
+              ) : (
+                <TakingsChart slots={plan.slots} series={series} currency={currency} fmt={fmt} />
+              )}
+            </div>
+          </section>
+        )}
+      </Card>
 
       <div className="grid items-start gap-4 xl:grid-cols-[1.4fr_1fr]">
         <Card className="overflow-hidden">
           <CardHeader>
-            <CardTitle>Orders in Range</CardTitle>
+            <CardTitle>
+              <h2>Latest orders</h2>
+            </CardTitle>
           </CardHeader>
           <CardContent className="px-0">
             <DataTable
@@ -287,15 +243,18 @@ export function DashboardPanel() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden">
+        <Card>
           <CardHeader>
-            <CardTitle>Top 10 Bestsellers</CardTitle>
+            <CardTitle>
+              <h2>Best sellers</h2>
+            </CardTitle>
           </CardHeader>
-          <CardContent className="px-0">
-            <DataTable
-              table={bestTable}
-              emptyMessage="Nothing sold in this range."
+          <CardContent>
+            <BestSellers
+              items={orderStats.bestsellers}
+              fmt={fmt}
               status={statsStatus}
+              pending={statsPending}
               error={statsError}
               onRetry={retryStats}
             />
