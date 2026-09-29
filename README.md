@@ -134,6 +134,7 @@ without their own storage use the shared Vercel Blob store, whose
 |---|---|---|
 | `/login` | anyone | email and password sign-in, choosing **Owner** or **Staff** first (remembered per browser). A wrong choice gets the same "Email or password is wrong" message as a wrong password. Owners land on `/admin`, staff on `/staff` |
 | `/signup` | anyone | create an owner account and email the admin, then continue to `/`. When the backend has `REQUIRE_ACCOUNT_APPROVAL=true`, it shows "Dear <name>, your request is being reviewed…" with an OK button (to `/login`) instead, and sign-in is refused until the account is approved |
+| `/terms`, `/privacy`, `/cookies` | anyone | terms of use, privacy policy and cookie policy (`components/marketing/LegalPage.tsx`). They describe what the code does (Auth.js cookies, browser-storage keys, Resend, Pusher, Vercel), so update them with any change to those, along with `LEGAL_UPDATED` |
 | `/` | signed-in, no platform yet | step 1: connect the business's own database, Pusher app and image storage (only checked here, since the business doesn't exist yet; skippable while the backend allows the shared service) → step 2: business details, which creates the business, then saves the checked connections and uploads the logo to them → build animation → `/admin` |
 | `/admin` | signed-in staff (owner) | full admin panel: Dashboard, Tables, Categories, Menu, Orders, Bookings, Settings |
 | `/staff` | signed-in staff | day-to-day floor app: Orders, Tables, Bookings, Menu, History |
@@ -208,6 +209,7 @@ app/
   page.tsx                  setup form -> build animation -> /admin
   login/page.tsx             credentials sign-in (the form as a ticket on
                              the pass rail, plus the demo account)
+  terms/ privacy/ cookies/   legal pages, on LegalPage
   admin/page.tsx             AdminShell, gated on hydrated workspace
   staff/page.tsx              StaffShell, same gating
   qr-generation/page.tsx      per-table QR codes, defaults the guest link's
@@ -252,7 +254,8 @@ components/                   one folder per part of the UI; one PascalCase
                               Pusher + storage, shared with Settings)
   marketing/                  LandingPage, InstructionPage; MarketingTheme
                               (the kitchen-pass tokens, Archivo, header and
-                              footer, also used by /login); typeScale
+                              footer with Product / Contact / Legal links,
+                              also used by /login); LegalPage; typeScale
                               (DISPLAY headline class); TicketRail (landing
                               hero, PassRail and TicketClip reused by /login)
   client/                     ClientShell: the guest ordering UI
@@ -275,6 +278,7 @@ hooks/
 lib/
   types.ts                    Workspace, Order, Dish, Booking, Settings…
   demoAccount.ts              DEMO_ACCOUNT shown on the landing and login pages
+  siteOwner.ts                SITE_OWNER (name, email): landing, footer, legal pages
   api.ts / publicApi.ts      fetch wrappers for the two proxy routes
   platformApi.ts             server-side-only platform fetch/create (used
                              by layout.tsx and actions.ts, needs a raw JWT)

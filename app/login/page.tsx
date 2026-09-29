@@ -4,7 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { LoginCard } from "@/components/auth/LoginCard";
-import { MarketingHeader, MarketingShell } from "@/components/marketing/MarketingTheme";
+import { MarketingFooter, MarketingHeader, MarketingShell } from "@/components/marketing/MarketingTheme";
 import { PassRail, TicketClip } from "@/components/marketing/TicketRail";
 import { DEMO_ACCOUNT } from "@/lib/demoAccount";
 import { safeCallbackPath } from "@/lib/safeRedirect";
@@ -77,6 +77,8 @@ export default async function LoginPage({
           <span className="font-semibold text-(--landing-ink) select-all">{DEMO_ACCOUNT.password}</span>.
         </p>
       </main>
+
+      <MarketingFooter />
     </MarketingShell>
   );
 }

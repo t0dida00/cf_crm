@@ -3,14 +3,10 @@ import { BellRinging, ChartLineUp, QrCode, Table } from "@phosphor-icons/react/s
 import { Button } from "@/components/ui/Button";
 import { DEMO_ACCOUNT } from "@/lib/demoAccount";
 import { LEXICON } from "@/lib/lexicon";
+import { SITE_OWNER } from "@/lib/siteOwner";
 import { ContactForm } from "@/components/common/ContactForm";
 import { DISPLAY, MarketingFooter, MarketingHeader, MarketingShell } from "./MarketingTheme";
 import { TicketRail } from "./TicketRail";
-
-const AUTHOR = {
-  name: "Khoa Dinh",
-  email: "khoadinh.work@gmail.com",
-};
 
 const NAV_LINKS = [
   { href: "#features", label: "Features" },
@@ -174,12 +170,12 @@ export function LandingPage() {
                 A question about Tably, feedback, or a project you have in mind? Send a message and
                 I usually reply within a day.
               </p>
-              <p className="mt-8 font-bold">{AUTHOR.name}</p>
+              <p className="mt-8 font-bold">{SITE_OWNER.name}</p>
               <a
-                href={`mailto:${AUTHOR.email}`}
+                href={`mailto:${SITE_OWNER.email}`}
                 className="rounded-sm text-(--landing-accent) underline underline-offset-4 hover:text-(--landing-accent-hover)"
               >
-                {AUTHOR.email}
+                {SITE_OWNER.email}
               </a>
             </div>
             <div className="rounded-md border border-(--landing-border) bg-(--landing-card) p-6 sm:p-8">
