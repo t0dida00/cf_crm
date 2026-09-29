@@ -222,15 +222,17 @@ export function ClientShell({
             {placed.lines.map((line) => (
               <div
                 key={line.itemId}
-                className="mt-2.5 flex items-center gap-3 border-t pt-2.5 text-sm"
+                className="mt-2.5 flex items-start gap-3 border-t pt-2.5 text-sm"
               >
                 <span className="w-6 font-bold text-muted-foreground/70">{line.qty}×</span>
-                <span className="flex-1 truncate">
-                  {line.name}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate">
+                    {line.name}
+                    {line.note ? `, ${line.note}` : ""}
+                  </span>
                   {dishes.find((d) => d.id === line.itemId)?.isVegan && (
-                    <Badge className={cn(TONE_CLASSES.green, "ml-1.5")}>Vegan</Badge>
+                    <Badge className={cn(TONE_CLASSES.green, "mt-1")}>Vegan</Badge>
                   )}
-                  {line.note ? ` · ${line.note}` : ""}
                 </span>
                 <span className="font-semibold">{fmt(line.price * line.qty)}</span>
               </div>
@@ -306,12 +308,12 @@ export function ClientShell({
                   <div className="flex min-w-0 flex-1 items-stretch justify-between gap-2">
                     <div className="flex min-w-0 flex-col ">
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[15px] font-semibold">{line.name}</span>
-                          {dish?.isVegan && (
-                            <Badge className={cn(TONE_CLASSES.green, "shrink-0")}>Vegan</Badge>
-                          )}
-                        </div>
+                        <span className="text-[15px] font-semibold">{line.name}</span>
+                        {dish?.isVegan && (
+                          <div className="mt-1">
+                            <Badge className={TONE_CLASSES.green}>Vegan</Badge>
+                          </div>
+                        )}
                         {line.note && (
                           <div className="mt-1 flex items-center gap-1.5 text-xs text-brand-700">
                             <NotePencil size={12} weight="bold" />
@@ -586,18 +588,15 @@ export function ClientShell({
                 )}
               </div>
               <div className="flex min-w-0 flex-1 flex-col">
-                <div className="flex items-center gap-1.5 pr-8">
-                  <span className="text-[15px] font-semibold">{dish.name}</span>
-                  {dish.isVegan && (
-                    <Badge className={cn(TONE_CLASSES.green, "shrink-0")}>Vegan</Badge>
-                  )}
-                  {dish.isBestSeller && (
-                    <Badge className={cn(TONE_CLASSES.brand, "shrink-0")}>Best seller</Badge>
-                  )}
-                  {soldOut && (
-                    <Badge className={cn(TONE_CLASSES.amber, "shrink-0")}>Sold out</Badge>
-                  )}
-                </div>
+                <span className="pr-8 text-[15px] font-semibold">{dish.name}</span>
+                {/* Tags on their own line under the name, so a long name keeps its width. */}
+                {(dish.isVegan || dish.isBestSeller || soldOut) && (
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    {dish.isVegan && <Badge className={TONE_CLASSES.green}>Vegan</Badge>}
+                    {dish.isBestSeller && <Badge className={TONE_CLASSES.brand}>Best seller</Badge>}
+                    {soldOut && <Badge className={TONE_CLASSES.amber}>Sold out</Badge>}
+                  </div>
+                )}
                 {dish.description && (
                   <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
                     {dish.description}
@@ -795,17 +794,19 @@ export function ClientShell({
                     {order.lines.map((line) => (
                       <div
                         key={line.itemId}
-                        className="mt-2.5 flex items-center gap-3 border-t pt-2.5 text-sm"
+                        className="mt-2.5 flex items-start gap-3 border-t pt-2.5 text-sm"
                       >
                         <span className="w-6 font-bold text-muted-foreground/70">
                           {line.qty}×
                         </span>
-                        <span className="flex-1 truncate">
-                          {line.name}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate">
+                            {line.name}
+                            {line.note ? `, ${line.note}` : ""}
+                          </span>
                           {dishes.find((d) => d.id === line.itemId)?.isVegan && (
-                            <Badge className={cn(TONE_CLASSES.green, "ml-1.5")}>Vegan</Badge>
+                            <Badge className={cn(TONE_CLASSES.green, "mt-1")}>Vegan</Badge>
                           )}
-                          {line.note ? ` · ${line.note}` : ""}
                         </span>
                         <span className="font-semibold">{fmt(line.price * line.qty)}</span>
                       </div>

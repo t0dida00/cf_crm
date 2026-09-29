@@ -39,9 +39,9 @@ import { DishImage } from "@/components/common/DishImage";
 import { FieldError, fieldErrorProps } from "@/components/common/FieldError";
 import { blockInvalidNumberKeys, validateDish, type FieldErrors, acceptNumberInput, MAX_SPECIAL_TAX, withFieldError } from "@/lib/validation";
 import { formatNumber } from "@/lib/format";
-import { COMMON_TAX, menuToCsv, SAMPLE_MENU_CSV } from "@/lib/menuCsv";
+import { COMMON_TAX, decodeCsvFile, menuToCsv, SAMPLE_MENU_CSV } from "@/lib/menuCsv";
 import { downloadFile } from "@/lib/downloadFile";
-import { MenuImportDialog } from "./MenuImportDialog";
+import { MenuImportDialog, type MenuFile } from "./MenuImportDialog";
 
 /** "Khoa Restaurant" → "khoa-restaurant", for file names. */
 const fileSlug = (name: string) => name.trim().replace(/\s+/g, "-").toLowerCase() || "tably";
@@ -91,7 +91,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
   const { run, isPending } = useAsyncAction();
   const { categories, dishes, settings } = workspace;
   const fileInput = useRef<HTMLInputElement>(null);
-  const [importFile, setImportFile] = useState<{ name: string; text: string } | null>(null);
+  const [importFile, setImportFile] = useState<MenuFile | null>(null);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 300);
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -259,7 +259,13 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
             onChange={async (e) => {
               const picked = e.target.files?.[0];
               e.target.value = ""; // picking the same file again still opens the preview
-              if (picked) setImportFile({ name: picked.name, text: await picked.text() });
+              if (!picked) return;
+              // Strict UTF-8: a file in another encoding is refused with how to fix it.
+              try {
+                setImportFile({ name: picked.name, text: decodeCsvFile(await picked.arrayBuffer()) });
+              } catch (err) {
+                setImportFile({ name: picked.name, error: err instanceof Error ? err.message : String(err) });
+              }
             }}
           />
         </div>
@@ -317,25 +323,25 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                           <ImageSquare size={48} />
                         )}
                       </span>
-                      <span className="flex min-w-0 flex-col items-start gap-1.5">
-                        <span className="flex flex-col">
-                          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            {dish.name}
+                      {/* Name, then its tags, then the description: the same order in every app. */}
+                      <span className="flex min-w-0 flex-col items-start gap-1">
+                        <span>{dish.name}</span>
+                        {(dish.isVegan || taxBadge(dish)) && (
+                          <span className="flex flex-wrap gap-1.5">
                             {dish.isVegan && (
                               <Badge className="rounded-md bg-green-50 text-green-700">Vegan</Badge>
                             )}
+                            {taxBadge(dish) && (
+                              <Badge className="rounded-md border border-input-border bg-transparent text-muted-foreground">
+                                {taxBadge(dish)}
+                              </Badge>
+                            )}
                           </span>
-                          {/* What guests read under the name; two lines at most here. */}
-                          {dish.description && (
-                            <span className="line-clamp-2 max-w-prose text-sm text-muted-foreground">
-                              {dish.description}
-                            </span>
-                          )}
-                        </span>
-                        {taxBadge(dish) && (
-                          <Badge className="rounded-md border border-input-border bg-transparent text-muted-foreground">
-                            {taxBadge(dish)}
-                          </Badge>
+                        )}
+                        {dish.description && (
+                          <span className="line-clamp-2 max-w-prose text-sm text-muted-foreground">
+                            {dish.description}
+                          </span>
                         )}
                       </span>
                     </span>

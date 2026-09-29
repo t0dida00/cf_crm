@@ -206,11 +206,6 @@ export function StaffMenuPanel() {
                             <span className="flex-1 text-[15px] font-semibold">{dish.name}</span>
                             <span className="text-[15px] font-bold">{fmt(dish.price)}</span>
                           </div>
-                          {dish.description && (
-                            <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                              {dish.description}
-                            </p>
-                          )}
                           <div className="mt-1.5 flex items-center gap-1.5">
                             <Select
                               value={dish.status}
@@ -242,6 +237,12 @@ export function StaffMenuPanel() {
                               <Badge className={TONE_CLASSES.brand}>Best seller</Badge>
                             )}
                           </div>
+                          {/* Name, then its tags, then the description: the same order in every app. */}
+                          {dish.description && (
+                            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                              {dish.description}
+                            </p>
+                          )}
 
                           {noteOpen ? (
                             <div className="mt-2">

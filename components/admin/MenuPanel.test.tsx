@@ -46,9 +46,12 @@ describe("MenuPanel", () => {
     expect(row("Seafood paella").textContent).toContain("For one, prawn, mussel, squid");
   });
 
-  test("the Vegan tag sits on the name's line", () => {
+  test("the name comes first, then its tags, then the description", () => {
     render(<MenuPanel createSignal={0} />);
-    expect(screen.getByText("Vegan").parentElement?.textContent).toBe("Seafood paellaVegan");
+    const name = screen.getByText("Seafood paella");
+    const tags = screen.getByText("Vegan").parentElement!;
+    expect(name.nextElementSibling).toBe(tags);
+    expect(tags.nextElementSibling?.textContent).toBe("For one, prawn, mussel, squid");
   });
 
   test("tags only the dishes that need attention", () => {
