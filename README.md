@@ -234,7 +234,9 @@ components/                   one folder per part of the UI; one PascalCase
                               FieldError, ImageDropzone (uploads, or hands the
                               file over with onFile before the business exists),
                               PaginationBar, RequestState, RequiredLabel,
-                              ContactForm
+                              ContactForm, TableTile (a table drawn with its
+                              chairs, coloured by state; the admin and staff
+                              floor plans)
   providers/                  WorkspaceProvider (staff-side data: loads the
                               workspace, CRUD actions, applies real-time
                               events), ClientWorkspaceProvider (guest side,
@@ -270,8 +272,7 @@ components/                   one folder per part of the UI; one PascalCase
                               Connections, QR codes), TakingsChart,
                               BestSellers (dashboard bars), StaffSeats
                               (accounts used of the plan's limit),
-                              TableTile (a table drawn with its chairs on
-                              the Tables floor plan), TableTentCard (the
+                              TableTentCard (the
                               printable QR card, one SVG) and ReceiptPreview
                               (Settings' live sample bill)
   staff/                      staff-specific panel variants (simpler than
@@ -318,7 +319,8 @@ test/
   register.ts                 registerAccount(): POST /auth/register (server-side)
   notify.ts                   notifyNewAccount(): Resend email to the admin only
   tone.ts                     status/state -> badge color mapping
-  zone.ts                     hasZone(): blank and "—" both mean no zone
+  zone.ts                     hasZone() (blank and "—" both mean no zone),
+                              groupByZone() for the floor plans
   utils.ts                    cn()
 ```
 

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, MagnifyingGlass, Plus, Trash } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent } from "@/components/ui/Card";
+import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/Checkbox";
 import {
   Dialog,
@@ -142,98 +142,105 @@ export function StaffOrdersPanel() {
       {open.length === 0 ? (
         <p className="py-12 text-center text-sm text-muted-foreground">No open orders.</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
+        // The rail of kitchen tickets: one paper ticket per open order.
+        <ul className="grid grid-cols-1 items-start gap-x-4 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
           {open.map((order) => {
             const i = flow.indexOf(order.status);
             const canAdvance = i > -1 && i < flow.length - 1;
+            // Not started yet: a saffron strip, like the new ticket on the landing rail.
+            const isNew = i === 0;
             return (
-              <Card key={order.id}>
-                <CardContent>
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-[15px] font-bold">{order.code}</span>
-                    <Badge className={orderTone(order.status, flow)}>{order.status}</Badge>
-                    <span className="flex-1" />
-                    <span className="text-[13px] text-muted-foreground">{order.tableName}</span>
-                  </div>
+              <li
+                key={order.id}
+                aria-label={`${order.tableName}, ${order.code}, ${order.status}`}
+                className={cn(
+                  "ticket-torn border-x border-t bg-white px-5 pt-4 pb-7 shadow-[0_10px_20px_-14px_rgb(21_32_45/0.4)]",
+                  isNew ? "border-t-4 border-t-[#f0b232]" : "",
+                )}
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="min-w-0 truncate text-2xl font-extrabold">{order.tableName}</span>
+                  <time className="shrink-0 text-sm font-semibold text-muted-foreground" dateTime={new Date(order.ts).toISOString()}>
+                    Opened {hhmm(order.ts)}
+                  </time>
+                </div>
+                <div className="mt-1 flex items-center gap-2.5">
+                  <span className="text-[13px] font-semibold text-muted-foreground">{order.code}</span>
+                  <Badge className={orderTone(order.status, flow)}>{order.status}</Badge>
+                </div>
 
-                  <div className="mt-3 space-y-1 border-t pt-3">
-                    {order.lines.map((line) => (
-                      <div key={line.id ?? line.itemId} className="flex items-baseline gap-2.5 text-sm">
-                        <span className="w-6.5 font-bold text-muted-foreground">{line.qty}×</span>
-                        <span className="flex-1">
-                          {line.name}
-                          {line.note && (
-                            <span className="block text-[13px] text-muted-foreground">
-                              {line.note}
-                            </span>
-                          )}
-                        </span>
-                        <span className="font-semibold">{fmt(line.price * line.qty)}</span>
-                      </div>
-                    ))}
-                  </div>
+                <div className="mt-3 space-y-1.5 border-t border-dashed border-foreground/40 pt-3">
+                  {order.lines.map((line) => (
+                    <div key={line.id ?? line.itemId} className="flex items-baseline gap-2.5 text-[15px]">
+                      <span className="w-7 font-extrabold">{line.qty}×</span>
+                      <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                        {line.name}
+                        {line.note && (
+                          <span className="block text-[13px] text-muted-foreground">{line.note}</span>
+                        )}
+                      </span>
+                      <span className="text-sm text-muted-foreground tabular-nums">{fmt(line.price * line.qty)}</span>
+                    </div>
+                  ))}
+                </div>
 
-                  <div className="mt-3 flex items-center gap-3.5 border-t pt-3">
-                    <span className="text-[13px] text-muted-foreground">
-                      Opened {hhmm(order.ts)}
-                    </span>
-                    <span className="flex-1" />
-                    <span className="text-base font-bold">{fmt(order.total)}</span>
-                  </div>
+                <div className="mt-3 flex items-baseline justify-between border-t border-dashed border-foreground/40 pt-3">
+                  <span className="text-sm font-semibold">Total</span>
+                  <span className="text-lg font-bold tabular-nums">{fmt(order.total)}</span>
+                </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2.5">
-                    {canAdvance && (
-                      <Button
-                        size="sm"
-                        loading={isPending(`advance-${order.id}`)}
-                        onClick={() => {
-                          if (order.status === "Preparing") {
-                            setCheckedItems(new Set());
-                            setServingId(order.id);
-                            return;
-                          }
-                          run(`advance-${order.id}`, () => advanceOrder(order.id), "Failed to update order.");
-                        }}
-                      >
-                        {flow[i + 1]}
-                        <ArrowRight size={12} weight="bold" />
-                      </Button>
-                    )}
+                <div className="mt-4 flex flex-wrap items-center gap-2.5">
+                  {canAdvance && (
                     <Button
                       size="sm"
-                      variant="secondary"
+                      loading={isPending(`advance-${order.id}`)}
                       onClick={() => {
-                        setAddDishId(workspace.dishes[0]?.id ?? "");
-                        setEditId(order.id);
+                        if (order.status === "Preparing") {
+                          setCheckedItems(new Set());
+                          setServingId(order.id);
+                          return;
+                        }
+                        run(`advance-${order.id}`, () => advanceOrder(order.id), "Failed to update order.");
                       }}
                     >
-                      Modify
+                      {flow[i + 1]}
+                      <ArrowRight size={12} weight="bold" aria-hidden />
                     </Button>
-                    <span className="flex-1" />
-                    <button
-                      type="button"
-                      disabled={isPending(`delete-${order.id}`)}
-                      onClick={() =>
-                        run(`delete-${order.id}`, () => deleteOrder(order.id), "Failed to delete order.")
-                      }
-                      className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
-                      aria-label={`Delete ${order.code}`}
-                    >
-                      <Trash size={15} weight="bold" />
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setAddDishId(workspace.dishes[0]?.id ?? "");
+                      setEditId(order.id);
+                    }}
+                  >
+                    Modify
+                  </Button>
+                  <span className="flex-1" />
+                  <button
+                    type="button"
+                    disabled={isPending(`delete-${order.id}`)}
+                    onClick={() =>
+                      run(`delete-${order.id}`, () => deleteOrder(order.id), "Failed to delete order.")
+                    }
+                    className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
+                    aria-label={`Delete ${order.code}`}
+                  >
+                    <Trash size={15} weight="bold" aria-hidden />
+                  </button>
+                </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditId(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editing ? `Modify ${editing.code} · ${editing.tableName}` : ""}
+              {editing ? `Modify ${editing.code} at ${editing.tableName}` : ""}
             </DialogTitle>
           </DialogHeader>
           {editing && (

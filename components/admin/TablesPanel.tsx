@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus } from "@phosphor-icons/react";
+import { ClockCounterClockwise, PencilSimple, Plus } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
@@ -30,22 +30,13 @@ import { groupOrdersIntoSessions, type OrderSession } from "@/lib/orderMath";
 import { formatStamp } from "@/lib/range";
 import { orderTone } from "@/lib/tone";
 import type { TableRec } from "@/lib/types";
-import { TableTile } from "./TableTile";
-import { hasZone } from "@/lib/zone";
+import { TableTile } from "@/components/common/TableTile";
+import { groupByZone } from "@/lib/zone";
+import { cn } from "@/lib/utils";
 
 const NEW_ZONE = "__new";
 // Zone is optional; a Select item can't have an empty value, so "no zone" has its own.
 const NO_ZONE = "__none";
-
-/** Tables grouped by zone, in the workspace's zone order; tables without one come last. */
-export function groupByZone(tables: TableRec[], zones: string[]): { zone: string; tables: TableRec[] }[] {
-  const order = [...zones, ...tables.map((t) => t.zone)].filter(hasZone);
-  const groups = [...new Set(order)]
-    .map((zone) => ({ zone, tables: tables.filter((t) => t.zone === zone) }))
-    .filter((g) => g.tables.length);
-  const loose = tables.filter((t) => !hasZone(t.zone));
-  return loose.length ? [...groups, { zone: "", tables: loose }] : groups;
-}
 
 export function TablesPanel({ createSignal }: { createSignal: number }) {
   const { workspace, flow, fmt, saveTable, deleteTable } = useWorkspace();
@@ -124,8 +115,7 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
                   <TableTile
                     key={table.id}
                     table={table}
-                    onHistory={() => setHistoryTable(table)}
-                    onEdit={() => startEdit(table)}
+                    footer={<TileActions name={table.name} onHistory={() => setHistoryTable(table)} onEdit={() => startEdit(table)} />}
                   />
                 ))}
                 {last && <li><AddTableButton onClick={startCreate} /></li>}
@@ -291,5 +281,25 @@ function AddTableButton({ onClick }: { onClick: () => void }) {
       <Plus size={18} weight="bold" aria-hidden />
       Add table
     </button>
+  );
+}
+
+const TILE_ACTION =
+  "flex h-8 min-w-8 items-center justify-center gap-1.5 rounded-md px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
+
+/** A table tile's admin actions: its order history and Edit (Delete is in Edit). */
+function TileActions({ name, onHistory, onEdit }: { name: string; onHistory: () => void; onEdit: () => void }) {
+  return (
+    <span className="-mx-1 -mb-1 flex gap-1 border-t pt-2">
+      <button type="button" onClick={onHistory} className={TILE_ACTION} aria-label={`Orders at ${name}`}>
+        <ClockCounterClockwise size={15} weight="bold" aria-hidden />
+        {/* Icons only on phones, where two tiles share a row. */}
+        <span className="hidden sm:inline">Orders</span>
+      </button>
+      <button type="button" onClick={onEdit} className={cn(TILE_ACTION, "ml-auto")} aria-label={`Edit ${name}`}>
+        <PencilSimple size={15} weight="bold" aria-hidden />
+        <span className="hidden sm:inline">Edit</span>
+      </button>
+    </span>
   );
 }

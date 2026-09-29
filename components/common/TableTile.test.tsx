@@ -3,18 +3,10 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { axeViolations } from "@/test/axe";
 import type { TableRec } from "@/lib/types";
 import { chairLayout, MAX_DRAWN_CHAIRS, TableTile } from "./TableTile";
-import { groupByZone } from "./TablesPanel";
 
 afterEach(cleanup);
 
-const table = (id: string, zone: string, seats = 4): TableRec => ({
-  id,
-  name: `Table ${id}`,
-  seats,
-  zone,
-  state: "Free",
-  seatedAt: null,
-});
+const TABLE: TableRec = { id: "7", name: "Table 7", seats: 6, zone: "Bar", state: "Seated", seatedAt: 1 };
 
 describe("chairLayout", () => {
   test("puts half the chairs along the top and the rest along the bottom", () => {
@@ -30,44 +22,37 @@ describe("chairLayout", () => {
   });
 });
 
-describe("groupByZone", () => {
-  test("follows the workspace's zone order and puts tables without a zone last", () => {
-    const groups = groupByZone([table("1", ""), table("2", "Bar"), table("3", "Terrace"), table("4", "Bar"), table("5", "—")], [
-      "Terrace",
-      "Bar",
-    ]);
-    expect(groups.map((g) => [g.zone, g.tables.map((t) => t.id)])).toEqual([
-      ["Terrace", ["3"]],
-      ["Bar", ["2", "4"]],
-      ["", ["1", "5"]],
-    ]);
-  });
-
-  test("keeps a zone missing from the list, and skips empty zones", () => {
-    expect(groupByZone([table("1", "Garden")], ["Bar"]).map((g) => g.zone)).toEqual(["Garden"]);
-  });
-});
-
 describe("TableTile", () => {
-  test("names the table, its seats, and labels its actions", () => {
-    const onHistory = vi.fn();
-    const onEdit = vi.fn();
+  test("names the table and its seats, and shows the app's footer", () => {
     render(
       <ul>
-        <TableTile table={table("7", "Bar", 6)} onHistory={onHistory} onEdit={onEdit} />
+        <TableTile table={TABLE} footer={<span>Guests seated</span>} />
       </ul>,
     );
+    expect(screen.getByText("Table 7")).toBeTruthy();
     expect(screen.getByText("6 seats")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Orders at Table 7" }));
-    fireEvent.click(screen.getByRole("button", { name: "Edit Table 7" }));
-    expect(onHistory).toHaveBeenCalled();
-    expect(onEdit).toHaveBeenCalled();
+    expect(screen.getByText("Guests seated")).toBeTruthy();
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+
+  test("with onOpen, the whole tile is one button", () => {
+    const onOpen = vi.fn();
+    render(
+      <ul>
+        <TableTile table={TABLE} tone="Seated" aside={<span>Seated</span>} footer={<span>Guests seated</span>} onOpen={onOpen} />
+      </ul>,
+    );
+    const tile = screen.getByRole("button", { name: /Table 7/ });
+    fireEvent.click(tile);
+    expect(onOpen).toHaveBeenCalled();
+    // Hovering outlines the tile in the table's own colour.
+    expect(tile.className).toContain("hover:border-brand-700");
   });
 
   test("has no axe violations", async () => {
     const { container } = render(
       <ul>
-        <TableTile table={table("1", "")} onHistory={vi.fn()} onEdit={vi.fn()} />
+        <TableTile table={TABLE} tone="Free" footer={<span>Ready for guests</span>} onOpen={vi.fn()} />
       </ul>,
     );
     expect(await axeViolations(container)).toEqual([]);
