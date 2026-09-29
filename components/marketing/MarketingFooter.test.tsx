@@ -2,7 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { axeViolations } from "@/test/axe";
 
-vi.mock("next/font/google", () => ({ Archivo: () => ({ className: "font-archivo", variable: "--font-archivo" }) }));
+vi.mock("next/font/google", () => ({ Nunito_Sans: () => ({ className: "font-nunito-sans", variable: "--font-nunito-marketing" }) }));
 
 import { MarketingFooter } from "./MarketingTheme";
 import TermsPage from "@/app/terms/page";

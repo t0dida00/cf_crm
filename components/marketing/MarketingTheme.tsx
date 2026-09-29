@@ -1,16 +1,17 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Archivo } from "next/font/google";
+import { Nunito_Sans } from "next/font/google";
 import type { CSSProperties, ReactNode } from "react";
 import { SITE_OWNER } from "@/lib/siteOwner";
 import { DISPLAY } from "./typeScale";
 
 /* One family on its width axis: condensed and heavy for headlines (a kitchen
- * board), normal width for reading. */
-const archivo = Archivo({
+ * board), normal width for reading. The variable build, since the app's own
+ * Nunito Sans (app/layout.tsx) is static 400–700 without the width axis. */
+const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
   axes: ["wdth"],
-  variable: "--font-archivo",
+  variable: "--font-nunito-marketing",
 });
 
 export { DISPLAY } from "./typeScale";
@@ -41,7 +42,7 @@ export const LANDING_THEME_VARS: CSSProperties = {
 
 export function MarketingShell({ children }: { children: ReactNode }) {
   return (
-    <div className={`${archivo.variable} ${archivo.className} min-h-screen`} style={LANDING_THEME_VARS}>
+    <div className={`${nunitoSans.variable} ${nunitoSans.className} min-h-screen`} style={LANDING_THEME_VARS}>
       {children}
     </div>
   );
