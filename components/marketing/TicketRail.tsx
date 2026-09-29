@@ -15,6 +15,14 @@ interface Ticket {
 /* Dishes and zones from the restaurant lexicon (lib/lexicon.ts). */
 export const TICKETS: Ticket[] = [
   {
+    table: "Table 7",
+    zone: "Terrace",
+    time: "19:58",
+    status: "Served",
+    lines: [[2, "Grilled sea bass"], [1, "Padrón peppers"], [2, "Crema catalana"]],
+    tilt: 0.9,
+  },
+  {
     table: "Table 4",
     zone: "Terrace",
     time: "20:06",
@@ -42,16 +50,28 @@ export const TICKETS: Ticket[] = [
 ];
 
 const RAIL_LABEL =
-  "Three order tickets on the kitchen rail. The newest, from table 2 at the bar, has just arrived.";
+  "Order tickets on the kitchen rail. The newest, from table 2 at the bar, has just arrived.";
+
+/**
+ * Which tickets hang at each width, by age (0 = newest): the two newest always;
+ * a third from small tablets and a fourth from 880px, while the rail spans the
+ * page under the text. Beside the text (lg) the column fits only two.
+ */
+export function ticketVisibility(age: number): string | undefined {
+  if (age < 2) return undefined;
+  if (age === 2) return "hidden sm:block lg:hidden";
+  return "hidden min-[880px]:block lg:hidden";
+}
 
 /** The hero: order tickets hanging from the pass rail, the newest dropping in. */
 export function TicketRail() {
   return (
     <div role="img" aria-label={RAIL_LABEL} className="relative pt-2">
       <PassRail />
-      <div className="-mt-1.5 flex justify-end gap-3 overflow-hidden px-2 pb-6 sm:gap-4">
+      {/* Under the text (below lg) the tickets spread along the whole rail; beside it they sit right. */}
+      <div className="-mt-1.5 flex justify-end gap-3 overflow-hidden px-2 pb-6 sm:justify-around sm:gap-4 lg:justify-end">
         {TICKETS.map((ticket, i) => (
-          <TicketSlip key={ticket.table} ticket={ticket} className={i === 0 ? "hidden sm:block" : undefined} />
+          <TicketSlip key={ticket.table} ticket={ticket} className={ticketVisibility(TICKETS.length - 1 - i)} />
         ))}
       </div>
     </div>
@@ -75,7 +95,7 @@ function TicketSlip({ ticket, className = "" }: { ticket: Ticket; className?: st
   const { table, zone, time, status, lines, tilt, fresh } = ticket;
   return (
     <div
-      className={`${className} w-[46%] max-w-52 shrink-0 origin-top sm:w-44 ${fresh ? "ticket-drop" : ""}`}
+      className={`${className} w-[46%] max-w-52 shrink-0 origin-top sm:w-44 lg:w-[47%] ${fresh ? "ticket-drop" : ""}`}
       style={{ "--tilt": `${tilt}deg`, transform: `rotate(${tilt}deg)` } as CSSProperties}
     >
       <TicketClip className="mx-auto" />

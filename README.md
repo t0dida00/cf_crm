@@ -259,7 +259,9 @@ components/                   one folder per part of the UI; one PascalCase
                               (the kitchen-pass tokens, Nunito Sans, header and
                               footer with Product / Contact / Legal links,
                               also used by /login and /signup); LegalPage; typeScale
-                              (DISPLAY headline class); TicketRail (landing
+                              (DISPLAY headline class); ServiceFlow (the
+                              features swimlane: one table's evening);
+                              TicketRail (landing
                               hero, PassRail and TicketClip reused by /login
                               and /signup)
   client/                     ClientShell: the guest ordering UI
