@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Trash } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { ImageDropzone } from "@/components/common/ImageDropzone";
+import { FALLBACK_LINES, ReceiptPreview, type SampleLine } from "./ReceiptPreview";
 import { toast } from "sonner";
 import { SAVED_MESSAGE } from "@/hooks/useAsyncAction";
 import { FieldError, fieldErrorProps } from "@/components/common/FieldError";
@@ -117,24 +118,32 @@ export function SettingsPanel() {
     }
   };
 
-  const taxOnHundred = 100 - 100 / (1 + Number(billingDraft.taxRate || 0) / 100);
+  // The receipt preview's lines: a few of the real menu's dishes.
+  const sampleLines = useMemo<SampleLine[]>(() => {
+    const dishes = workspace.dishes.filter((d) => d.status === "valid").slice(0, 3);
+    return dishes.length ? dishes.map((d, i) => ({ qty: i === 0 ? 2 : 1, name: d.name, price: d.price })) : FALLBACK_LINES;
+  }, [workspace.dishes]);
 
   return (
     <Card className="max-w-xl xl:max-w-none">
       <CardContent className="space-y-5">
         <div>
-          <p className="text-lg font-semibold">Restaurant</p>
+          <h2 className="text-lg font-semibold">Restaurant</h2>
           <div className="mt-4 space-y-4">
+            {/* The logo sits beside the name, at about the size it shows in the app. */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className="space-y-1.5">
               <Label>Logo</Label>
               <ImageDropzone
                 label="logo"
                 value={profileDraft.logoUrl}
                 onChange={(logoUrl) => setProfileDraft((d) => ({ ...d, logoUrl }))}
-                className="size-[300px]"
+                className="size-32"
                 placeholder="Drop a logo, or click to browse"
               />
             </div>
+            {/* Name, phone and address stack in one column beside the logo. */}
+            <div className="min-w-0 flex-1 space-y-4">
             <div className="space-y-1.5">
               <RequiredLabel htmlFor="restaurant-name">Name</RequiredLabel>
               <Input
@@ -149,7 +158,6 @@ export function SettingsPanel() {
               />
               <FieldError id="restaurant-name" message={profileErrors.name} />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <RequiredLabel htmlFor="restaurant-phone">Phone</RequiredLabel>
                 <Input
@@ -181,12 +189,14 @@ export function SettingsPanel() {
                 <FieldError id="restaurant-address" message={profileErrors.address} />
               </div>
             </div>
+            </div>
           </div>
         </div>
 
         <div className="border-t pt-5">
-          <p className="text-lg font-semibold">Billing</p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <h2 className="text-lg font-semibold">Billing</h2>
+          <div className="mt-4 grid items-start gap-6 sm:grid-cols-[minmax(0,1fr)_15rem]">
+          <div className="grid gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="tax-rate">Common tax</Label>
               <div className="flex items-center gap-2">
@@ -231,14 +241,19 @@ export function SettingsPanel() {
               </Select>
             </div>
           </div>
-          <p className="mt-4 text-[13px] text-muted-foreground text-pretty">
-            The common tax applies to every order. On a {fmt(100)} order that is{" "}
-            {fmt(taxOnHundred)}.
-          </p>
+          <ReceiptPreview
+            name={profileDraft.name}
+            address={profileDraft.address}
+            phone={profileDraft.phone}
+            taxRate={Number(billingDraft.taxRate) || 0}
+            currency={billingDraft.currency}
+            lines={sampleLines}
+          />
+          </div>
         </div>
 
         <div className="border-t pt-5">
-          <p className="text-lg font-semibold">Special Taxes</p>
+          <h2 className="text-lg font-semibold">Special taxes</h2>
           <p className="mt-1 mb-3.5 text-[13px] text-muted-foreground">
             Optional. Define them here, then apply one to a dish from the Menu tab.
           </p>

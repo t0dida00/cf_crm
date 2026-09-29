@@ -267,7 +267,13 @@ components/                   one folder per part of the UI; one PascalCase
                               allowTableAssign), BookingAssignDialog
   admin/                      one panel per admin tab (Dashboard, Tables,
                               Categories, Menu, Orders, Staff, Settings,
-                              Connections, QR codes) and TakingsChart
+                              Connections, QR codes), TakingsChart,
+                              BestSellers (dashboard bars), StaffSeats
+                              (accounts used of the plan's limit),
+                              TableTile (a table drawn with its chairs on
+                              the Tables floor plan), TableTentCard (the
+                              printable QR card, one SVG) and ReceiptPreview
+                              (Settings' live sample bill)
   staff/                      staff-specific panel variants (simpler than
                               admin's) and TableRequestsModal
 hooks/
@@ -312,6 +318,7 @@ test/
   register.ts                 registerAccount(): POST /auth/register (server-side)
   notify.ts                   notifyNewAccount(): Resend email to the admin only
   tone.ts                     status/state -> badge color mapping
+  zone.ts                     hasZone(): blank and "—" both mean no zone
   utils.ts                    cn()
 ```
 
