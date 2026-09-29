@@ -55,6 +55,8 @@ interface WorkspaceContextValue {
   /** Resolves with the saved category (a new one's id comes from the backend). */
   saveCategory: (category: Omit<Category, "id"> & { id?: string }) => Promise<Category>;
   deleteCategory: (id: string) => Promise<void>;
+  /** Saves the menu's category order (every category's id, first to last); shown at once, undone if the save fails. */
+  reorderCategories: (ids: string[]) => Promise<void>;
   saveDish: (dish: Omit<Dish, "id"> & { id?: string }) => Promise<void>;
   deleteDish: (id: string) => Promise<void>;
   addOrder: (input: { tableName: string; itemId: string; qty: number }) => Promise<void>;
@@ -555,6 +557,22 @@ export function WorkspaceProvider({
             : [...w.categories, saved],
         }));
         return saved;
+      },
+      reorderCategories: async (ids) => {
+        // The order to go back to if the save fails.
+        const previous = workspace.categories;
+        const position = new Map(ids.map((id, i) => [id, i]));
+        patch((w) => ({
+          categories: [...w.categories].sort(
+            (a, b) => (position.get(a.id) ?? Infinity) - (position.get(b.id) ?? Infinity),
+          ),
+        }));
+        try {
+          await apiFetch("/categories/order", { method: "PUT", body: JSON.stringify({ ids }) });
+        } catch (err) {
+          patch(() => ({ categories: previous }));
+          throw err;
+        }
       },
       deleteCategory: async (id) => {
         await apiFetch(`/categories/${id}`, { method: "DELETE" });

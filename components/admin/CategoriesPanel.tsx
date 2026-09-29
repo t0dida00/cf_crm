@@ -1,15 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import { EyeSlash, PencilSimple, Trash } from "@phosphor-icons/react";
-import { Badge } from "@/components/ui/Badge";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import {
   Dialog,
@@ -23,20 +16,13 @@ import { Label } from "@/components/ui/Label";
 import { FieldError, fieldErrorProps } from "@/components/common/FieldError";
 import { RequiredLabel } from "@/components/common/RequiredLabel";
 import { validateCategory, type FieldErrors, withFieldError } from "@/lib/validation";
-import { DataTable } from "@/components/common/DataTable";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/useAsyncAction";
 import type { Category } from "@/lib/types";
-
-interface Row {
-  category: Category;
-  dishes: number;
-}
-
-const helper = createColumnHelper<Row>();
+import { CategoryList } from "./CategoryList";
 
 export function CategoriesPanel({ createSignal }: { createSignal: number }) {
-  const { workspace, saveCategory, deleteCategory } = useWorkspace();
+  const { workspace, saveCategory, deleteCategory, reorderCategories } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
@@ -59,86 +45,7 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
     setOpen(true);
   };
 
-  const rows = useMemo<Row[]>(
-    () =>
-      workspace.categories.map((category) => ({
-        category,
-        dishes: workspace.dishes.filter((d) => d.catId === category.id).length,
-      })),
-    [workspace.categories, workspace.dishes],
-  );
-
-  const table = useReactTable({
-    data: rows,
-    columns: useMemo(
-      () => [
-        helper.accessor((r) => r.category.name, {
-          id: "name",
-          header: "Name",
-          cell: (c) => <span className="font-semibold">{c.getValue()}</span>,
-        }),
-        helper.accessor("dishes", {
-          header: "Dishes",
-          cell: (c) => (
-            <span className="text-muted-foreground">
-              {c.getValue()} {c.getValue() === 1 ? "dish" : "dishes"}
-            </span>
-          ),
-          size: 120,
-        }),
-        helper.accessor((r) => r.category.valid, {
-          id: "valid",
-          header: "Status",
-          cell: (c) => (
-            c.getValue() ? (
-              <span className="text-sm text-muted-foreground">On the menu</span>
-            ) : (
-              <Badge className="gap-1 bg-secondary text-muted-foreground">
-                <EyeSlash size={12} weight="bold" aria-hidden />
-                Hidden
-              </Badge>
-            )
-          ),
-          size: 130,
-        }),
-        helper.display({
-          id: "actions",
-          header: "",
-          size: 90,
-          cell: ({ row }) => (
-            <span className="flex justify-end gap-3.5">
-              <button
-                type="button"
-                onClick={() => startEdit(row.original.category)}
-                className="text-muted-foreground transition-colors hover:text-foreground"
-                aria-label={`Edit category ${row.original.category.name}`}
-              >
-                <PencilSimple size={15} weight="bold" />
-              </button>
-              <button
-                type="button"
-                disabled={isPending(`delete-${row.original.category.id}`)}
-                onClick={() =>
-                  run(
-                    `delete-${row.original.category.id}`,
-                    () => deleteCategory(row.original.category.id),
-                    "Failed to delete category.",
-                  )
-                }
-                className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
-                aria-label={`Delete category ${row.original.category.name}`}
-              >
-                <Trash size={15} weight="bold" />
-              </button>
-            </span>
-          ),
-        }),
-      ],
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [deleteCategory, run, isPending],
-    ),
-    getCoreRowModel: getCoreRowModel(),
-  });
+  const dishCount = (id: string) => workspace.dishes.filter((d) => d.catId === id).length;
 
   const submit = async () => {
     const found = validateCategory(form);
@@ -152,10 +59,17 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
 
   return (
     <>
-      <Card className="overflow-hidden">
-        <CardContent className="px-0">
-          <DataTable table={table} emptyMessage="No categories yet." />
-        </CardContent>
+      <Card className="overflow-hidden py-0">
+        <CategoryList
+          categories={workspace.categories}
+          dishCount={dishCount}
+          onReorder={(ids) => run("reorder-categories", () => reorderCategories(ids), "Couldn't save the new order.", SAVED_MESSAGE)}
+          onEdit={startEdit}
+          onDelete={(category) =>
+            run(`delete-${category.id}`, () => deleteCategory(category.id), "Failed to delete category.")
+          }
+          isDeleting={(id) => isPending(`delete-${id}`)}
+        />
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>

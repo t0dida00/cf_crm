@@ -276,7 +276,9 @@ components/                   one folder per part of the UI; one PascalCase
                               (accounts used of the plan's limit),
                               TableTentCard (the
                               printable QR card, one SVG) and ReceiptPreview
-                              (Settings' live sample bill), MenuImportDialog
+                              (Settings' live sample bill), CategoryList
+                              (drag or move up/down to order categories,
+                              Motion Reorder), MenuImportDialog
                               (preview and run a menu CSV import)
   staff/                      staff-specific panel variants (simpler than
                               admin's) and TableRequestsModal
