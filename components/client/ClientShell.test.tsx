@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import type { Category, Dish } from "@/lib/types";
 import { axeViolations } from "@/test/axe";
@@ -74,17 +74,43 @@ describe("ClientShell keyboard focus", () => {
 describe("ClientShell dish tags", () => {
   test("Vegan and Best seller sit on their own line below the dish name", () => {
     renderShell();
-    const name = screen.getAllByText("Coca cola").find((el) => el.tagName === "SPAN")!;
-    const tags = screen.getByText("Vegan").parentElement!;
+    // The name's row: the name, a dotted leader and the price.
+    const nameRow = screen.getByRole("heading", { name: "Coca cola" }).parentElement!;
+    expect(nameRow.textContent).toBe("Coca cola€3.00");
+    const tags = nameRow.nextElementSibling!;
     expect(tags.textContent).toBe("VeganBest seller");
-    // Not beside the name: the tag row is the name's next sibling.
-    expect(name.contains(tags)).toBe(false);
-    expect(name.nextElementSibling).toBe(tags);
   });
 
   test("a dish without tags has no tag row", () => {
     renderShell();
-    const name = screen.getAllByText("Pepsi").find((el) => el.tagName === "SPAN")!;
-    expect(name.nextElementSibling?.textContent ?? "").not.toMatch(/Vegan|Best seller/);
+    const nameRow = screen.getByRole("heading", { name: "Pepsi" }).parentElement!;
+    expect(nameRow.nextElementSibling?.textContent ?? "").not.toMatch(/Vegan|Best seller/);
+  });
+});
+
+describe("ClientShell brochure", () => {
+  const pages = () => screen.getAllByRole("region").filter((r) => r.getAttribute("aria-roledescription") === "page");
+
+  test("opens on the cover, with a page per section after it", () => {
+    renderShell();
+    expect(pages().map((p) => p.getAttribute("aria-label"))).toEqual(["Page 1 of 2: Contents", "Page 2 of 2: Drinks"]);
+    expect(screen.getByText("Page 1 of 2")).toBeTruthy();
+    // Only the page on screen can be used; the others are inert.
+    expect(pages().map((p) => p.hasAttribute("inert"))).toEqual([false, true]);
+  });
+
+  test("the contents, the arrows and the section pills turn the page", () => {
+    renderShell();
+    fireEvent.click(screen.getByRole("button", { name: "Drinks, page 2" }));
+    expect(screen.getByText("Page 2 of 2")).toBeTruthy();
+    expect(pages().map((p) => p.hasAttribute("inert"))).toEqual([true, false]);
+    expect((screen.getByRole("button", { name: "Next page" }) as HTMLButtonElement).disabled).toBe(true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
+    expect(screen.getByText("Page 1 of 2")).toBeTruthy();
+
+    const nav = screen.getByRole("navigation", { name: "Menu sections" });
+    fireEvent.click(within(nav).getByRole("button", { name: "Drinks" }));
+    expect(within(nav).getByRole("button", { name: "Drinks" }).getAttribute("aria-current")).toBe("page");
   });
 });

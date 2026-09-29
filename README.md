@@ -264,7 +264,9 @@ components/                   one folder per part of the UI; one PascalCase
                               TicketRail (landing
                               hero, PassRail and TicketClip reused by /login
                               and /signup)
-  client/                     ClientShell: the guest ordering UI
+  client/                     ClientShell: the guest ordering UI, a swipeable
+                              brochure (cover + one page per section) built on
+                              BrochurePager (snap-scrolling pages)
   orders/                     BillReceipt (the bill on screen, its printable
                               copy and PrintReceiptButton), SessionDetailDialog
   bookings/                   BookingsPanel (admin tab, reused by staff with

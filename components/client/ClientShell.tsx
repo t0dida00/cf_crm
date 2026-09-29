@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
+  ArrowRight,
   BowlFood,
+  CaretLeft,
+  CaretRight,
   Cake,
   CheckCircle,
   ClockCounterClockwise,
@@ -34,6 +37,7 @@ import {
 } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { DishImage } from "@/components/common/DishImage";
+import { BrochurePager } from "./BrochurePager";
 
 /** Each screen's heading: it takes focus when the screen changes, and is the fallback focus target. */
 const SCREEN_HEADING_ID = "client-screen-heading";
@@ -91,7 +95,8 @@ export function ClientShell({
     [categories, dishes],
   );
 
-  const [tab, setTab] = useState(validCategories[0]?.id ?? "");
+  // The brochure's page on screen: 0 is the cover, then one page per category.
+  const [page, setPage] = useState(0);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [noteOpenId, setNoteOpenId] = useState<string | null>(null);
@@ -149,13 +154,15 @@ export function ClientShell({
     setActiveAction(null);
   };
 
-  const activeCategory = validCategories.find((c) => c.id === tab) ?? validCategories[0];
-  const items = dishes
-    .filter((d) => d.catId === activeCategory?.id)
-    .sort((a, b) => {
-      if (a.status !== b.status) return a.status === "valid" ? -1 : 1;
-      return a.name.localeCompare(b.name);
-    });
+  // A category's dishes: available ones first, then by name.
+  const itemsFor = (catId: string) =>
+    dishes
+      .filter((d) => d.catId === catId)
+      .sort((a, b) => {
+        if (a.status !== b.status) return a.status === "valid" ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+  const pageCount = validCategories.length + 1;
 
   const setQty = (itemId: string, qty: number) =>
     setCart((c) => {
@@ -197,6 +204,237 @@ export function ClientShell({
 
   const net = placed ? placed.total / (1 + taxRate / 100) : 0;
   const tax = placed ? placed.total - net : 0;
+
+  // One printed-menu entry: name, a dotted leader to the price, then tags,
+  // description, the kitchen note, and Add.
+  const dishEntry = (dish: Dish, Icon: PhosphorIcon, eager: boolean) => {
+    const qty = cart[dish.id] ?? 0;
+    const noteOpen = noteOpenId === dish.id;
+    const noteText = notes[dish.id] ?? "";
+    const soldOut = dish.status === "sold_out";
+    return (
+      <li key={dish.id} className="flex gap-3.5 border-t border-dashed py-4 first:border-t-0 first:pt-1">
+        <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary text-muted-foreground sm:size-20">
+          {dish.imageUrl ? (
+            <DishImage
+              src={dish.imageUrl}
+              alt="" // the name is shown right beside it
+              sizes="(min-width: 640px) 80px, 64px"
+              priority={eager}
+              fallback={<Icon size={26} weight="fill" />}
+            />
+          ) : (
+            <Icon size={26} weight="fill" aria-hidden />
+          )}
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex items-baseline gap-2">
+            <h3 className={cn("min-w-0 text-base leading-snug font-bold", soldOut && "text-muted-foreground")}>
+              {dish.name}
+            </h3>
+            {/* The dotted leader of a printed menu, from the name to the price. */}
+            <span aria-hidden className="mb-1 min-w-4 flex-1 border-b-2 border-dotted border-muted-foreground/40" />
+            <span className="shrink-0 font-bold tabular-nums">{fmt(dish.price)}</span>
+          </div>
+          {/* Sold out shows where Add would be, so it isn't repeated as a tag. */}
+          {(dish.isVegan || dish.isBestSeller) && (
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {dish.isVegan && <Badge className={TONE_CLASSES.green}>Vegan</Badge>}
+              {dish.isBestSeller && <Badge className={TONE_CLASSES.brand}>Best seller</Badge>}
+            </div>
+          )}
+          {dish.description && (
+            <p className="mt-1 text-[13px] leading-relaxed text-pretty text-muted-foreground">{dish.description}</p>
+          )}
+          {noteOpen ? (
+            <div className="mt-2">
+              <textarea
+                aria-label={`Note for the kitchen: ${dish.name}`}
+                value={noteText}
+                onChange={(e) => setNotes((n) => ({ ...n, [dish.id]: e.target.value }))}
+                placeholder="Add a note for the kitchen, e.g. no onion"
+                rows={2}
+                className="w-full resize-none rounded-lg border border-input-border bg-background p-2 text-base outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <div className="mt-1.5 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotes((n) => {
+                      const next = { ...n };
+                      delete next[dish.id];
+                      return next;
+                    });
+                    setNoteOpenId(null);
+                  }}
+                  className="text-[13px] font-semibold text-muted-foreground"
+                >
+                  Clear
+                </button>
+                <button type="button" onClick={() => setNoteOpenId(null)} className="text-[13px] font-bold text-brand-700">
+                  Done
+                </button>
+              </div>
+            </div>
+          ) : (
+            noteText && (
+              <div className="mt-2 flex items-start gap-1.5 rounded-md bg-brand-50 px-2.5 py-1.5 text-xs text-brand-700">
+                <NotePencil size={13} weight="bold" className="mt-px shrink-0" aria-hidden />
+                {noteText}
+              </div>
+            )
+          )}
+          <div className="mt-2.5 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setNoteOpenId(noteOpen ? null : dish.id)}
+              aria-label={noteText ? `Edit note for ${dish.name}` : `Add a note for ${dish.name}`}
+              aria-expanded={noteOpen}
+              className={cn(
+                "flex size-[34px] items-center justify-center rounded-full border",
+                noteOpen || noteText ? "border-brand-500 bg-brand-50 text-brand-700" : "border-border text-muted-foreground",
+              )}
+            >
+              <NotePencil size={15} weight="bold" aria-hidden />
+            </button>
+            {qty > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  focusNext.current = `add-${dish.id}`;
+                  setQty(dish.id, 0);
+                }}
+                aria-label={`Remove ${dish.name}`}
+                className="flex size-[34px] items-center justify-center rounded-full border border-border text-muted-foreground hover:text-destructive"
+              >
+                <Trash size={15} weight="bold" aria-hidden />
+              </button>
+            )}
+            {soldOut ? (
+              <span className="flex h-[34px] items-center rounded-full bg-secondary px-3.5 text-[13px] font-bold text-muted-foreground">
+                Sold out
+              </span>
+            ) : qty === 0 ? (
+              <button
+                id={`add-${dish.id}`}
+                type="button"
+                onClick={() => {
+                  focusNext.current = `inc-${dish.id}`;
+                  setQty(dish.id, 1);
+                }}
+                aria-label={`Add ${dish.name}`}
+                className="flex h-[34px] items-center gap-1.5 rounded-full bg-brand-700 px-3.5 text-[13px] font-bold text-white"
+              >
+                <Plus size={13} weight="bold" aria-hidden />
+                Add
+              </button>
+            ) : (
+              <span className="flex items-center gap-1 rounded-full bg-brand-50 p-[3px]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (qty === 1) focusNext.current = `add-${dish.id}`;
+                    setQty(dish.id, qty - 1);
+                  }}
+                  aria-label={`Remove one ${dish.name}`}
+                  className="flex size-7 items-center justify-center rounded-full border bg-background text-brand-700"
+                >
+                  <Minus size={13} weight="bold" aria-hidden />
+                </button>
+                <span aria-live="polite" className="min-w-5 text-center text-sm font-bold text-brand-700">
+                  {qty}
+                  <span className="sr-only"> × {dish.name}</span>
+                </span>
+                <button
+                  id={`inc-${dish.id}`}
+                  type="button"
+                  onClick={() => setQty(dish.id, qty + 1)}
+                  aria-label={`Add one ${dish.name}`}
+                  className="flex size-7 items-center justify-center rounded-full bg-brand-700 text-white"
+                >
+                  <Plus size={13} weight="bold" aria-hidden />
+                </button>
+              </span>
+            )}
+          </div>
+        </div>
+      </li>
+    );
+  };
+
+  /** A sheet of the brochure: white paper on the grey desk, the folio at the foot. */
+  const sheet = (number: number, children: ReactNode) => (
+    <div className="mx-auto flex min-h-full w-full max-w-2xl flex-col p-3 sm:p-5">
+      <div className="flex flex-1 flex-col rounded-2xl border bg-card px-5 pt-6 pb-4 shadow-[0_8px_20px_-14px_rgb(35_47_63/0.35)] sm:px-8">
+        {children}
+        <p aria-hidden className="mt-auto pt-6 text-right text-xs font-semibold text-muted-foreground tabular-nums">
+          {number} / {pageCount}
+        </p>
+      </div>
+    </div>
+  );
+
+  /** Page 1: the brochure's cover and its contents. */
+  const coverPage = () =>
+    sheet(
+      1,
+      <>
+        <div className="flex flex-col items-center text-center">
+          <span className="flex size-20 items-center justify-center overflow-hidden rounded-2xl bg-brand-500 text-white">
+            {workspaceLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={workspaceLogoUrl} alt="" className="size-full object-cover" />
+            ) : (
+              <ForkKnife size={40} weight="bold" aria-hidden />
+            )}
+          </span>
+          <h2 className="mt-4 text-3xl leading-tight font-extrabold tracking-tight text-balance">{workspaceName}</h2>
+          {workspaceAddress && <p className="mt-1.5 text-sm text-muted-foreground">{workspaceAddress}</p>}
+          {workspacePhone && <p className="text-sm text-muted-foreground">{workspacePhone}</p>}
+          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-[13px] font-bold text-brand-700">
+            <QrCode size={14} weight="bold" aria-hidden />
+            {tableName}
+          </p>
+        </div>
+
+        <h3 className="mt-8 text-sm font-bold">In this menu</h3>
+        <ol className="mt-2">
+          {validCategories.map((c, i) => (
+            <li key={c.id}>
+              <button
+                type="button"
+                onClick={() => setPage(i + 1)}
+                aria-label={`${c.name}, page ${i + 2}`}
+                className="flex w-full items-baseline gap-2 py-2.5 text-left"
+              >
+                <span className="font-semibold">{c.name}</span>
+                <span aria-hidden className="mb-1 flex-1 border-b-2 border-dotted border-muted-foreground/40" />
+                <span className="text-sm text-muted-foreground tabular-nums">{i + 2}</span>
+              </button>
+            </li>
+          ))}
+        </ol>
+
+        {validCategories.length > 0 && (
+          <p className="mt-6 flex items-center justify-center gap-2 text-[13px] font-semibold text-muted-foreground">
+            Swipe to open the menu
+            <ArrowRight size={14} weight="bold" aria-hidden />
+          </p>
+        )}
+      </>,
+    );
+
+  /** A category's page: its name as the page heading, then its dishes. */
+  const categoryPage = (category: Category, index: number) => {
+    const Icon = CATEGORY_ICONS[category.name] ?? ForkKnife;
+    return sheet(
+      index + 1,
+      <>
+        <h2 className="text-3xl leading-tight font-extrabold tracking-tight">{category.name}</h2>
+        <ul className="mt-4">{itemsFor(category.id).map((dish, i) => dishEntry(dish, Icon, index === 1 && i < 4))}</ul>
+      </>,
+    );
+  };
 
   if (screen === "done" && placed) {
     return (
@@ -418,41 +656,22 @@ export function ClientShell({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-secondary/20">
-      <header className="sticky top-0 z-10 border-b bg-card px-4 pt-3 pb-3 sm:px-6">
+    // A brochure: the header and the order bar stay put, the pages turn in between.
+    <div className="flex h-dvh flex-col bg-secondary">
+      <header className="z-10 shrink-0 border-b bg-card px-4 pt-3 pb-3 sm:px-6">
         <div className="mx-auto flex w-full max-w-2xl items-center gap-2.5">
-          <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-500 text-white">
+          <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-500 text-white">
             {workspaceLogoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={workspaceLogoUrl} alt="" className="size-full object-cover" />
             ) : (
-              <ForkKnife size={30} weight="bold" />
+              <ForkKnife size={22} weight="bold" />
             )}
           </span>
           <div className="min-w-0 flex-1">
             <h1 id={SCREEN_HEADING_ID} tabIndex={-1} className="truncate text-[15px] font-bold tracking-tight outline-none">
               {workspaceName}
             </h1>
-            {workspaceAddress || workspacePhone ? (
-              <div className="flex flex-col gap-0.5">
-                {workspaceAddress && (
-                  <div className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-                    <MapPin size={11} weight="bold" className="shrink-0" />
-                    <span className="truncate">{workspaceAddress}</span>
-                  </div>
-                )}
-                {workspacePhone && (
-                  <div className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-                    <Phone size={11} weight="bold" className="shrink-0" />
-                    <span className="truncate">{workspacePhone}</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="truncate text-xs text-muted-foreground">
-                Scan to order · no app needed
-              </div>
-            )}
           </div>
           <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-[13px] font-bold text-brand-700">
             <QrCode size={14} weight="bold" />
@@ -499,226 +718,87 @@ export function ClientShell({
             <Receipt size={15} weight="bold" />
             Checkout
           </button>
-        </div>
-
-        {canOrder && (
-          <div className="mx-auto mt-2 flex w-full max-w-2xl">
+          {canOrder && (
             <button
               type="button"
               onClick={() => setHistoryOpen(true)}
-              className="flex w-full items-center justify-center gap-1.5 rounded-full border border-border px-3 py-2 text-[13px] font-semibold text-foreground"
+              aria-label={`Order history${tableOrders.length ? `, ${tableOrders.length} orders` : ""}`}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border px-3 py-2 text-[13px] font-semibold text-foreground"
             >
-              <ClockCounterClockwise size={15} weight="bold" />
-              Order history
+              <ClockCounterClockwise size={15} weight="bold" aria-hidden />
+              History
               {tableOrders.length > 0 && (
-                <span className="ml-1 flex min-w-4.5 items-center justify-center rounded-full bg-secondary px-1 text-[11px] font-bold text-muted-foreground">
+                <span className="flex min-w-4.5 items-center justify-center rounded-full bg-secondary px-1 text-[11px] font-bold text-muted-foreground">
                   {tableOrders.length}
                 </span>
               )}
             </button>
-          </div>
-        )}
-
-        <div className="mx-auto mt-3.5 flex w-full max-w-2xl gap-2 overflow-x-auto">
-          {validCategories.map((c) => {
-            const active = c.id === activeCategory?.id;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setTab(c.id)}
-                aria-pressed={tab === c.id}
-                className={cn(
-                  "shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition-colors",
-                  active
-                    ? "border-foreground bg-foreground text-white font-bold"
-                    : "border-border bg-background text-muted-foreground",
-                )}
-              >
-                {c.name}
-              </button>
-            );
-          })}
+          )}
         </div>
-      </header>
 
-      <main className="mx-auto w-full max-w-2xl flex-1 space-y-3 p-4 pb-28 sm:p-6">
-        {items.map((dish, i) => {
-          const Icon = CATEGORY_ICONS[activeCategory?.name ?? ""] ?? ForkKnife;
-          const qty = cart[dish.id] ?? 0;
-          const noteOpen = noteOpenId === dish.id;
-          const noteText = notes[dish.id] ?? "";
-          const soldOut = dish.status === "sold_out";
-          return (
-            <div
-              key={dish.id}
+        {/* The brochure's sections: jump to a page; the current one follows the swipe. */}
+        <nav aria-label="Menu sections" className="mx-auto mt-3 flex w-full max-w-2xl gap-2 overflow-x-auto">
+          {["Contents", ...validCategories.map((c) => c.name)].map((name, i) => (
+            <button
+              key={name + i}
+              type="button"
+              onClick={() => setPage(i)}
+              aria-current={page === i ? "page" : undefined}
               className={cn(
-                "relative flex gap-3 rounded-xl border bg-card p-3",
-                // Tinted rather than faded: opacity would drop the text below readable contrast.
-                soldOut && "bg-secondary",
+                "shrink-0 rounded-full border px-4 py-2 text-[13px] font-medium transition-colors",
+                page === i
+                  ? "border-foreground bg-foreground font-bold text-white"
+                  : "border-border bg-background text-muted-foreground",
               )}
             >
-              {qty > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    focusNext.current = `add-${dish.id}`;
-                    setQty(dish.id, 0);
-                  }}
-                  aria-label={`Remove ${dish.name}`}
-                  className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
-                >
-                  <Trash size={15} weight="bold" />
-                </button>
-              )}
-              <div aria-hidden="true" className="hidden w-6 shrink-0 pt-0.5 text-[13px] font-bold text-muted-foreground sm:block">
-                {String(i + 1).padStart(2, "0")}
-              </div>
-              <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-secondary/50 text-muted-foreground sm:size-[100px]">
-                {dish.imageUrl ? (
-                  <DishImage
-                    src={dish.imageUrl}
-                    alt="" // the name is shown right beside it
-                    sizes="(min-width: 640px) 100px, 80px"
-                    priority={i < 4}
-                    fallback={<Icon size={28} weight="fill" className="sm:size-[30px]" />}
-                  />
-                ) : (
-                  <Icon size={28} weight="fill" className="sm:size-[30px]" />
-                )}
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="pr-8 text-[15px] font-semibold">{dish.name}</span>
-                {/* Tags on their own line under the name, so a long name keeps its width. */}
-                {(dish.isVegan || dish.isBestSeller || soldOut) && (
-                  <div className="mt-1 flex flex-wrap gap-1.5">
-                    {dish.isVegan && <Badge className={TONE_CLASSES.green}>Vegan</Badge>}
-                    {dish.isBestSeller && <Badge className={TONE_CLASSES.brand}>Best seller</Badge>}
-                    {soldOut && <Badge className={TONE_CLASSES.amber}>Sold out</Badge>}
-                  </div>
-                )}
-                {dish.description && (
-                  <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                    {dish.description}
-                  </div>
-                )}
-                {noteOpen ? (
-                  <div className="mt-2">
-                    <textarea
-                      aria-label={`Note for the kitchen: ${dish.name}`}
-                      value={noteText}
-                      onChange={(e) =>
-                        setNotes((n) => ({ ...n, [dish.id]: e.target.value }))
-                      }
-                      placeholder="Add a note for the kitchen, e.g. no onion"
-                      rows={2}
-                      className="w-full resize-none rounded-lg border border-input-border bg-background p-2 text-base outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
-                    />
-                    <div className="mt-1.5 flex justify-end gap-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setNotes((n) => {
-                            const next = { ...n };
-                            delete next[dish.id];
-                            return next;
-                          });
-                          setNoteOpenId(null);
-                        }}
-                        className="text-[13px] font-semibold text-muted-foreground"
-                      >
-                        Clear
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNoteOpenId(null)}
-                        className="text-[13px] font-bold text-brand-700"
-                      >
-                        Done
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  noteText && (
-                    <div className="mt-2 flex items-start gap-1.5 rounded-md bg-brand-50 px-2.5 py-1.5 text-xs text-brand-700">
-                      <NotePencil size={13} weight="bold" className="mt-px shrink-0" />
-                      {noteText}
-                    </div>
-                  )
-                )}
-                <div className="flex-1" />
-                <div className="mt-2 flex flex-wrap items-end gap-2.5">
-                  <span className="text-[15px] font-bold">{fmt(dish.price)}</span>
-                  <div className="flex-1" />
-                  <button
-                    type="button"
-                    onClick={() => setNoteOpenId(noteOpen ? null : dish.id)}
-                    aria-label={noteText ? `Edit note for ${dish.name}` : `Add a note for ${dish.name}`}
-                    aria-expanded={noteOpen}
-                    className={cn(
-                      "flex size-[34px] items-center justify-center rounded-full border",
-                      noteOpen || noteText
-                        ? "border-brand-500 bg-brand-50 text-brand-700"
-                        : "border-border text-muted-foreground",
-                    )}
-                  >
-                    <NotePencil size={15} weight="bold" />
-                  </button>
-                  {soldOut ? (
-                    <span className="flex h-[34px] items-center rounded-full bg-secondary px-3.5 text-[13px] font-bold text-muted-foreground">
-                      Sold out
-                    </span>
-                  ) : qty === 0 ? (
-                    <button
-                      id={`add-${dish.id}`}
-                      type="button"
-                      onClick={() => {
-                        focusNext.current = `inc-${dish.id}`;
-                        setQty(dish.id, 1);
-                      }}
-                      aria-label={`Add ${dish.name}`}
-                      className="flex h-[34px] items-center gap-1.5 rounded-full bg-brand-700 px-3.5 text-[13px] font-bold text-white"
-                    >
-                      <Plus size={13} weight="bold" />
-                      Add
-                    </button>
-                  ) : (
-                    <span className="flex items-center gap-1 rounded-full bg-brand-50 p-[3px]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (qty === 1) focusNext.current = `add-${dish.id}`;
-                          setQty(dish.id, qty - 1);
-                        }}
-                        aria-label={`Remove one ${dish.name}`}
-                        className="flex size-7 items-center justify-center rounded-full border bg-background text-brand-700"
-                      >
-                        <Minus size={13} weight="bold" />
-                      </button>
-                      <span aria-live="polite" className="min-w-5 text-center text-sm font-bold text-brand-700">
-                        {qty}
-                        <span className="sr-only"> × {dish.name}</span>
-                      </span>
-                      <button
-                        id={`inc-${dish.id}`}
-                        type="button"
-                        onClick={() => setQty(dish.id, qty + 1)}
-                        aria-label={`Add one ${dish.name}`}
-                        className="flex size-7 items-center justify-center rounded-full bg-brand-700 text-white"
-                      >
-                        <Plus size={13} weight="bold" />
-                      </button>
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+              {name}
+            </button>
+          ))}
+        </nav>
+      </header>
+
+      <main className="min-h-0 flex-1">
+        <BrochurePager
+          label="Menu, swipe left or right to turn the page"
+          index={page}
+          onIndexChange={setPage}
+          pages={[
+            { id: "cover", title: "Contents", content: coverPage() },
+            ...validCategories.map((category, i) => ({
+              id: category.id,
+              title: category.name,
+              content: categoryPage(category, i + 1),
+            })),
+          ]}
+        />
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 border-t bg-card px-4 py-3 sm:px-6">
+      <footer className="shrink-0 border-t bg-card px-4 pt-2 pb-3 sm:px-6">
         <div className="mx-auto w-full max-w-2xl">
+          {/* Turn the page without swiping (keyboard, single tap). */}
+          <div className="mb-2 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setPage(page - 1)}
+              disabled={page === 0}
+              aria-label="Previous page"
+              className="flex size-9 items-center justify-center rounded-full border text-foreground disabled:opacity-30"
+            >
+              <CaretLeft size={16} weight="bold" aria-hidden />
+            </button>
+            <span className="text-[13px] font-semibold text-muted-foreground tabular-nums" aria-live="polite">
+              Page {page + 1} of {pageCount}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage(page + 1)}
+              disabled={page === pageCount - 1}
+              aria-label="Next page"
+              className="flex size-9 items-center justify-center rounded-full border text-foreground disabled:opacity-30"
+            >
+              <CaretRight size={16} weight="bold" aria-hidden />
+            </button>
+          </div>
           <button
             type="button"
             disabled={!cartCount}
