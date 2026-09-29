@@ -1,8 +1,11 @@
-import { ArrowLeft, SquaresFour } from "@phosphor-icons/react/ssr";
+import { ArrowLeft } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { SignupCard, type SignupState } from "@/components/auth/SignupCard";
+import { SignupSteps } from "@/components/auth/SignupSteps";
+import { MarketingFooter, MarketingHeader, MarketingShell } from "@/components/marketing/MarketingTheme";
+import { PassRail, TicketClip } from "@/components/marketing/TicketRail";
 import { notifyNewAccount } from "@/lib/notify";
 import { registerAccount } from "@/lib/register";
 
@@ -37,25 +40,35 @@ export default async function SignupPage({
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md">
+    <MarketingShell>
+      <MarketingHeader>
         <Link
-          href="/login"
-          className="mb-6 flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          href="/"
+          className="flex items-center gap-1.5 rounded-sm text-sm font-medium text-(--landing-muted) hover:text-(--landing-ink)"
         >
-          <ArrowLeft size={15} weight="bold" />
-          Back to sign in
+          <ArrowLeft size={15} weight="bold" aria-hidden />
+          Back to home
         </Link>
+      </MarketingHeader>
 
-        <div className="mb-7 flex items-center gap-2.5">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-brand-500 text-white">
-            <SquaresFour size={15} weight="bold" />
-          </span>
-          <span className="text-xs font-semibold tracking-wide text-muted-foreground">CREATE ACCOUNT</span>
+      {/* The form is a ticket on the pass rail, like sign-in; the setup order hangs beside it. */}
+      <main className="mx-auto grid w-full max-w-5xl gap-12 px-4 pt-10 pb-16 sm:pt-16 lg:grid-cols-[minmax(0,32rem)_1fr] lg:gap-16">
+        <div>
+          <PassRail />
+          <div className="-mt-1.5 flex justify-between px-10" aria-hidden>
+            <TicketClip />
+            <TicketClip />
+          </div>
+          <div className="ticket-torn -mt-1 bg-(--landing-card) px-6 pt-8 pb-12 shadow-[0_14px_24px_-14px_rgb(21_32_45/0.45)] sm:px-10">
+            <SignupCard signUp={signUp} error={error} message={message} />
+          </div>
         </div>
+        <div className="lg:pt-16">
+          <SignupSteps />
+        </div>
+      </main>
 
-        <SignupCard signUp={signUp} error={error} message={message} />
-      </div>
-    </main>
+      <MarketingFooter />
+    </MarketingShell>
   );
 }

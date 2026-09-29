@@ -245,6 +245,7 @@ components/                   one folder per part of the UI; one PascalCase
                               StaffShell only add their tabs and panels;
                               MobileNavDrawer, SidebarClock
   auth/                       LoginCard (Owner / Staff choice), SignupCard,
+                              SignupSteps (setup order beside the form),
                               LoginSubmitButton
   onboarding/                 WorkspaceSetupFlow (step 1 connections, checked
                               not saved → step 2 details, which creates the
@@ -253,11 +254,12 @@ components/                   one folder per part of the UI; one PascalCase
                               BuildingScreen; ConnectionsForm (database +
                               Pusher + storage, shared with Settings)
   marketing/                  LandingPage, InstructionPage; MarketingTheme
-                              (the kitchen-pass tokens, Archivo, header and
+                              (the kitchen-pass tokens, Nunito Sans, header and
                               footer with Product / Contact / Legal links,
-                              also used by /login); LegalPage; typeScale
+                              also used by /login and /signup); LegalPage; typeScale
                               (DISPLAY headline class); TicketRail (landing
-                              hero, PassRail and TicketClip reused by /login)
+                              hero, PassRail and TicketClip reused by /login
+                              and /signup)
   client/                     ClientShell: the guest ordering UI
   orders/                     BillReceipt (the bill on screen, its printable
                               copy and PrintReceiptButton), SessionDetailDialog
@@ -277,7 +279,6 @@ hooks/
                              component only, so ticks don't re-render pages)
 lib/
   types.ts                    Workspace, Order, Dish, Booking, Settings…
-  demoAccount.ts              DEMO_ACCOUNT shown on the landing and login pages
   siteOwner.ts                SITE_OWNER (name, email): landing, footer, legal pages
   api.ts / publicApi.ts      fetch wrappers for the two proxy routes
   platformApi.ts             server-side-only platform fetch/create (used
