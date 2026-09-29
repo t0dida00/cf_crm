@@ -34,6 +34,13 @@ afterEach(cleanup);
 const row = (name: string) => screen.getByText(name).closest(".grid") as HTMLElement;
 
 describe("MenuPanel", () => {
+  test("offers importing, exporting and a sample of the menu file", () => {
+    render(<MenuPanel createSignal={0} />);
+    for (const name of ["Import CSV", "Export CSV", "Sample file"]) {
+      expect(screen.getByRole("button", { name })).toBeTruthy();
+    }
+  });
+
   test("shows each dish's description under its name", () => {
     render(<MenuPanel createSignal={0} />);
     expect(row("Seafood paella").textContent).toContain("For one, prawn, mussel, squid");

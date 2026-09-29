@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { EyeSlash, ImageSquare, MagnifyingGlass, PencilSimple, Trash } from "@phosphor-icons/react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { DownloadSimple, EyeSlash, FileCsv, ImageSquare, MagnifyingGlass, PencilSimple, Trash, UploadSimple } from "@phosphor-icons/react";
 import { ImageDropzone } from "@/components/common/ImageDropzone";
 import {
   Accordion,
@@ -39,8 +39,13 @@ import { DishImage } from "@/components/common/DishImage";
 import { FieldError, fieldErrorProps } from "@/components/common/FieldError";
 import { blockInvalidNumberKeys, validateDish, type FieldErrors, acceptNumberInput, MAX_SPECIAL_TAX, withFieldError } from "@/lib/validation";
 import { formatNumber } from "@/lib/format";
+import { COMMON_TAX, menuToCsv, SAMPLE_MENU_CSV } from "@/lib/menuCsv";
+import { downloadFile } from "@/lib/downloadFile";
+import { MenuImportDialog } from "./MenuImportDialog";
 
-const COMMON_TAX = "Common tax";
+/** "Khoa Restaurant" → "khoa-restaurant", for file names. */
+const fileSlug = (name: string) => name.trim().replace(/\s+/g, "-").toLowerCase() || "tably";
+
 
 // The same words as the staff menu.
 const STATUS_LABEL: Record<DishStatus, string> = {
@@ -85,6 +90,8 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
   const { workspace, fmt, saveDish, deleteDish } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const { categories, dishes, settings } = workspace;
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [importFile, setImportFile] = useState<{ name: string; text: string } | null>(null);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 300);
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -224,7 +231,41 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
             ))}
           </SelectContent>
         </Select>
+        {/* The whole menu as a CSV file: in, out, and an example of the format. */}
+        <div className="flex flex-wrap gap-2 sm:ml-auto">
+          <Button variant="outline" size="sm" onClick={() => fileInput.current?.click()}>
+            <UploadSimple size={14} weight="bold" aria-hidden />
+            Import CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!dishes.length}
+            onClick={() => downloadFile(menuToCsv(categories, dishes), `${fileSlug(workspace.name)}-menu.csv`)}
+          >
+            <DownloadSimple size={14} weight="bold" aria-hidden />
+            Export CSV
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => downloadFile(SAMPLE_MENU_CSV, "menu-sample.csv")}>
+            <FileCsv size={14} weight="bold" aria-hidden />
+            Sample file
+          </Button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            aria-label="Menu CSV file"
+            onChange={async (e) => {
+              const picked = e.target.files?.[0];
+              e.target.value = ""; // picking the same file again still opens the preview
+              if (picked) setImportFile({ name: picked.name, text: await picked.text() });
+            }}
+          />
+        </div>
       </div>
+
+      <MenuImportDialog file={importFile} onClose={() => setImportFile(null)} />
 
       <Accordion
         type="multiple"

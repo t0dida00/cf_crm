@@ -1,0 +1,145 @@
+import { describe, expect, test } from "vitest";
+import type { Category, Dish } from "./types";
+import {
+  MENU_CSV_COLUMNS,
+  menuToCsv,
+  parseCsv,
+  parseMenuCsv,
+  planMenuImport,
+  SAMPLE_MENU_CSV,
+  toCsv,
+} from "./menuCsv";
+
+const HEADER = MENU_CSV_COLUMNS.join(",");
+const file = (...lines: string[]) => [HEADER, ...lines].join("\n");
+
+describe("parseCsv / toCsv", () => {
+  test("reads quoted fields with commas, quotes and line breaks", () => {
+    expect(parseCsv('a,"b, c","say ""hi""","two\nlines"\r\n1,2,3,4\n')).toEqual([
+      ["a", "b, c", 'say "hi"', "two\nlines"],
+      ["1", "2", "3", "4"],
+    ]);
+  });
+
+  test("skips blank lines and a leading byte-order mark", () => {
+    expect(parseCsv("﻿a,b\n\n,\nc,d")).toEqual([
+      ["a", "b"],
+      ["c", "d"],
+    ]);
+  });
+
+  test("round-trips through toCsv", () => {
+    const rows = [["plain", "with, comma", 'a "quote"', "multi\nline"]];
+    expect(parseCsv(toCsv(rows))).toEqual(rows);
+  });
+});
+
+describe("parseMenuCsv", () => {
+  test("reads every column and its codes", () => {
+    const { rows, errors } = parseMenuCsv(
+      file(
+        "Mains,Seafood paella,19.5,2,10,For one,https://x.public.blob.vercel-storage.com/p.jpg,1,1",
+        "Drinks,Red wine,6,1,wine,,,no,0",
+        "Starters,Bread,2,0,,,,,",
+      ),
+      ["Wine"],
+    );
+    expect(errors).toEqual([]);
+    expect(rows[0]).toMatchObject({
+      line: 2,
+      category: "Mains",
+      name: "Seafood paella",
+      price: 19.5,
+      taxMode: "exclude",
+      taxPct: 10,
+      description: "For one",
+      imageUrl: "https://x.public.blob.vercel-storage.com/p.jpg",
+      isVegan: true,
+      status: "sold_out",
+    });
+    // An included tax is named; case doesn't matter.
+    expect(rows[1]).toMatchObject({ taxMode: "include", taxName: "Wine", isVegan: false, status: "hidden" });
+    // Blank tax, vegan and status mean none, no and available.
+    expect(rows[2]).toMatchObject({ taxMode: "none", isVegan: false, status: "valid" });
+  });
+
+  test("an included tax with no value is the common tax", () => {
+    const { rows } = parseMenuCsv(file("Mains,Soup,5,1,,,,0,2"), []);
+    expect(rows[0].taxName).toBe("Common tax");
+  });
+
+  test("reports each problem with its line, and keeps no rows from a bad line", () => {
+    const { rows, errors } = parseMenuCsv(
+      file(
+        ",Soup,-1,3,,,,maybe,5",
+        "Mains,Steak,20,2,300,,http://insecure.example/p.jpg,0,2",
+        "Drinks,Beer,4,1,Beer tax,,,0,2",
+      ),
+      ["Wine"],
+    );
+    expect(rows).toEqual([]);
+    expect(errors.map((e) => `${e.line}: ${e.message}`)).toEqual([
+      "2: Category is required.",
+      "2: Price must be a number, 0 or more.",
+      "2: Tax must be 0 (none), 1 (included) or 2 (added at checkout).",
+      "2: is_vegan must be 1 or 0.",
+      "2: Status must be 0 (hidden), 1 (sold out) or 2 (available).",
+      "3: Tax value must be a percentage from 0 to 200.",
+      "3: Photo must be an https:// link (Vercel Blob or S3).",
+      '4: Tax value must be "Common tax" or one of your special taxes (Wine).',
+    ]);
+  });
+
+  test("the same dish twice in one category is an error", () => {
+    const { errors } = parseMenuCsv(file("Mains,Soup,5,0,,,,0,2", "mains,SOUP,6,0,,,,0,2"), []);
+    expect(errors).toEqual([{ line: 3, message: '"SOUP" appears twice in mains.' }]);
+  });
+
+  test("names missing columns, and matches columns in any order", () => {
+    expect(parseMenuCsv("category,name\nMains,Soup", []).errors[0].message).toMatch(/^Missing columns: price, tax/);
+    const reordered = ["status", ...MENU_CSV_COLUMNS.filter((c) => c !== "status")].join(",");
+    expect(parseMenuCsv(`${reordered}\n0,Mains,Soup,5,0,,,,0`, []).rows[0]).toMatchObject({ name: "Soup", status: "hidden" });
+  });
+
+  test("an empty file or a header alone has nothing to import", () => {
+    expect(parseMenuCsv("", []).errors).toEqual([{ line: 1, message: "The file is empty." }]);
+    expect(parseMenuCsv(HEADER, []).errors).toEqual([{ line: 2, message: "The file has no dishes." }]);
+  });
+
+  test("the sample file is valid", () => {
+    const { rows, errors } = parseMenuCsv(SAMPLE_MENU_CSV, []);
+    expect(errors).toEqual([]);
+    expect(new Set(rows.map((r) => r.taxMode))).toEqual(new Set(["none", "include", "exclude"]));
+    expect(new Set(rows.map((r) => r.status))).toEqual(new Set(["valid", "sold_out", "hidden"]));
+  });
+});
+
+const CATEGORIES: Category[] = [{ id: "c1", name: "Mains", valid: true }];
+const DISHES: Dish[] = [
+  { id: "d1", name: "Soup", price: 5, catId: "c1", status: "valid", taxMode: "include", taxName: "Wine", isVegan: true },
+  { id: "d2", name: "Steak, rare", price: 20, catId: "c1", status: "hidden", taxMode: "exclude", taxPct: 10, description: 'The "big" one' },
+];
+
+describe("menuToCsv", () => {
+  test("an export imports back as the same menu", () => {
+    const { rows, errors } = parseMenuCsv(menuToCsv(CATEGORIES, DISHES), ["Wine"]);
+    expect(errors).toEqual([]);
+    expect(rows.map(({ line: _line, ...r }) => r)).toEqual([
+      { category: "Mains", name: "Soup", price: 5, taxMode: "include", taxName: "Wine", taxPct: undefined, description: undefined, imageUrl: undefined, isVegan: true, status: "valid" },
+      { category: "Mains", name: "Steak, rare", price: 20, taxMode: "exclude", taxName: undefined, taxPct: 10, description: 'The "big" one', imageUrl: undefined, isVegan: false, status: "hidden" },
+    ]);
+  });
+});
+
+describe("planMenuImport", () => {
+  test("updates dishes matched by category and name, adds the rest, and lists new categories once", () => {
+    const { rows } = parseMenuCsv(
+      file("mains,soup,6,0,,,,0,2", "Mains,Salad,7,0,,,,1,2", "Desserts,Flan,4,0,,,,0,2", "desserts,Tart,5,0,,,,0,2"),
+      [],
+    );
+    const plan = planMenuImport(rows, CATEGORIES, DISHES);
+    expect(plan.update.map((u) => [u.id, u.row.price])).toEqual([["d1", 6]]);
+    expect(plan.add.map((r) => r.name)).toEqual(["Salad", "Flan", "Tart"]);
+    expect(plan.newCategories).toEqual(["Desserts"]);
+  });
+});

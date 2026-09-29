@@ -276,7 +276,8 @@ components/                   one folder per part of the UI; one PascalCase
                               (accounts used of the plan's limit),
                               TableTentCard (the
                               printable QR card, one SVG) and ReceiptPreview
-                              (Settings' live sample bill)
+                              (Settings' live sample bill), MenuImportDialog
+                              (preview and run a menu CSV import)
   staff/                      staff-specific panel variants (simpler than
                               admin's) and TableRequestsModal
 hooks/
@@ -321,6 +322,9 @@ test/
   register.ts                 registerAccount(): POST /auth/register (server-side)
   notify.ts                   notifyNewAccount(): Resend email to the admin only
   tone.ts                     status/state -> badge color mapping
+  menuCsv.ts                  the menu CSV (import, export, sample): parseMenuCsv(),
+                              planMenuImport(), menuToCsv(), SAMPLE_MENU_CSV
+  downloadFile.ts             downloadFile(): save text as a file in the browser
   zone.ts                     hasZone() (blank and "—" both mean no zone),
                               groupByZone() for the floor plans
   utils.ts                    cn()

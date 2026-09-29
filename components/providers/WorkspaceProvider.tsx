@@ -52,7 +52,8 @@ interface WorkspaceContextValue {
     table: Omit<TableRec, "id" | "state" | "seatedAt"> & { id?: string },
   ) => Promise<void>;
   deleteTable: (id: string) => Promise<void>;
-  saveCategory: (category: Omit<Category, "id"> & { id?: string }) => Promise<void>;
+  /** Resolves with the saved category (a new one's id comes from the backend). */
+  saveCategory: (category: Omit<Category, "id"> & { id?: string }) => Promise<Category>;
   deleteCategory: (id: string) => Promise<void>;
   saveDish: (dish: Omit<Dish, "id"> & { id?: string }) => Promise<void>;
   deleteDish: (id: string) => Promise<void>;
@@ -553,6 +554,7 @@ export function WorkspaceProvider({
             ? w.categories.map((c) => (c.id === saved.id ? saved : c))
             : [...w.categories, saved],
         }));
+        return saved;
       },
       deleteCategory: async (id) => {
         await apiFetch(`/categories/${id}`, { method: "DELETE" });
