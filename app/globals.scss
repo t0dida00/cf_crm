@@ -109,6 +109,24 @@
   to { width: 100%; }
 }
 
+/* Landing hero (TicketRail): the new order drops onto the rail and settles at
+ * its tilt. The page's only non-interactive motion. */
+@keyframes ticket-drop {
+  0% { opacity: 0; transform: translateY(-90px) rotate(-7deg); }
+  60% { opacity: 1; transform: translateY(6px) rotate(calc(var(--tilt) + 2deg)); }
+  100% { opacity: 1; transform: rotate(var(--tilt)); }
+}
+.ticket-drop {
+  animation: ticket-drop 0.8s cubic-bezier(0.3, 1.25, 0.5, 1) 0.5s backwards;
+}
+/* Torn bottom edge of a paper ticket. */
+.ticket-torn {
+  --tooth: 7px;
+  mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--tooth)) no-repeat,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / calc(2 * var(--tooth)) var(--tooth) repeat-x;
+}
+
 /* People who ask their system to reduce motion get no animations (WCAG 2.3.3). */
 @media (prefers-reduced-motion: reduce) {
   *,

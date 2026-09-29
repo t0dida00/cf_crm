@@ -64,6 +64,13 @@ describe("LoginCard", () => {
     expect(screen.getByRole("button", { name: "contact us" })).toBeTruthy();
   });
 
+  test("the line under the heading says what the chosen account opens", () => {
+    render(<LoginCard loginWithCredentials={vi.fn()} />);
+    expect(screen.getByText(/Manage your menu, tables, staff and reports/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("radio", { name: "Staff" }));
+    expect(screen.getByText(/Take orders and look after your tables/)).toBeTruthy();
+  });
+
   test("remembers the last choice on this browser", () => {
     render(<LoginCard loginWithCredentials={vi.fn()} />);
     fireEvent.click(screen.getByRole("radio", { name: "Staff" }));

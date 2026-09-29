@@ -206,7 +206,8 @@ docker-compose.yml           builds and runs that image with .env.production.loc
 app/
   layout.tsx                Nunito Sans font, WorkspaceProvider, page <title>
   page.tsx                  setup form -> build animation -> /admin
-  login/page.tsx             credentials sign-in
+  login/page.tsx             credentials sign-in (the form as a ticket on
+                             the pass rail, plus the demo account)
   admin/page.tsx             AdminShell, gated on hydrated workspace
   staff/page.tsx              StaffShell, same gating
   qr-generation/page.tsx      per-table QR codes, defaults the guest link's
@@ -249,7 +250,11 @@ components/                   one folder per part of the UI; one PascalCase
                               building); ConnectionsStep, SetupScreen,
                               BuildingScreen; ConnectionsForm (database +
                               Pusher + storage, shared with Settings)
-  marketing/                  LandingPage, InstructionPage, MarketingTheme
+  marketing/                  LandingPage, InstructionPage; MarketingTheme
+                              (the kitchen-pass tokens, Archivo, header and
+                              footer, also used by /login); typeScale
+                              (DISPLAY headline class); TicketRail (landing
+                              hero, PassRail and TicketClip reused by /login)
   client/                     ClientShell: the guest ordering UI
   orders/                     BillReceipt (the bill on screen, its printable
                               copy and PrintReceiptButton), SessionDetailDialog
@@ -269,6 +274,7 @@ hooks/
                              component only, so ticks don't re-render pages)
 lib/
   types.ts                    Workspace, Order, Dish, Booking, Settings…
+  demoAccount.ts              DEMO_ACCOUNT shown on the landing and login pages
   api.ts / publicApi.ts      fetch wrappers for the two proxy routes
   platformApi.ts             server-side-only platform fetch/create (used
                              by layout.tsx and actions.ts, needs a raw JWT)
