@@ -40,7 +40,37 @@ export const SAMPLE_MENU_CSV = toCsv([
     "1",
   ],
   ["Desserts", "Crema catalana", "6.5", "0", "", "", "", "0", "0"],
+  // Accents survive the round trip: the file is UTF-8.
+  ["Món chính", "Phở bò", "9.5", "0", "", "Nước dùng bò, bánh phở, hành lá", "", "0", "2"],
 ]);
+
+/**
+ * Marks a file as UTF-8 for spreadsheet apps: without it Excel opens a CSV in
+ * the Windows code page, and "Phở" shows as "PhÆ¡Ì‰". Exports and the sample
+ * start with it; parseCsv skips it.
+ */
+export const UTF8_BOM = "\uFEFF";
+
+/** The file isn't UTF-8 (usually Excel's plain "CSV (Comma delimited)"). */
+export class NotUtf8Error extends Error {
+  constructor() {
+    super(
+      'This file isn\'t saved as UTF-8, so accented letters (Vietnamese, for example) would come out wrong. In Excel, use File > Save As > "CSV UTF-8 (Comma delimited)"; in Google Sheets, File > Download > CSV. Then import it again.',
+    );
+  }
+}
+
+/**
+ * Reads a picked file's bytes as UTF-8, strictly: bytes that aren't valid
+ * UTF-8 throw NotUtf8Error instead of turning into replacement characters.
+ */
+export function decodeCsvFile(bytes: ArrayBuffer): string {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    throw new NotUtf8Error();
+  }
+}
 
 /** Parses CSV text (RFC 4180: quoted fields, "" for a quote, CRLF or LF). Blank lines are skipped. */
 export function parseCsv(text: string): string[][] {
@@ -122,7 +152,7 @@ export interface MenuRowError {
 
 const YES = new Set(["1", "yes", "true", "y"]);
 const NO = new Set(["", "0", "no", "false", "n"]);
-const key = (s: string) => s.trim().toLowerCase();
+const key = (s: string) => s.normalize("NFC").trim().toLowerCase();
 
 /**
  * Reads and checks a menu file. Every problem is reported with its line, so the
@@ -133,7 +163,9 @@ export function parseMenuCsv(
   text: string,
   specialTaxNames: string[],
 ): { rows: MenuRow[]; errors: MenuRowError[] } {
-  const table = parseCsv(text);
+  // One form for accented letters (NFC): a file saved with decomposed accents
+  // (as macOS can) still matches the same names already on the menu.
+  const table = parseCsv(text.normalize("NFC"));
   if (!table.length) return { rows: [], errors: [{ line: 1, message: "The file is empty." }] };
 
   const header = table[0].map(key);

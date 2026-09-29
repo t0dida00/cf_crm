@@ -327,6 +327,7 @@ test/
   menuCsv.ts                  the menu CSV (import, export, sample): parseMenuCsv(),
                               planMenuImport(), menuToCsv(), SAMPLE_MENU_CSV
   downloadFile.ts             downloadFile(): save text as a file in the browser
+                              (CSVs get a UTF-8 byte-order mark for Excel)
   zone.ts                     hasZone() (blank and "—" both mean no zone),
                               groupByZone() for the floor plans
   utils.ts                    cn()

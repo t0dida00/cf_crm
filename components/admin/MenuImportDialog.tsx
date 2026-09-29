@@ -16,13 +16,21 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? o
  * every error by line. Import runs only on an error-free file; it creates the
  * missing categories first, then saves the dishes one by one.
  */
-export function MenuImportDialog({ file, onClose }: { file: { name: string; text: string } | null; onClose: () => void }) {
+/** A picked file: its text, or why it couldn't be read (e.g. not UTF-8). */
+export type MenuFile = { name: string; text: string } | { name: string; error: string };
+
+export function MenuImportDialog({ file, onClose }: { file: MenuFile | null; onClose: () => void }) {
   const { workspace, saveCategory, saveDish } = useWorkspace();
   const { categories, dishes, settings } = workspace;
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
   const parsed = useMemo(
-    () => (file ? parseMenuCsv(file.text, settings.specialTaxes.map((t) => t.name)) : null),
+    () =>
+      !file
+        ? null
+        : "error" in file
+          ? { rows: [], errors: [{ line: 0, message: file.error }] }
+          : parseMenuCsv(file.text, settings.specialTaxes.map((t) => t.name)),
     [file, settings.specialTaxes],
   );
   const plan = useMemo(
@@ -97,7 +105,8 @@ export function MenuImportDialog({ file, onClose }: { file: { name: string; text
             <ul className="max-h-64 space-y-1 overflow-y-auto rounded-lg border p-3 text-sm">
               {errors.map((e, i) => (
                 <li key={i}>
-                  <span className="font-semibold">Line {e.line}:</span> {e.message}
+                  {e.line > 0 && <span className="font-semibold">Line {e.line}: </span>}
+                  {e.message}
                 </li>
               ))}
             </ul>

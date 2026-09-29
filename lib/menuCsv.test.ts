@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 import type { Category, Dish } from "./types";
 import {
+  decodeCsvFile,
   MENU_CSV_COLUMNS,
+  NotUtf8Error,
   menuToCsv,
   parseCsv,
   parseMenuCsv,
@@ -141,5 +143,43 @@ describe("planMenuImport", () => {
     expect(plan.update.map((u) => [u.id, u.row.price])).toEqual([["d1", 6]]);
     expect(plan.add.map((r) => r.name)).toEqual(["Salad", "Flan", "Tart"]);
     expect(plan.newCategories).toEqual(["Desserts"]);
+  });
+});
+
+describe("Vietnamese and other accented text", () => {
+  const VI = "category,name,price,tax,tax_value,description,photo,is_vegan,status\nMón chính,Phở bò,9.5,0,,\"Nước dùng bò, hành lá\",,0,2\n";
+  const bytes = (text: string) => new TextEncoder().encode(text).buffer as ArrayBuffer;
+
+  test("a UTF-8 file reads back exactly, with or without the byte-order mark", () => {
+    for (const text of [decodeCsvFile(bytes(VI)), decodeCsvFile(bytes("\uFEFF" + VI))]) {
+      const { rows, errors } = parseMenuCsv(text, []);
+      expect(errors).toEqual([]);
+      expect(rows[0]).toMatchObject({ category: "Món chính", name: "Phở bò", description: "Nước dùng bò, hành lá" });
+    }
+  });
+
+  test("a file in a Windows code page is refused, with how to fix it", () => {
+    // "Phở" in Windows-1258-style single bytes: not valid UTF-8.
+    const legacy = new Uint8Array([0x50, 0x68, 0xd5, 0x2c, 0x31, 0x0a]).buffer;
+    expect(() => decodeCsvFile(legacy)).toThrow(NotUtf8Error);
+    expect(() => decodeCsvFile(legacy)).toThrow(/CSV UTF-8/);
+  });
+
+  test("decomposed accents (as macOS can save them) match the dish already on the menu", () => {
+    const decomposed = VI.normalize("NFD");
+    expect(decomposed).not.toBe(VI);
+    const { rows } = parseMenuCsv(decomposed, []);
+    expect(rows[0].name).toBe("Phở bò");
+    const plan = planMenuImport(
+      rows,
+      [{ id: "c9", name: "Món chính", valid: true }],
+      [{ id: "d9", name: "Phở bò", price: 9, catId: "c9", status: "valid", taxMode: "none" }],
+    );
+    expect(plan.update.map((u) => u.id)).toEqual(["d9"]);
+    expect(plan.add).toEqual([]);
+  });
+
+  test("the sample file carries a Vietnamese dish", () => {
+    expect(parseMenuCsv(SAMPLE_MENU_CSV, []).rows.map((r) => r.name)).toContain("Phở bò");
   });
 });

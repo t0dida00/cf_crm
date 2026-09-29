@@ -58,3 +58,12 @@ describe("MenuImportDialog", () => {
     expect((screen.getByRole("button", { name: "Import" }) as HTMLButtonElement).disabled).toBe(true);
   });
 });
+
+describe("MenuImportDialog with a file that isn't UTF-8", () => {
+  test("explains how to save it as UTF-8 and imports nothing", () => {
+    render(<MenuImportDialog file={{ name: "excel.csv", error: "This file isn't saved as UTF-8. Use CSV UTF-8." }} onClose={vi.fn()} />);
+    expect(screen.getByRole("alert").textContent).toContain("This file isn't saved as UTF-8. Use CSV UTF-8.");
+    expect(screen.getByRole("alert").textContent).not.toContain("Line");
+    expect((screen.getByRole("button", { name: "Import" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+});
