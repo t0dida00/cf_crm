@@ -6,11 +6,12 @@ import { SITE_OWNER } from "@/lib/siteOwner";
 import { ContactForm } from "@/components/common/ContactForm";
 import { DISPLAY, MarketingFooter, MarketingHeader, MarketingShell } from "./MarketingTheme";
 import { TicketRail } from "./TicketRail";
+import { ServiceFlow } from "./ServiceFlow";
 
 const NAV_LINKS = [
   { href: "#features", label: "Features" },
-  { href: "#menu", label: "Menu" },
   { href: "#demo", label: "Demo" },
+  { href: "#menu", label: "Menu" },
   { href: "#contact", label: "Contact" },
 ];
 
@@ -76,7 +77,7 @@ export function LandingPage() {
       </MarketingHeader>
 
       <main>
-        <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-12 pb-10 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:gap-8 lg:pt-20 lg:pb-16">
+        <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-12 pb-10 sm:px-6 lg:grid-cols-[minmax(0,65fr)_minmax(0,35fr)] lg:gap-8 lg:pt-20 lg:pb-16">
           <div>
             <h1 className={`${DISPLAY} text-[clamp(3.5rem,11vw,7.5rem)] text-balance`}>
               Every order, straight to the pass.
@@ -98,31 +99,33 @@ export function LandingPage() {
           <TicketRail />
         </section>
 
-        <DemoAccess />
-
         <section id="features" aria-labelledby="features-title" className="bg-(--landing-bg-alt) py-16 sm:py-20">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.4fr]">
-            <div>
-              <h2 id="features-title" className={`${DISPLAY} text-5xl text-balance sm:text-6xl`}>
-                From the scan to the closing count
-              </h2>
-              <p className="mt-4 max-w-md text-pretty text-(--landing-muted)">
-                One system for the guest at the table, the team on the floor and you at the end of the night.
-              </p>
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <h2 id="features-title" className={`${DISPLAY} max-w-3xl text-5xl text-balance sm:text-6xl`}>
+              From the scan to the closing count
+            </h2>
+            <p className="mt-4 max-w-xl text-pretty text-(--landing-muted)">
+              One system for the guest at the table, the team on the floor and you at the end of the
+              night. Here is one table&apos;s evening.
+            </p>
+
+            <div className="mt-10">
+              <ServiceFlow />
             </div>
-            <ul className="divide-y divide-(--landing-border) border-y border-(--landing-border)">
+
+            <ul className="mt-12 grid gap-x-8 gap-y-6 border-t border-(--landing-border) pt-8 sm:grid-cols-2 lg:grid-cols-4">
               {FEATURES.map(({ icon: Icon, title, description }) => (
-                <li key={title} className="flex gap-5 py-6">
-                  <Icon size={28} weight="duotone" aria-hidden className="mt-0.5 shrink-0 text-(--landing-accent)" />
-                  <div>
-                    <h3 className="text-lg font-bold">{title}</h3>
-                    <p className="mt-1 max-w-prose text-pretty text-(--landing-muted)">{description}</p>
-                  </div>
+                <li key={title}>
+                  <Icon size={28} weight="duotone" aria-hidden className="text-(--landing-accent)" />
+                  <h3 className="mt-3 text-lg font-bold">{title}</h3>
+                  <p className="mt-1 text-pretty text-(--landing-muted)">{description}</p>
                 </li>
               ))}
             </ul>
           </div>
         </section>
+
+        <DemoAccess />
 
         <MenuSample />
 

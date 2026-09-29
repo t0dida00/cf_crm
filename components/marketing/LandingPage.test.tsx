@@ -7,7 +7,7 @@ vi.mock("@/components/common/ContactForm", () => ({ ContactForm: () => null }));
 
 import { LandingPage } from "./LandingPage";
 import { InstructionPage } from "./InstructionPage";
-import { TICKETS } from "./TicketRail";
+import { TICKETS, ticketVisibility } from "./TicketRail";
 
 afterEach(cleanup);
 
@@ -34,12 +34,18 @@ describe("LandingPage", () => {
 
   test("the ticket rail is one image with a description", () => {
     render(<LandingPage />);
-    const rail = screen.getByRole("img", { name: /order tickets on the kitchen rail/ });
+    const rail = screen.getByRole("img", { name: /order tickets on the kitchen rail/i });
     expect(rail.querySelectorAll(".ticket-drop")).toHaveLength(1);
   });
 });
 
 describe("TicketRail", () => {
+  test("the two newest tickets always hang; older ones only where the rail has room", () => {
+    expect([0, 1].map(ticketVisibility)).toEqual([undefined, undefined]);
+    expect(ticketVisibility(2)).toBe("hidden sm:block lg:hidden");
+    expect(ticketVisibility(3)).toBe("hidden min-[880px]:block lg:hidden");
+  });
+
   test("exactly one ticket is the new order", () => {
     expect(TICKETS.filter((t) => t.fresh).map((t) => t.status)).toEqual(["New"]);
   });
