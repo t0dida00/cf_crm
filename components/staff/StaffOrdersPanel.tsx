@@ -26,11 +26,13 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
-import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/useAsyncAction";
+import { savedMessage, useAsyncAction } from "@/hooks/useAsyncAction";
 import { hhmm } from "@/lib/range";
 import { orderTone } from "@/lib/tone";
 import type { Order } from "@/lib/types";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useTranslation } from "react-i18next";
+import { statusLabel } from "@/lib/i18n/labels";
 
 export function StaffOrdersPanel() {
   const {
@@ -43,6 +45,7 @@ export function StaffOrdersPanel() {
     setOrderLineQty,
     addOrderLine,
   } = useWorkspace();
+  const { t } = useTranslation();
   const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 300);
@@ -127,20 +130,20 @@ export function StaffOrdersPanel() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search order ID"
-            aria-label="Search order ID"
+            placeholder={t("staff.orders.search")}
+            aria-label={t("staff.orders.search")}
             className="pl-9"
           />
         </div>
         <div className="hidden flex-1 sm:block" />
         {/* <Button size="sm" onClick={startCreate}>
           <Plus size={14} weight="bold" />
-          New order
+          {t("staff.orders.new")}
         </Button> */}
       </div>
 
       {open.length === 0 ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">No open orders.</p>
+        <p className="py-12 text-center text-sm text-muted-foreground">{t("staff.orders.none")}</p>
       ) : (
         // The rail of kitchen tickets: one paper ticket per open order.
         <ul className="grid grid-cols-1 items-start gap-x-4 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))]">
@@ -152,7 +155,7 @@ export function StaffOrdersPanel() {
             return (
               <li
                 key={order.id}
-                aria-label={`${order.tableName}, ${order.code}, ${order.status}`}
+                aria-label={t("staff.orders.ticketLabel", { table: order.tableName, code: order.code, status: statusLabel(t, order.status) })}
                 className={cn(
                   "ticket-torn border-x border-t bg-white px-5 pt-4 pb-7 shadow-[0_10px_20px_-14px_rgb(21_32_45/0.4)]",
                   isNew ? "border-t-4 border-t-[#f0b232]" : "",
@@ -161,12 +164,12 @@ export function StaffOrdersPanel() {
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="min-w-0 truncate text-2xl font-extrabold">{order.tableName}</span>
                   <time className="shrink-0 text-sm font-semibold text-muted-foreground" dateTime={new Date(order.ts).toISOString()}>
-                    Opened {hhmm(order.ts)}
+                    {t("staff.orders.opened", { time: hhmm(order.ts) })}
                   </time>
                 </div>
                 <div className="mt-1 flex items-center gap-2.5">
                   <span className="text-[13px] font-semibold text-muted-foreground">{order.code}</span>
-                  <Badge className={orderTone(order.status, flow)}>{order.status}</Badge>
+                  <Badge className={orderTone(order.status, flow)}>{statusLabel(t, order.status)}</Badge>
                 </div>
 
                 <div className="mt-3 space-y-1.5 border-t border-dashed border-foreground/40 pt-3">
@@ -185,7 +188,7 @@ export function StaffOrdersPanel() {
                 </div>
 
                 <div className="mt-3 flex items-baseline justify-between border-t border-dashed border-foreground/40 pt-3">
-                  <span className="text-sm font-semibold">Total</span>
+                  <span className="text-sm font-semibold">{t("staff.orders.total")}</span>
                   <span className="text-lg font-bold tabular-nums">{fmt(order.total)}</span>
                 </div>
 
@@ -200,10 +203,10 @@ export function StaffOrdersPanel() {
                           setServingId(order.id);
                           return;
                         }
-                        run(`advance-${order.id}`, () => advanceOrder(order.id), "Failed to update order.");
+                        run(`advance-${order.id}`, () => advanceOrder(order.id), t("staff.orders.updateFailed"));
                       }}
                     >
-                      {flow[i + 1]}
+                      {statusLabel(t, flow[i + 1])}
                       <ArrowRight size={12} weight="bold" aria-hidden />
                     </Button>
                   )}
@@ -215,17 +218,17 @@ export function StaffOrdersPanel() {
                       setEditId(order.id);
                     }}
                   >
-                    Modify
+                    {t("staff.orders.modify")}
                   </Button>
                   <span className="flex-1" />
                   <button
                     type="button"
                     disabled={isPending(`delete-${order.id}`)}
                     onClick={() =>
-                      run(`delete-${order.id}`, () => deleteOrder(order.id), "Failed to delete order.")
+                      run(`delete-${order.id}`, () => deleteOrder(order.id), t("staff.orders.deleteFailed"))
                     }
                     className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
-                    aria-label={`Delete ${order.code}`}
+                    aria-label={t("staff.orders.deleteName", { code: order.code })}
                   >
                     <Trash size={15} weight="bold" aria-hidden />
                   </button>
@@ -240,7 +243,7 @@ export function StaffOrdersPanel() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editing ? `Modify ${editing.code} at ${editing.tableName}` : ""}
+              {editing ? t("staff.orders.modifyTitle", { code: editing.code, table: editing.tableName }) : ""}
             </DialogTitle>
           </DialogHeader>
           {editing && (
@@ -263,7 +266,7 @@ export function StaffOrdersPanel() {
                           )
                         }
                         className="flex size-6.5 items-center justify-center rounded-full bg-white text-foreground disabled:pointer-events-none disabled:opacity-50"
-                        aria-label={`Decrease ${line.name}`}
+                        aria-label={t("staff.orders.decrease", { name: line.name })}
                       >
                         −
                       </button>
@@ -277,7 +280,7 @@ export function StaffOrdersPanel() {
                           )
                         }
                         className="flex size-6.5 items-center justify-center rounded-full bg-brand-700 text-white disabled:pointer-events-none disabled:opacity-50"
-                        aria-label={`Increase ${line.name}`}
+                        aria-label={t("staff.orders.increase", { name: line.name })}
                       >
                         +
                       </button>
@@ -288,7 +291,7 @@ export function StaffOrdersPanel() {
 
               <div className="flex items-center gap-2.5">
                 <Select value={addDishId} onValueChange={setAddDishId}>
-                  <SelectTrigger className="flex-1" aria-label="Add a dish">
+                  <SelectTrigger className="flex-1" aria-label={t("staff.orders.addDish")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -306,12 +309,12 @@ export function StaffOrdersPanel() {
                     addDishId && run("add-line", () => addOrderLine(editing.id, addDishId))
                   }
                 >
-                  Add item
+                  {t("staff.orders.addItem")}
                 </Button>
               </div>
 
               <div className="flex items-center justify-between border-t pt-3.5">
-                <span className="text-sm font-semibold">Order total</span>
+                <span className="text-sm font-semibold">{t("staff.orders.orderTotal")}</span>
                 <span className="text-xl font-bold">{fmt(editing.total)}</span>
               </div>
             </div>
@@ -323,14 +326,14 @@ export function StaffOrdersPanel() {
                 className="mr-auto"
                 loading={isPending(`delete-${editing.id}`)}
                 onClick={async () => {
-                  const ok = await run(`delete-${editing.id}`, () => deleteOrder(editing.id), "Failed to delete order.");
+                  const ok = await run(`delete-${editing.id}`, () => deleteOrder(editing.id), t("staff.orders.deleteFailed"));
                   if (ok) setEditId(null);
                 }}
               >
-                Delete order
+                {t("staff.orders.deleteOrder")}
               </Button>
             )}
-            <Button onClick={() => setEditId(null)}>Done</Button>
+            <Button onClick={() => setEditId(null)}>{t("staff.orders.done")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -339,13 +342,13 @@ export function StaffOrdersPanel() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {serving ? `Confirm ${serving.code} · ${serving.tableName}` : ""}
+              {serving ? t("staff.orders.confirmTitle", { code: serving.code, table: serving.tableName }) : ""}
             </DialogTitle>
           </DialogHeader>
           {serving && (
             <div className="space-y-1">
               <p className="mb-2 text-[13px] text-muted-foreground">
-                Check off each dish as it leaves the kitchen.
+                {t("staff.orders.checkOff")}
               </p>
               {serving.lines.map((line) => {
                 const checked = checkedItems.has(line.itemId);
@@ -374,7 +377,7 @@ export function StaffOrdersPanel() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setServingId(null)}>
-              Cancel
+              {t("staff.orders.cancel")}
             </Button>
             <Button
               disabled={!allChecked}
@@ -384,12 +387,12 @@ export function StaffOrdersPanel() {
                 const ok = await run(
                   `advance-${serving.id}`,
                   () => advanceOrder(serving.id),
-                  "Failed to update order.",
+                  t("staff.orders.updateFailed"),
                 );
                 if (ok) setServingId(null);
               }}
             >
-              {serving ? flow[flow.indexOf(serving.status) + 1] : ""}
+              {serving ? statusLabel(t, flow[flow.indexOf(serving.status) + 1]) : ""}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -398,11 +401,11 @@ export function StaffOrdersPanel() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>New order</DialogTitle>
+            <DialogTitle>{t("staff.orders.new")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="staff-orders-panel-table">Table</Label>
+              <Label htmlFor="staff-orders-panel-table">{t("staff.orders.table")}</Label>
               <Select
                 value={form.tableName}
                 onValueChange={(tableName) => setForm((f) => ({ ...f, tableName }))}
@@ -411,16 +414,16 @@ export function StaffOrdersPanel() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {workspace.tables.map((t) => (
-                    <SelectItem key={t.id} value={t.name}>
-                      {t.name}
+                  {workspace.tables.map((table) => (
+                    <SelectItem key={table.id} value={table.name}>
+                      {table.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="staff-orders-panel-dish">Dish</Label>
+              <Label htmlFor="staff-orders-panel-dish">{t("staff.orders.dish")}</Label>
               <Select
                 value={form.itemId}
                 onValueChange={(itemId) => setForm((f) => ({ ...f, itemId }))}
@@ -438,7 +441,7 @@ export function StaffOrdersPanel() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="staff-order-qty">Quantity</RequiredLabel>
+              <RequiredLabel htmlFor="staff-order-qty">{t("staff.orders.quantity")}</RequiredLabel>
               <Input
                 id="staff-order-qty"
                 type="number"
@@ -449,19 +452,19 @@ export function StaffOrdersPanel() {
                 onKeyDown={blockInvalidNumberKeys({ whole: true })}
                 onChange={(e) => setForm((f) => ({ ...f, qty: e.target.value }))}
                 {...fieldErrorProps("staff-order-qty", qtyError)}
-                onBlur={() => setQtyError(countError(form.qty, "Quantity"))}
+                onBlur={() => setQtyError(countError(form.qty, "quantity"))}
               />
               <FieldError id="staff-order-qty" message={qtyError} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>
-              Cancel
+              {t("staff.orders.cancel")}
             </Button>
             <Button
               loading={isPending("create-order")}
               onClick={async () => {
-                const qtyProblem = countError(form.qty, "Quantity");
+                const qtyProblem = countError(form.qty, "quantity");
                 setQtyError(qtyProblem);
                 if (qtyProblem) return;
                 if (!form.tableName || !form.itemId) return;
@@ -470,12 +473,12 @@ export function StaffOrdersPanel() {
                     tableName: form.tableName,
                     itemId: form.itemId,
                     qty: Number(form.qty),
-                  }), undefined, SAVED_MESSAGE
+                  }), undefined, savedMessage()
                 );
                 if (ok) setCreateOpen(false);
               }}
             >
-              Open order
+              {t("staff.orders.open")}
             </Button>
           </DialogFooter>
         </DialogContent>

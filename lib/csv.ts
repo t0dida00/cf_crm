@@ -1,3 +1,5 @@
+import { t } from "./i18n";
+
 /** CSV and UTF-8 for every file Tably reads or writes: parse and write rows,
  * mark files as UTF-8 for spreadsheet apps, and read picked files strictly. */
 
@@ -11,9 +13,7 @@ export const UTF8_BOM = "\uFEFF";
 /** The file isn't UTF-8 (usually Excel's plain "CSV (Comma delimited)"). */
 export class NotUtf8Error extends Error {
   constructor() {
-    super(
-      'This file isn\'t saved as UTF-8, so accented letters (Vietnamese, for example) would come out wrong. In Excel, use File > Save As > "CSV UTF-8 (Comma delimited)"; in Google Sheets, File > Download > CSV. Then import it again.',
-    );
+    super(t("admin.csv.notUtf8"));
   }
 }
 

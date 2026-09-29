@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+import { hasZone } from "@/lib/zone";
 import { ArrowRight, SquaresFour } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
@@ -9,15 +11,16 @@ import type { Booking } from "@/lib/types";
 
 /** Assigns a free table to a booking (the table is marked Booked), or releases it. */
 export function BookingAssignDialog({ booking, onClose }: { booking: Booking | null; onClose: () => void }) {
+  const { t } = useTranslation();
   const { workspace, assignBooking, unassignBooking } = useWorkspace();
   const { run, isPending } = useAsyncAction();
-  const freeTables = workspace.tables.filter((t) => t.state === "Free");
+  const freeTables = workspace.tables.filter((table) => table.state === "Free");
 
   return (
     <Dialog open={!!booking} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{booking ? `${booking.name} · ${booking.time}` : ""}</DialogTitle>
+          <DialogTitle>{booking ? t("bookings.assignTitle", { name: booking.name, time: booking.time }) : ""}</DialogTitle>
         </DialogHeader>
         {booking && (
           <div className="space-y-3">
@@ -26,18 +29,18 @@ export function BookingAssignDialog({ booking, onClose }: { booking: Booking | n
             </p>
             <div className="space-y-2">
               {freeTables.length === 0 ? (
-                <p className="py-6 text-center text-sm text-muted-foreground">No free tables right now.</p>
+                <p className="py-6 text-center text-sm text-muted-foreground">{t("bookings.noFreeTables")}</p>
               ) : (
-                freeTables.map((t) => (
+                freeTables.map((table) => (
                   <button
-                    key={t.id}
+                    key={table.id}
                     type="button"
                     disabled={isPending(`assign-${booking.id}`)}
                     onClick={async () => {
                       const ok = await run(
                         `assign-${booking.id}`,
-                        () => assignBooking(booking.id, t.id),
-                        "Failed to assign table.",
+                        () => assignBooking(booking.id, table.id),
+                        t("bookings.assignFailed"),
                       );
                       if (ok) onClose();
                     }}
@@ -45,9 +48,9 @@ export function BookingAssignDialog({ booking, onClose }: { booking: Booking | n
                   >
                     <SquaresFour size={17} weight="bold" className="text-brand-500" />
                     <span className="flex-1">
-                      <span className="block text-[15px] font-semibold">{t.name}</span>
+                      <span className="block text-[15px] font-semibold">{table.name}</span>
                       <span className="block text-xs text-muted-foreground">
-                        {t.seats} seats{t.zone ? ` · ${t.zone}` : ""}
+                        {t("bookings.seats", { n: table.seats })}{hasZone(table.zone) ? `, ${table.zone}` : ""}
                       </span>
                     </span>
                     <ArrowRight size={14} weight="bold" className="text-muted-foreground" />
@@ -64,12 +67,12 @@ export function BookingAssignDialog({ booking, onClose }: { booking: Booking | n
                     const ok = await run(
                       `unassign-${booking.id}`,
                       () => unassignBooking(booking.id),
-                      "Failed to release table.",
+                      t("bookings.releaseFailed"),
                     );
                     if (ok) onClose();
                   }}
                 >
-                  Release table
+                  {t("bookings.release")}
                 </Button>
               </div>
             )}

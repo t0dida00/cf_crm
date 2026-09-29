@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen, within } from "@testing-librar
 import { afterEach, describe, expect, test, vi } from "vitest";
 import type { Category, Dish } from "@/lib/types";
 import { axeViolations } from "@/test/axe";
+import { i18n } from "@/lib/i18n";
 import { ClientShell } from "./ClientShell";
 
 vi.mock("@/components/common/DishImage", () => ({ DishImage: () => null }));
@@ -49,14 +50,14 @@ describe("ClientShell keyboard focus", () => {
   test("a new screen focuses its heading, so it's announced", () => {
     renderShell();
     fireEvent.click(screen.getByRole("button", { name: "Add Coca cola" }));
-    fireEvent.click(screen.getByRole("button", { name: /Order · 1 item/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Order, 1 item/ }));
     expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Your order" }));
   });
 
   test("an order error is announced", async () => {
     renderShell(vi.fn(async () => Promise.reject(new Error("Kitchen closed"))));
     fireEvent.click(screen.getByRole("button", { name: "Add Coca cola" }));
-    fireEvent.click(screen.getByRole("button", { name: /Order · 1 item/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Order, 1 item/ }));
     const place = screen.getAllByRole("button").find((b) => /place|confirm|send/i.test(b.textContent ?? ""));
     await act(async () => fireEvent.click(place!));
     expect(screen.getByRole("alert")).toBeTruthy();
@@ -66,7 +67,7 @@ describe("ClientShell keyboard focus", () => {
     const { container } = renderShell();
     expect(await axeViolations(container)).toEqual([]);
     fireEvent.click(screen.getByRole("button", { name: "Add Coca cola" }));
-    fireEvent.click(screen.getByRole("button", { name: /Order · 1 item/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Order, 1 item/ }));
     expect(await axeViolations(container)).toEqual([]);
   });
 });
@@ -112,5 +113,21 @@ describe("ClientShell brochure", () => {
     const nav = screen.getByRole("navigation", { name: "Menu sections" });
     fireEvent.click(within(nav).getByRole("button", { name: "Drinks" }));
     expect(within(nav).getByRole("button", { name: "Drinks" }).getAttribute("aria-current")).toBe("page");
+  });
+});
+
+describe("ClientShell in Vietnamese", () => {
+  afterEach(() => i18n.changeLanguage("en"));
+
+  test("the guest menu, its actions and tags follow the chosen language", async () => {
+    await i18n.changeLanguage("vi");
+    renderShell();
+    expect(screen.getByRole("button", { name: "Gọi phục vụ" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Thanh toán" })).toBeTruthy();
+    expect(screen.getAllByText("Chay").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Bán chạy").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "Thêm Coca cola" }));
+    expect(screen.getByRole("button", { name: /Gọi món, 1 món/ })).toBeTruthy();
+    expect(screen.getByText("Trang 1 / 2")).toBeTruthy();
   });
 });

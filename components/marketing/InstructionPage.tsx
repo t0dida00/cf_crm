@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   Bell,
@@ -20,156 +23,39 @@ import {
 } from "@phosphor-icons/react/ssr";
 import { DISPLAY, MarketingFooter, MarketingHeader, MarketingShell } from "./MarketingTheme";
 
+/* Words are translation keys under marketing.guide. */
 const ROLES = [
-  {
-    id: "client",
-    label: "Client",
-    eyebrow: "No login required",
-    title: "The guest ordering from their table",
-    description:
-      "Guests reach Tably by scanning the QR code on their table — no app install, no account.",
-    features: [
-      {
-        icon: QrCode,
-        title: "Scan & browse",
-        description: "Scan the table's QR code to open the menu, grouped by category, right in the browser.",
-      },
-      {
-        icon: ShoppingCart,
-        title: "Build an order",
-        description: "Add items to a cart, adjust quantities, and leave a note for the kitchen on any item.",
-      },
-      {
-        icon: Bell,
-        title: "Call staff or checkout",
-        description: "Tap \"Call staff\" or \"Checkout\" to ping the floor instantly — no waving to get attention.",
-      },
-      {
-        icon: ClockCounterClockwise,
-        title: "Order history",
-        description: "Review every order placed at the table this visit, with line items and totals.",
-      },
-    ],
-  },
+  { id: "client", features: [[QrCode, "scan"], [ShoppingCart, "cart"], [Bell, "call"], [ClockCounterClockwise, "history"]] },
   {
     id: "staff",
-    label: "Staff",
-    eyebrow: "Sign in required",
-    title: "The floor and kitchen team",
-    description: "Staff sign in to a shared dashboard that tracks every table and ticket in real time.",
-    features: [
-      {
-        icon: Receipt,
-        title: "Live orders",
-        description: "New orders land on the board instantly, with a notification the moment a guest checks out.",
-      },
-      {
-        icon: SquaresFour,
-        title: "Table status",
-        description: "See every table's state — free, seated, booked, or finished — and print the bill at checkout.",
-      },
-      {
-        icon: CalendarCheck,
-        title: "Bookings",
-        description: "View upcoming reservations alongside live table activity.",
-      },
-      {
-        icon: ForkKnife,
-        title: "Menu reference",
-        description: "Look up dish details while serving, plus a closed-orders history for past service.",
-      },
-      {
-        icon: Bell,
-        title: "Guest requests",
-        description: "A bell icon surfaces pending \"call staff\" and \"checkout\" requests from guests, ready to resolve.",
-      },
-    ],
+    features: [[Receipt, "liveOrders"], [SquaresFour, "tableStatus"], [CalendarCheck, "bookings"], [ForkKnife, "menuRef"], [Bell, "requests"]],
   },
   {
     id: "admin",
-    label: "Admin",
-    eyebrow: "Owner access",
-    title: "The workspace owner",
-    description: "Admins configure the workspace and get the full picture across every table and shift.",
     features: [
-      {
-        icon: ChartBar,
-        title: "Dashboard",
-        description: "Track revenue, top dishes, and busy hours over any period.",
-      },
-      {
-        icon: SquaresFour,
-        title: "Tables & categories",
-        description: "Set up the floor plan and organize the menu into categories.",
-      },
-      {
-        icon: ForkKnife,
-        title: "Menu management",
-        description: "Add, edit, and price every dish guests can order.",
-      },
-      {
-        icon: Receipt,
-        title: "Orders & bookings",
-        description: "Browse, filter, and export order history, and manage upcoming reservations.",
-      },
-      {
-        icon: Users,
-        title: "Staff accounts",
-        description: "Add staff members or disable their access when needed.",
-      },
-      {
-        icon: QrCode,
-        title: "Table QR codes",
-        description: "Generate the QR code for every table — the link guests scan to reach the menu.",
-      },
-      {
-        icon: Gear,
-        title: "Settings",
-        description: "Configure the workspace's tax rate and currency.",
-      },
+      [ChartBar, "dashboard"],
+      [SquaresFour, "tablesCats"],
+      [ForkKnife, "menuMgmt"],
+      [Receipt, "ordersBookings"],
+      [Users, "staffAccounts"],
+      [QrCode, "qr"],
+      [Gear, "settings"],
     ],
   },
-];
+] as const;
 
 const WORKFLOW_STEPS = [
-  {
-    icon: UserPlus,
-    title: "Create an account",
-    description: "Sign up and set up your workspace as the admin.",
-  },
-  {
-    icon: SquaresFour,
-    title: "Create a table",
-    description: "Add each table in your venue from the Tables panel.",
-  },
-  {
-    icon: QrCode,
-    title: "QR generates automatically",
-    description: "Every table gets its own QR code the moment it's created — nothing else to set up.",
-  },
-  {
-    icon: Download,
-    title: "Download & place the QR",
-    description: "Download the code and stick it on the matching table for guests to scan.",
-  },
-  {
-    icon: ForkKnife,
-    title: "Guests scan & order",
-    description: "Scanning opens the menu — guests browse and place their order straight from their phone.",
-  },
-  {
-    icon: Receipt,
-    title: "Staff & admin see the order",
-    description: "The order lands on the live board instantly, tied to its table.",
-  },
-  {
-    icon: ListChecks,
-    title: "Order moves through status",
-    description: "Staff track it from New → Preparing → Served → Paid as service progresses.",
-  },
-];
+  [UserPlus, "account"],
+  [SquaresFour, "table"],
+  [QrCode, "qr"],
+  [Download, "download"],
+  [ForkKnife, "order"],
+  [Receipt, "see"],
+  [ListChecks, "status"],
+] as const;
 
 export function InstructionPage() {
+  const { t } = useTranslation();
   return (
     <MarketingShell>
       <MarketingHeader>
@@ -178,7 +64,7 @@ export function InstructionPage() {
           className="flex items-center gap-1.5 rounded-sm text-sm font-medium text-(--landing-muted) hover:text-(--landing-ink)"
         >
           <ArrowLeft size={15} weight="bold" aria-hidden />
-          Back to home
+          {t("common.backToHome")}
         </Link>
       </MarketingHeader>
 
@@ -195,14 +81,13 @@ export function InstructionPage() {
             className="mt-5 text-sm font-semibold"
             style={{ color: "var(--landing-accent)" }}
           >
-            How Tably works
+            {t("marketing.guide.kicker")}
           </p>
           <h1 className={`${DISPLAY} mx-auto mt-4 max-w-2xl text-6xl text-balance sm:text-7xl`}>
-            One app, three roles
+            {t("marketing.guide.title")}
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-lg text-pretty" style={{ color: "var(--landing-muted)" }}>
-            Every table interaction in Tably flows through one of three views. Here&apos;s what each
-            one can do.
+            {t("marketing.guide.intro")}
           </p>
         </section>
 
@@ -222,20 +107,20 @@ export function InstructionPage() {
                   className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold"
                   style={{ backgroundColor: "var(--landing-card)", border: "1px solid var(--landing-border)", color: "var(--landing-accent)" }}
                 >
-                  {role.label}: {role.eyebrow.toLowerCase()}
+                  {t(`marketing.guide.roles.${role.id}.label`)}: {t(`marketing.guide.roles.${role.id}.eyebrow`)}
                 </span>
                 <h2 className={`${DISPLAY} mt-4 text-5xl text-balance`}>
-                  {role.title}
+                  {t(`marketing.guide.roles.${role.id}.title`)}
                 </h2>
                 <p className="mt-2.5 text-pretty" style={{ color: "var(--landing-muted)" }}>
-                  {role.description}
+                  {t(`marketing.guide.roles.${role.id}.body`)}
                 </p>
               </div>
 
               <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {role.features.map(({ icon: Icon, title, description }) => (
+                {role.features.map(([Icon, key]) => (
                   <div
-                    key={title}
+                    key={key}
                     className="rounded-2xl border p-6"
                     style={{ borderColor: "var(--landing-border)", backgroundColor: "var(--landing-card)" }}
                   >
@@ -245,9 +130,9 @@ export function InstructionPage() {
                     >
                       <Icon size={20} weight="bold" />
                     </span>
-                    <h3 className="mt-4 text-base font-semibold">{title}</h3>
+                    <h3 className="mt-4 text-base font-semibold">{t(`marketing.guide.features.${key}.title`)}</h3>
                     <p className="mt-1.5 text-sm text-pretty" style={{ color: "var(--landing-muted)" }}>
-                      {description}
+                      {t(`marketing.guide.features.${key}.body`)}
                     </p>
                   </div>
                 ))}
@@ -270,20 +155,20 @@ export function InstructionPage() {
                 style={{ backgroundColor: "var(--landing-card)", border: "1px solid var(--landing-border)", color: "var(--landing-accent)" }}
               >
                 <Flag size={13} weight="bold" />
-                End to end
+                {t("marketing.guide.loop.kicker")}
               </span>
               <h2 className={`${DISPLAY} mt-4 text-5xl text-balance`}>
-                From sign-up to a paid order
+                {t("marketing.guide.loop.title")}
               </h2>
               <p className="mt-2.5 text-pretty" style={{ color: "var(--landing-muted)" }}>
-                Here&apos;s the full loop, start to finish.
+                {t("marketing.guide.loop.intro")}
               </p>
             </div>
 
             <ol className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {WORKFLOW_STEPS.map(({ icon: Icon, title, description }, i) => (
+              {WORKFLOW_STEPS.map(([Icon, key], i) => (
                 <li
-                  key={title}
+                  key={key}
                   className="relative rounded-2xl border p-6"
                   style={{ borderColor: "var(--landing-border)", backgroundColor: "var(--landing-card)" }}
                 >
@@ -298,12 +183,12 @@ export function InstructionPage() {
                       className="text-xs font-semibold tracking-wide"
                       style={{ color: "var(--landing-muted)" }}
                     >
-                      Step {i + 1}
+                      {t("marketing.guide.loop.step", { n: i + 1 })}
                     </span>
                   </div>
-                  <h3 className="mt-4 text-base font-semibold">{title}</h3>
+                  <h3 className="mt-4 text-base font-semibold">{t(`marketing.guide.steps.${key}.title`)}</h3>
                   <p className="mt-1.5 text-sm text-pretty" style={{ color: "var(--landing-muted)" }}>
-                    {description}
+                    {t(`marketing.guide.steps.${key}.body`)}
                   </p>
                 </li>
               ))}

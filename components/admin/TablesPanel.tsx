@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+import { statusLabel } from "@/lib/i18n/labels";
 import { useEffect, useState } from "react";
 import { ClockCounterClockwise, PencilSimple, Plus } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/Badge";
@@ -25,7 +27,7 @@ import {
 } from "@/components/ui/Select";
 import { SessionDetailDialog } from "@/components/orders/SessionDetailDialog";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
-import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/useAsyncAction";
+import { savedMessage, useAsyncAction } from "@/hooks/useAsyncAction";
 import { groupOrdersIntoSessions, type OrderSession } from "@/lib/orderMath";
 import { formatStamp } from "@/lib/range";
 import { orderTone } from "@/lib/tone";
@@ -39,6 +41,7 @@ const NEW_ZONE = "__new";
 const NO_ZONE = "__none";
 
 export function TablesPanel({ createSignal }: { createSignal: number }) {
+  const { t } = useTranslation();
   const { workspace, flow, fmt, saveTable, deleteTable } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const [editing, setEditing] = useState<TableRec | null>(null);
@@ -55,7 +58,7 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
     setEditing(null);
     setErrors({});
     setForm({
-      name: `Table ${workspace.tables.length + 1}`,
+      name: t("common.tableName", { n: workspace.tables.length + 1 }),
       seats: "4",
       zone: workspace.zones[0] ?? NO_ZONE,
       newZone: "",
@@ -87,7 +90,7 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
         name: form.name.trim(),
         seats: Number(form.seats),
         zone,
-      }), undefined, SAVED_MESSAGE
+      }), undefined, savedMessage()
     );
     if (ok) setOpen(false);
   };
@@ -99,14 +102,15 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
         {groups.map(({ zone, tables }, i) => {
           const seats = tables.reduce((n, t) => n + t.seats, 0);
           const last = i === groups.length - 1;
-          const heading = zone || (groups.length > 1 ? "No zone" : "");
+          const heading = zone || (groups.length > 1 ? t("admin.tables.noZone") : "");
           return (
-            <section key={zone || NO_ZONE} aria-label={heading || "Tables"}>
+            <section key={zone || NO_ZONE} aria-label={heading || t("admin.tables.tables")}>
               {heading && (
                 <h2 className="mb-3 flex items-baseline gap-3">
                   <span className="text-lg font-bold">{heading}</span>
                   <span className="text-sm text-muted-foreground">
-                    {tables.length} {tables.length === 1 ? "table" : "tables"}, {seats} {seats === 1 ? "seat" : "seats"}
+                    {t("admin.tables.count", { count: tables.length, n: tables.length })},{" "}
+                    {t("admin.tables.seats", { count: seats, n: seats })}
                   </span>
                 </h2>
               )}
@@ -126,11 +130,11 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
         {groups.length === 0 && (
           <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed p-6">
             <p className="text-sm text-muted-foreground">
-              No tables yet. Add the tables guests sit at; each one gets its own QR code.
+              {t("admin.tables.empty")}
             </p>
             <Button onClick={startCreate}>
               <Plus size={16} weight="bold" aria-hidden />
-              Add table
+              {t("admin.tables.add")}
             </Button>
           </div>
         )}
@@ -139,11 +143,11 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit table" : "New table"}</DialogTitle>
+            <DialogTitle>{editing ? t("admin.tables.edit") : t("admin.tables.new")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="table-name">Name</RequiredLabel>
+              <RequiredLabel htmlFor="table-name">{t("admin.tables.name")}</RequiredLabel>
               <Input
                 id="table-name"
                 required
@@ -155,7 +159,7 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
               <FieldError id="table-name" message={errors.name} />
             </div>
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="table-seats">Seats</RequiredLabel>
+              <RequiredLabel htmlFor="table-seats">{t("admin.tables.seatsLabel")}</RequiredLabel>
               <Input
                 id="table-seats"
                 type="number"
@@ -171,32 +175,32 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
               <FieldError id="table-seats" message={errors.seats} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="table-zone">Zone (optional)</Label>
+              <Label htmlFor="table-zone">{t("admin.tables.zone")}</Label>
               <Select
                 value={form.zone}
                 onValueChange={(zone) => setForm((f) => ({ ...f, zone }))}
               >
                 <SelectTrigger id="table-zone" className="w-full">
-                  <SelectValue placeholder="No zone" />
+                  <SelectValue placeholder={t("admin.tables.noZone")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_ZONE}>No zone</SelectItem>
+                  <SelectItem value={NO_ZONE}>{t("admin.tables.noZone")}</SelectItem>
                   {workspace.zones.map((zone) => (
                     <SelectItem key={zone} value={zone}>
                       {zone}
                     </SelectItem>
                   ))}
-                  <SelectItem value={NEW_ZONE}>+ New zone…</SelectItem>
+                  <SelectItem value={NEW_ZONE}>{t("admin.tables.newZone")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {form.zone === NEW_ZONE && (
               <div className="space-y-1.5">
-                <Label htmlFor="table-new-zone">New zone name</Label>
+                <Label htmlFor="table-new-zone">{t("admin.tables.newZoneName")}</Label>
                 <Input
                   id="table-new-zone"
                   value={form.newZone}
-                  placeholder="e.g. Garden (leave blank for no zone)"
+                  placeholder={t("admin.tables.newZonePlaceholder")}
                   onChange={(e) => setForm((f) => ({ ...f, newZone: e.target.value }))}
                 />
               </div>
@@ -209,18 +213,18 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
                 className="mr-auto"
                 loading={isPending(`delete-${editing.id}`)}
                 onClick={async () => {
-                  const ok = await run(`delete-${editing.id}`, () => deleteTable(editing.id), "Failed to delete table.");
+                  const ok = await run(`delete-${editing.id}`, () => deleteTable(editing.id), t("admin.tables.deleteFailed"));
                   if (ok) setOpen(false);
                 }}
               >
-                Delete
+                {t("admin.tables.delete")}
               </Button>
             )}
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("admin.tables.cancel")}
             </Button>
             <Button loading={isPending("save-table")} onClick={submit}>
-              {editing ? "Save table" : "Create table"}
+              {editing ? t("admin.tables.save") : t("admin.tables.create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -229,12 +233,12 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
       <Dialog open={!!historyTable} onOpenChange={(o) => !o && setHistoryTable(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Orders at {historyTable?.name}</DialogTitle>
+            <DialogTitle>{t("admin.tables.ordersAt", { name: historyTable?.name })}</DialogTitle>
           </DialogHeader>
           <div className="max-h-[60vh] space-y-2 overflow-y-auto">
             {historyTable && tableSessions(historyTable).length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                No orders placed at this table yet.
+                {t("admin.tables.noOrders")}
               </p>
             ) : (
               historyTable &&
@@ -248,14 +252,14 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
                     className="flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-secondary"
                   >
                     <span className="font-semibold">
-                      {multi ? `${s.orders.length} orders` : s.orders[0].code}
+                      {multi ? t("admin.tables.orderCount", { n: s.orders.length }) : s.orders[0].code}
                     </span>
                     <span className="text-sm text-muted-foreground">{formatStamp(s.ts)}</span>
                     <span className="flex-1" />
                     <span className="font-semibold">{fmt(s.total)}</span>
                     {!multi && (
                       <Badge className={orderTone(s.orders[0].status, flow)}>
-                        {s.orders[0].status}
+                        {statusLabel(t, s.orders[0].status)}
                       </Badge>
                     )}
                   </button>
@@ -272,6 +276,7 @@ export function TablesPanel({ createSignal }: { createSignal: number }) {
 }
 
 function AddTableButton({ onClick }: { onClick: () => void }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
@@ -279,7 +284,7 @@ function AddTableButton({ onClick }: { onClick: () => void }) {
       className="flex h-full min-h-44 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input-border text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
     >
       <Plus size={18} weight="bold" aria-hidden />
-      Add table
+      {t("admin.tables.add")}
     </button>
   );
 }
@@ -289,16 +294,17 @@ const TILE_ACTION =
 
 /** A table tile's admin actions: its order history and Edit (Delete is in Edit). */
 function TileActions({ name, onHistory, onEdit }: { name: string; onHistory: () => void; onEdit: () => void }) {
+  const { t } = useTranslation();
   return (
     <span className="-mx-1 -mb-1 flex gap-1 border-t pt-2">
-      <button type="button" onClick={onHistory} className={TILE_ACTION} aria-label={`Orders at ${name}`}>
+      <button type="button" onClick={onHistory} className={TILE_ACTION} aria-label={t("admin.tables.ordersAt", { name })}>
         <ClockCounterClockwise size={15} weight="bold" aria-hidden />
         {/* Icons only on phones, where two tiles share a row. */}
-        <span className="hidden sm:inline">Orders</span>
+        <span className="hidden sm:inline">{t("admin.tables.orders")}</span>
       </button>
-      <button type="button" onClick={onEdit} className={cn(TILE_ACTION, "ml-auto")} aria-label={`Edit ${name}`}>
+      <button type="button" onClick={onEdit} className={cn(TILE_ACTION, "ml-auto")} aria-label={t("admin.tables.editName", { name })}>
         <PencilSimple size={15} weight="bold" aria-hidden />
-        <span className="hidden sm:inline">Edit</span>
+        <span className="hidden sm:inline">{t("admin.tables.editShort")}</span>
       </button>
     </span>
   );

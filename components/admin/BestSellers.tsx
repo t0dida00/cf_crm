@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslation } from "react-i18next";
 import { ErrorState, LoadingState } from "@/components/common/RequestState";
 import type { OrderStats } from "@/hooks/useOrderStats";
 import { formatNumber } from "@/lib/format";
@@ -23,10 +26,11 @@ export function BestSellers({
   error: string | null;
   onRetry: () => void;
 }) {
+  const { t } = useTranslation();
   if (status === "error") return <ErrorState message={error ?? undefined} onRetry={onRetry} className="py-6" />;
   if (pending) return <LoadingState className="py-6" />;
   if (!items.length) {
-    return <p className="py-6 text-center text-sm text-muted-foreground">Nothing sold in this range.</p>;
+    return <p className="py-6 text-center text-sm text-muted-foreground">{t("admin.dashboard.nothingSold")}</p>;
   }
   const top = Math.max(...items.map((b) => b.takings), 1);
   return (
@@ -45,7 +49,7 @@ export function BestSellers({
               />
             </div>
             <span className="w-24 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
-              {formatNumber(b.qty)} sold
+              {t("admin.dashboard.sold", { n: formatNumber(b.qty) })}
             </span>
           </div>
         </li>

@@ -1,3 +1,7 @@
+"use client";
+
+import type { DishKey } from "@/lib/lexicon";
+import { useTranslation } from "react-i18next";
 import { money } from "@/lib/format";
 
 export interface SampleLine {
@@ -6,10 +10,10 @@ export interface SampleLine {
   price: number;
 }
 
-/** Stands in when the menu is empty, so the preview still reads like a bill. */
-export const FALLBACK_LINES: SampleLine[] = [
-  { qty: 2, name: "Flat white", price: 3.2 },
-  { qty: 1, name: "Almond croissant", price: 3.6 },
+/** Stands in when the menu is empty, so the preview still reads like a bill (named per language). */
+export const FALLBACK_LINES: { qty: number; dish: DishKey; price: number }[] = [
+  { qty: 2, dish: "flatWhite", price: 3.2 },
+  { qty: 1, dish: "almondCroissant", price: 3.6 },
 ];
 
 /**
@@ -41,6 +45,7 @@ export function ReceiptPreview({
   currency: string;
   lines: SampleLine[];
 }) {
+  const { t } = useTranslation();
   const total = lines.reduce((sum, l) => sum + l.qty * l.price, 0);
   const { net, tax } = splitIncludedTax(total, taxRate);
   const fmt = (v: number) => money(v, currency);
@@ -50,13 +55,13 @@ export function ReceiptPreview({
       {/* A grey tray, so the white paper reads as paper on the white card. */}
       <div className="rounded-lg bg-secondary px-4 pt-4 pb-5">
       <div
-        aria-label="Sample receipt"
+        aria-label={t("admin.settings.receipt.label")}
         role="img"
         className="ticket-torn bg-white px-5 pt-5 pb-8 text-[13px] text-[#15202d] shadow-[0_14px_24px_-14px_rgb(21_32_45/0.45)]"
       >
         <div aria-hidden>
           <div className="text-center">
-            <p className="text-base font-bold [overflow-wrap:anywhere]">{name.trim() || "Your restaurant"}</p>
+            <p className="text-base font-bold [overflow-wrap:anywhere]">{name.trim() || t("admin.settings.receipt.yourRestaurant")}</p>
             {address.trim() && <p className="[overflow-wrap:anywhere]">{address}</p>}
             {phone.trim() && <p>{phone}</p>}
           </div>
@@ -71,24 +76,23 @@ export function ReceiptPreview({
           ))}
           <div className="my-3 border-t border-dashed border-[#15202d]" />
           <div className="flex justify-between">
-            <span>Net</span>
+            <span>{t("bill.net")}</span>
             <span className="tabular-nums">{fmt(net)}</span>
           </div>
           <div className="flex justify-between">
-            <span>Tax ({Math.max(taxRate, 0)}%)</span>
+            <span>{t("admin.settings.receipt.tax", { pct: Math.max(taxRate, 0) })}</span>
             <span className="tabular-nums">{fmt(tax)}</span>
           </div>
           <div className="my-3 border-t border-dashed border-[#15202d]" />
-          <div className="flex justify-between text-base font-bold">
-            <span>Total due</span>
-            <span className="tabular-nums">{fmt(total)}</span>
+          <div className="flex justify-between gap-3 text-base font-bold">
+            <span>{t("bill.totalDue")}</span>
+            <span className="shrink-0 tabular-nums">{fmt(total)}</span>
           </div>
         </div>
       </div>
       </div>
       <figcaption className="mt-3 text-[13px] text-muted-foreground text-pretty">
-        How a bill looks with these settings: the common tax is included in each price, so a{" "}
-        {fmt(total)} bill carries {fmt(tax)} of tax.
+        {t("admin.settings.receipt.caption", { total: fmt(total), tax: fmt(tax) })}
       </figcaption>
     </figure>
   );

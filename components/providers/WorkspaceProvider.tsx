@@ -29,6 +29,7 @@ import type {
   Workspace,
 } from "@/lib/types";
 import { LEXICON } from "@/lib/lexicon";
+import { t } from "@/lib/i18n";
 import { usePlatformSocket } from "@/hooks/usePlatformSocket";
 import { isNewer, removeById, upsertById } from "@/lib/liveMerge";
 
@@ -323,8 +324,8 @@ export function WorkspaceProvider({
   // live order list (a mutation or a real-time refetch) makes them stale.
   // Debounced: a burst of order events (busy service) refreshes them once.
   useEffect(() => {
-    const t = setTimeout(() => void queryClient.invalidateQueries({ queryKey: ["orders"] }), 1500);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => void queryClient.invalidateQueries({ queryKey: ["orders"] }), 1500);
+    return () => clearTimeout(timer);
   }, [workspace.orders, queryClient]);
 
   useEffect(() => {
@@ -370,10 +371,10 @@ export function WorkspaceProvider({
       .catch((err) => {
         if (cancelled() || isAbortError(err)) return;
         if (background) {
-          toast.error(errorMessage(err, "Couldn't refresh your workspace."));
+          toast.error(errorMessage(err, t("errors.workspaceRefresh")));
           return;
         }
-        setError(errorMessage(err, "Couldn't load your workspace."));
+        setError(errorMessage(err, t("errors.workspaceLoad")));
         setStatus("error");
       });
     return () => controller.abort();

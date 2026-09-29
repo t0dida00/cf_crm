@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+import { statusLabel } from "@/lib/i18n/labels";
 import { useMemo, useState } from "react";
 import { Printer } from "@phosphor-icons/react";
 import {
@@ -23,6 +25,7 @@ export function SessionDetailDialog({
   session: OrderSession | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const { workspace, flow, fmt } = useWorkspace();
   const { specialTaxes } = workspace.settings;
   const [billOpen, setBillOpen] = useState(false);
@@ -38,7 +41,7 @@ export function SessionDetailDialog({
         const dish = workspace.dishes.find((d) => d.id === line.itemId);
         const tax =
           dish?.taxMode === "include"
-            ? specialTaxes.find((t) => t.name === dish.taxName)
+            ? specialTaxes.find((tax) => tax.name === dish.taxName)
             : undefined;
         if (!tax) return;
         const base = (line.price * line.qty) / (1 + taxRate / 100);
@@ -50,7 +53,7 @@ export function SessionDetailDialog({
     return {
       net,
       lines: [
-        { label: `Common tax (${formatTaxRates(session.orders)})`, amount: commonTax },
+        { label: t("bill.commonTax", { rates: formatTaxRates(session.orders) }), amount: commonTax },
         ...Object.entries(extras).map(([label, amount]) => ({ label, amount })),
       ],
     };
@@ -67,7 +70,7 @@ export function SessionDetailDialog({
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {multi ? `${session.orders.length} orders — ${tableName}` : session.orders[0].code}
+              {multi ? t("bill.multiTitle", { n: session.orders.length, table: tableName }) : session.orders[0].code}
             </DialogTitle>
           </DialogHeader>
 
@@ -77,7 +80,7 @@ export function SessionDetailDialog({
             <span className="flex-1" />
             {!multi && (
               <Badge className={orderTone(session.orders[0].status, flow)}>
-                {session.orders[0].status}
+                {statusLabel(t, session.orders[0].status)}
               </Badge>
             )}
           </div>
@@ -91,7 +94,7 @@ export function SessionDetailDialog({
                     {formatStamp(order.ts)}
                   </span>
                   <span className="flex-1" />
-                  <Badge className={orderTone(order.status, flow)}>{order.status}</Badge>
+                  <Badge className={orderTone(order.status, flow)}>{statusLabel(t, order.status)}</Badge>
                 </div>
               )}
               {order.lines.map((line) => (
@@ -115,7 +118,7 @@ export function SessionDetailDialog({
           ))}
 
           <div className="flex justify-between pt-3.5 text-sm text-muted-foreground">
-            <span>Net</span>
+            <span>{t("bill.net")}</span>
             <span>{fmt(breakdown.net)}</span>
           </div>
           {breakdown.lines.map((line) => (
@@ -128,7 +131,7 @@ export function SessionDetailDialog({
             </div>
           ))}
           <div className="mt-3 flex items-center justify-between border-t pt-3">
-            <span className="text-sm font-semibold">{multi ? "Combined total" : "Total"}</span>
+            <span className="text-sm font-semibold">{multi ? t("bill.combinedTotal") : t("bill.total")}</span>
             <span className="text-xl font-bold">{fmt(session.total)}</span>
           </div>
 
@@ -138,7 +141,7 @@ export function SessionDetailDialog({
               style={{ backgroundColor: "#232F3F", color: "#FFF" }}
             >
               <Printer size={15} weight="bold" />
-              Print bill
+              {t("bill.printBill")}
             </Button>
           </div>
         </DialogContent>
@@ -147,7 +150,7 @@ export function SessionDetailDialog({
       <Dialog open={billOpen} onOpenChange={setBillOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Bill — {tableName}</DialogTitle>
+            <DialogTitle>{t("bill.billTitle", { table: tableName })}</DialogTitle>
           </DialogHeader>
           <div>
             <BillReceipt
@@ -163,7 +166,7 @@ export function SessionDetailDialog({
             />
             <div className="mt-5 flex items-center gap-2.5">
               <Button variant="secondary" onClick={() => setBillOpen(false)}>
-                Back
+                {t("bill.back")}
               </Button>
               <PrintReceiptButton
                 workspaceName={workspace.name}

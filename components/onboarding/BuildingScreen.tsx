@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import {
   Buildings,
@@ -10,7 +11,6 @@ import {
   Receipt,
   SquaresFour,
 } from "@phosphor-icons/react";
-import { LEXICON } from "@/lib/lexicon";
 import type { Domain } from "@/lib/types";
 
 const DURATION = 3000;
@@ -24,32 +24,33 @@ export function BuildingScreen({
   domain: Domain;
   onDone: () => void;
 }) {
-  const lex = LEXICON[domain];
 
   useEffect(() => {
     const timer = setTimeout(onDone, DURATION);
     return () => clearTimeout(timer);
   }, [onDone]);
 
+  const { t } = useTranslation();
+  const b = (key: "workspace" | "tables" | "categories" | "menu" | "orders" | "bookings") => t(`onboarding.building.${key}`);
   const cards = [
-    { Icon: Buildings, title: "Workspace", sub: name },
-    { Icon: SquaresFour, title: "Tables", sub: "Ready to add" },
-    { Icon: Folders, title: "Categories", sub: "Ready to add" },
-    { Icon: ListBullets, title: "Menu", sub: "Ready to add" },
-    { Icon: Receipt, title: "Orders", sub: "History imported" },
-    { Icon: CalendarCheck, title: "Bookings", sub: "Calendar synced" },
+    { Icon: Buildings, title: b("workspace"), sub: name },
+    { Icon: SquaresFour, title: b("tables"), sub: t("onboarding.building.readyToAdd") },
+    { Icon: Folders, title: b("categories"), sub: t("onboarding.building.readyToAdd") },
+    { Icon: ListBullets, title: b("menu"), sub: t("onboarding.building.readyToAdd") },
+    { Icon: Receipt, title: b("orders"), sub: t("onboarding.building.historyImported") },
+    { Icon: CalendarCheck, title: b("bookings"), sub: t("onboarding.building.calendarSynced") },
   ];
 
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-12">
       <div className="w-full max-w-4xl text-center">
         <div style={{ animation: "fade-up 500ms ease both" }}>
-          <p className="mb-2.5 text-xs font-semibold tracking-wide text-muted-foreground">
-            SETTING UP
+          <p className="mb-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            {t("onboarding.building.kicker")}
           </p>
-          <h1 className="text-3xl font-bold">Welcome, {name}</h1>
+          <h1 className="text-3xl font-bold">{t("onboarding.building.welcome", { name })}</h1>
           <p className="mt-2 mb-10 text-sm text-muted-foreground">
-            Assembling your {lex.label.toLowerCase()} workspace.
+            {t("onboarding.building.assembling", { kind: t(`lexicon.${domain}.label`).toLowerCase() })}
           </p>
         </div>
 

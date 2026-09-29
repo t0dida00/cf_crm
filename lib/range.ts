@@ -1,13 +1,15 @@
+import type { TFunction } from "i18next";
 import type { RangeId } from "./types";
 
-export const RANGES: { id: RangeId; label: string }[] = [
-  { id: "today", label: "Today" },
-  { id: "week", label: "Last 7 days" },
-  { id: "month", label: "This month" },
-  { id: "year", label: "This year" },
-  { id: "all", label: "All time" },
-  { id: "custom", label: "Custom range" },
-];
+/** The dashboard's ranges; their names are under range.* in the translations. */
+export const RANGES: { id: RangeId }[] = [
+  { id: "today" },
+  { id: "week" },
+  { id: "month" },
+  { id: "year" },
+  { id: "all" },
+  { id: "custom" },
+]
 
 export interface RangeState {
   id: RangeId;
@@ -49,18 +51,18 @@ export const formatStamp = (ts: number) => `${formatDate(ts)} ${hhmm(ts)}`;
 export const daysAgoStart = (days: number, now: Date = new Date()) =>
   new Date(now.getFullYear(), now.getMonth(), now.getDate() - days).getTime();
 
-export function rangeCaption(range: RangeState, oldestTs: number): string {
+export function rangeCaption(t: TFunction, range: RangeState, oldestTs: number): string {
   const today = Date.now();
   if (range.id === "all") {
-    return `All time · ${formatDate(oldestTs)} – ${formatDate(today)}`;
+    return t("range.allCaption", { from: formatDate(oldestTs), to: formatDate(today) });
   }
   if (range.id === "custom") {
     const from = range.from
       ? formatDate(new Date(`${range.from}T00:00:00`).getTime())
-      : "Start";
+      : t("range.start");
     const to = range.to
       ? formatDate(new Date(`${range.to}T00:00:00`).getTime())
-      : "Today";
+      : t("range.todayWord");
     return `${from} – ${to}`;
   }
   return `${formatDate(rangeBounds(range)[0])} – ${formatDate(today)}`;

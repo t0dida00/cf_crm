@@ -1,5 +1,6 @@
 "use client";
 
+import { t } from "@/lib/i18n";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { playNotificationSound } from "@/lib/notificationSound";
@@ -49,11 +50,11 @@ export function useNewOrderNotifications(
     if (!channel) return;
 
     const notify = (order: ApiOrder) => {
-      toast(`New order ${order.code}`, {
-        description: `${order.table_name} · ${fmt(Number(order.total))}`,
+      toast(t("shell.newOrder.title", { code: order.code }), {
+        description: t("shell.newOrder.body", { table: order.table_name, total: fmt(Number(order.total)) }),
         ...(onToastClick
           ? // With an action, stay until dismissed: staff may not reach "View" in 4 s (WCAG 2.2.1).
-            { action: { label: "View", onClick: onToastClick }, duration: Infinity }
+            { action: { label: t("shell.newOrder.view"), onClick: onToastClick }, duration: Infinity }
           : {}),
       });
       playNotificationSound();

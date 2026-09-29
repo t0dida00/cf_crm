@@ -37,6 +37,8 @@ import {
 } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { DishImage } from "@/components/common/DishImage";
+import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 import { BrochurePager } from "./BrochurePager";
 
 /** Each screen's heading: it takes focus when the screen changes, and is the fallback focus target. */
@@ -90,6 +92,7 @@ export function ClientShell({
   placeOrder,
   createTableRequest,
 }: ClientShellProps) {
+  const { t } = useTranslation();
   const validCategories = useMemo(
     () => categories.filter((c) => c.valid && dishes.some((d) => d.catId === c.id)),
     [categories, dishes],
@@ -196,7 +199,7 @@ export function ClientShell({
       setNoteOpenId(null);
       setScreen("done");
     } catch (err) {
-      setOrderError(err instanceof Error ? err.message : "Failed to place order");
+      setOrderError(err instanceof Error ? err.message : t("client.placeFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -239,8 +242,8 @@ export function ClientShell({
           {/* Sold out shows where Add would be, so it isn't repeated as a tag. */}
           {(dish.isVegan || dish.isBestSeller) && (
             <div className="mt-1 flex flex-wrap gap-1.5">
-              {dish.isVegan && <Badge className={TONE_CLASSES.green}>Vegan</Badge>}
-              {dish.isBestSeller && <Badge className={TONE_CLASSES.brand}>Best seller</Badge>}
+              {dish.isVegan && <Badge className={TONE_CLASSES.green}>{t("common.tags.vegan")}</Badge>}
+              {dish.isBestSeller && <Badge className={TONE_CLASSES.brand}>{t("common.tags.bestSeller")}</Badge>}
             </div>
           )}
           {dish.description && (
@@ -249,10 +252,10 @@ export function ClientShell({
           {noteOpen ? (
             <div className="mt-2">
               <textarea
-                aria-label={`Note for the kitchen: ${dish.name}`}
+                aria-label={t("client.noteFor", { name: dish.name })}
                 value={noteText}
                 onChange={(e) => setNotes((n) => ({ ...n, [dish.id]: e.target.value }))}
-                placeholder="Add a note for the kitchen, e.g. no onion"
+                placeholder={t("client.notePlaceholder")}
                 rows={2}
                 className="w-full resize-none rounded-lg border border-input-border bg-background p-2 text-base outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
               />
@@ -269,10 +272,10 @@ export function ClientShell({
                   }}
                   className="text-[13px] font-semibold text-muted-foreground"
                 >
-                  Clear
+                  {t("client.clear")}
                 </button>
                 <button type="button" onClick={() => setNoteOpenId(null)} className="text-[13px] font-bold text-brand-700">
-                  Done
+                  {t("client.done")}
                 </button>
               </div>
             </div>
@@ -288,7 +291,7 @@ export function ClientShell({
             <button
               type="button"
               onClick={() => setNoteOpenId(noteOpen ? null : dish.id)}
-              aria-label={noteText ? `Edit note for ${dish.name}` : `Add a note for ${dish.name}`}
+              aria-label={t(noteText ? "client.editNote" : "client.addNote", { name: dish.name })}
               aria-expanded={noteOpen}
               className={cn(
                 "flex size-[34px] items-center justify-center rounded-full border",
@@ -304,7 +307,7 @@ export function ClientShell({
                   focusNext.current = `add-${dish.id}`;
                   setQty(dish.id, 0);
                 }}
-                aria-label={`Remove ${dish.name}`}
+                aria-label={t("client.remove", { name: dish.name })}
                 className="flex size-[34px] items-center justify-center rounded-full border border-border text-muted-foreground hover:text-destructive"
               >
                 <Trash size={15} weight="bold" aria-hidden />
@@ -312,7 +315,7 @@ export function ClientShell({
             )}
             {soldOut ? (
               <span className="flex h-[34px] items-center rounded-full bg-secondary px-3.5 text-[13px] font-bold text-muted-foreground">
-                Sold out
+                {t("common.tags.soldOut")}
               </span>
             ) : qty === 0 ? (
               <button
@@ -322,11 +325,11 @@ export function ClientShell({
                   focusNext.current = `inc-${dish.id}`;
                   setQty(dish.id, 1);
                 }}
-                aria-label={`Add ${dish.name}`}
+                aria-label={t("client.addName", { name: dish.name })}
                 className="flex h-[34px] items-center gap-1.5 rounded-full bg-brand-700 px-3.5 text-[13px] font-bold text-white"
               >
                 <Plus size={13} weight="bold" aria-hidden />
-                Add
+                {t("client.add")}
               </button>
             ) : (
               <span className="flex items-center gap-1 rounded-full bg-brand-50 p-[3px]">
@@ -336,7 +339,7 @@ export function ClientShell({
                     if (qty === 1) focusNext.current = `add-${dish.id}`;
                     setQty(dish.id, qty - 1);
                   }}
-                  aria-label={`Remove one ${dish.name}`}
+                  aria-label={t("client.removeOne", { name: dish.name })}
                   className="flex size-7 items-center justify-center rounded-full border bg-background text-brand-700"
                 >
                   <Minus size={13} weight="bold" aria-hidden />
@@ -349,7 +352,7 @@ export function ClientShell({
                   id={`inc-${dish.id}`}
                   type="button"
                   onClick={() => setQty(dish.id, qty + 1)}
-                  aria-label={`Add one ${dish.name}`}
+                  aria-label={t("client.addOne", { name: dish.name })}
                   className="flex size-7 items-center justify-center rounded-full bg-brand-700 text-white"
                 >
                   <Plus size={13} weight="bold" aria-hidden />
@@ -397,14 +400,14 @@ export function ClientShell({
           </p>
         </div>
 
-        <h3 className="mt-8 text-sm font-bold">In this menu</h3>
+        <h3 className="mt-8 text-sm font-bold">{t("client.inThisMenu")}</h3>
         <ol className="mt-2">
           {validCategories.map((c, i) => (
             <li key={c.id}>
               <button
                 type="button"
                 onClick={() => setPage(i + 1)}
-                aria-label={`${c.name}, page ${i + 2}`}
+                aria-label={t("client.sectionPage", { name: c.name, n: i + 2 })}
                 className="flex w-full items-baseline gap-2 py-2.5 text-left"
               >
                 <span className="font-semibold">{c.name}</span>
@@ -417,10 +420,14 @@ export function ClientShell({
 
         {validCategories.length > 0 && (
           <p className="mt-6 flex items-center justify-center gap-2 text-[13px] font-semibold text-muted-foreground">
-            Swipe to open the menu
+            {t("client.swipe")}
             <ArrowRight size={14} weight="bold" aria-hidden />
           </p>
         )}
+
+        <div className="mt-8 flex justify-center">
+          <LanguageSwitcher />
+        </div>
       </>,
     );
 
@@ -444,12 +451,12 @@ export function ClientShell({
             <CheckCircle size={100} weight="fill" />
           </div>
           <h1 id={SCREEN_HEADING_ID} tabIndex={-1} className="mt-6 text-xl font-bold outline-none sm:text-2xl">
-            Thanks for your order
+            {t("client.thanks")}
           </h1>
           <p className="mt-2.5 text-[15px] text-muted-foreground">
-            We&apos;re preparing your foods.
+            {t("client.preparing")}
             <br />
-            Enjoy your meals
+            {t("client.enjoy")}
           </p>
 
           <div className="mt-7 w-full rounded-xl border bg-card p-4 text-left">
@@ -459,7 +466,7 @@ export function ClientShell({
             </div>
             {placed.lines.map((line) => (
               <div
-                key={line.itemId}
+                key={line.id ?? line.itemId}
                 className="mt-2.5 flex items-start gap-3 border-t pt-2.5 text-sm"
               >
                 <span className="w-6 font-bold text-muted-foreground/70">{line.qty}×</span>
@@ -469,22 +476,22 @@ export function ClientShell({
                     {line.note ? `, ${line.note}` : ""}
                   </span>
                   {dishes.find((d) => d.id === line.itemId)?.isVegan && (
-                    <Badge className={cn(TONE_CLASSES.green, "mt-1")}>Vegan</Badge>
+                    <Badge className={cn(TONE_CLASSES.green, "mt-1")}>{t("common.tags.vegan")}</Badge>
                   )}
                 </span>
                 <span className="font-semibold">{fmt(line.price * line.qty)}</span>
               </div>
             ))}
             <div className="mt-3 flex justify-between border-t pt-3 text-[13px] text-muted-foreground">
-              <span>Net</span>
+              <span>{t("client.net")}</span>
               <span>{fmt(net)}</span>
             </div>
             <div className="mt-1.5 flex justify-between text-[13px] text-muted-foreground">
-              <span>Tax ({taxRate}%)</span>
+              <span>{t("client.tax", { pct: taxRate })}</span>
               <span>{fmt(tax)}</span>
             </div>
             <div className="mt-2.5 flex items-center justify-between border-t pt-2.5">
-              <span className="text-sm font-semibold">Total</span>
+              <span className="text-sm font-semibold">{t("client.total")}</span>
               <span className="text-lg font-bold">{fmt(placed.total)}</span>
             </div>
           </div>
@@ -497,7 +504,7 @@ export function ClientShell({
             }}
             className="mt-5 text-sm font-bold text-brand-700"
           >
-            Order something else
+            {t("client.orderMore")}
           </button>
         </div>
       </div>
@@ -512,13 +519,13 @@ export function ClientShell({
             <button
               type="button"
               onClick={() => setScreen("menu")}
-              aria-label="Back to menu"
+              aria-label={t("client.backToMenu")}
               className="flex size-8 shrink-0 items-center justify-center rounded-full border text-muted-foreground"
             >
               <ArrowLeft size={16} weight="bold" />
             </button>
             <h1 id={SCREEN_HEADING_ID} tabIndex={-1} className="text-[17px] font-bold outline-none">
-              Your order
+              {t("client.yourOrder")}
             </h1>
             <span className="flex-1" />
             <span className="text-[13px] font-semibold text-muted-foreground">{tableName}</span>
@@ -528,7 +535,7 @@ export function ClientShell({
         <main className="mx-auto w-full max-w-2xl flex-1 space-y-3 p-4 pb-40 sm:p-6">
           {cartLines.length === 0 ? (
             <p className="py-16 text-center text-sm text-muted-foreground">
-              Your cart is empty.
+              {t("client.empty")}
             </p>
           ) : (
             cartLines.map((line, i) => {
@@ -549,7 +556,7 @@ export function ClientShell({
                         <span className="text-[15px] font-semibold">{line.name}</span>
                         {dish?.isVegan && (
                           <div className="mt-1">
-                            <Badge className={TONE_CLASSES.green}>Vegan</Badge>
+                            <Badge className={TONE_CLASSES.green}>{t("common.tags.vegan")}</Badge>
                           </div>
                         )}
                         {line.note && (
@@ -560,7 +567,7 @@ export function ClientShell({
                         )}
                       </div>
                       <span className="text-[13px] text-muted-foreground">
-                        {fmt(dish?.price ?? line.price)} each
+                        {t("client.each", { price: fmt(dish?.price ?? line.price) })}
                       </span>
                     </div>
                     <div className="flex shrink-0 flex-col items-end justify-between gap-1">
@@ -570,7 +577,7 @@ export function ClientShell({
                           focusNext.current = SCREEN_HEADING_ID; // the line is gone
                           setQty(line.itemId, 0);
                         }}
-                        aria-label={`Remove ${line.name}`}
+                        aria-label={t("client.remove", { name: line.name })}
                         className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
                       >
                         <Trash size={15} weight="bold" />
@@ -583,7 +590,7 @@ export function ClientShell({
                             if (line.qty === 1) focusNext.current = SCREEN_HEADING_ID;
                             setQty(line.itemId, line.qty - 1);
                           }}
-                          aria-label={`Remove one ${line.name}`}
+                          aria-label={t("client.removeOne", { name: line.name })}
                           className="flex size-7 items-center justify-center rounded-full border bg-background text-brand-700"
                         >
                           <Minus size={13} weight="bold" />
@@ -595,7 +602,7 @@ export function ClientShell({
                         <button
                           type="button"
                           onClick={() => setQty(line.itemId, line.qty + 1)}
-                          aria-label={`Add one ${line.name}`}
+                          aria-label={t("client.addOne", { name: line.name })}
                           className="flex size-7 items-center justify-center rounded-full bg-brand-700 text-white"
                         >
                           <Plus size={13} weight="bold" />
@@ -613,13 +620,13 @@ export function ClientShell({
           <div className="mx-auto w-full max-w-2xl">
             {cartCount > 0 && (
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-semibold">Total</span>
+                <span className="text-sm font-semibold">{t("client.total")}</span>
                 <span className="text-lg font-bold">{fmt(cartTotal)}</span>
               </div>
             )}
             {!canOrder && cartCount > 0 && (
               <p className="mb-3 text-center text-[13px] text-muted-foreground">
-                Ask a staff member to place your order for now.
+                {t("client.askStaff")}
               </p>
             )}
             {orderError && (
@@ -633,7 +640,7 @@ export function ClientShell({
                 onClick={() => setScreen("menu")}
                 className="h-13 shrink-0 rounded-2xl border px-5 text-base font-bold text-foreground"
               >
-                Edit
+                {t("client.edit")}
               </button>
               <button
                 type="button"
@@ -646,7 +653,7 @@ export function ClientShell({
                     : "cursor-not-allowed bg-muted-foreground/30",
                 )}
               >
-                {submitting ? "Placing order…" : "Confirm order"}
+                {submitting ? t("client.placing") : t("client.confirm")}
               </button>
             </div>
           </div>
@@ -685,48 +692,48 @@ export function ClientShell({
             onClick={() =>
               notify(
                 "staff",
-                "Staff notified",
-                "Someone will be right with you.",
+                t("client.staffNotified"),
+                t("client.staffComing"),
               )
             }
             className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-[13px] font-semibold transition-colors active:bg-brand-700 active:text-white active:border-brand-700",
+              "flex flex-1 items-center justify-center gap-1.5 rounded-full border px-2 py-2 text-[13px] font-semibold whitespace-nowrap transition-colors active:bg-brand-700 active:text-white active:border-brand-700",
               activeAction === "staff"
                 ? "border-brand-700 bg-brand-700 text-white"
                 : "border-border text-foreground",
             )}
           >
             <HandWaving size={15} weight="bold" />
-            Call staff
+            {t("client.callStaff")}
           </button>
           <button
             type="button"
             onClick={() =>
               notify(
                 "checkout",
-                "Bill requested",
-                "Staff will bring your bill shortly.",
+                t("client.billRequested"),
+                t("client.billComing"),
               )
             }
             className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-[13px] font-semibold transition-colors active:bg-brand-700 active:text-white active:border-brand-700",
+              "flex flex-1 items-center justify-center gap-1.5 rounded-full border px-2 py-2 text-[13px] font-semibold whitespace-nowrap transition-colors active:bg-brand-700 active:text-white active:border-brand-700",
               activeAction === "checkout"
                 ? "border-brand-700 bg-brand-700 text-white"
                 : "border-border text-foreground",
             )}
           >
             <Receipt size={15} weight="bold" />
-            Checkout
+            {t("client.checkout")}
           </button>
           {canOrder && (
             <button
               type="button"
               onClick={() => setHistoryOpen(true)}
-              aria-label={`Order history${tableOrders.length ? `, ${tableOrders.length} orders` : ""}`}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border px-3 py-2 text-[13px] font-semibold text-foreground"
+              aria-label={tableOrders.length ? t("client.historyCount", { count: tableOrders.length, n: tableOrders.length }) : t("client.historyLabel")}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border px-2 py-2 text-[13px] font-semibold whitespace-nowrap text-foreground"
             >
               <ClockCounterClockwise size={15} weight="bold" aria-hidden />
-              History
+              {t("client.history")}
               {tableOrders.length > 0 && (
                 <span className="flex min-w-4.5 items-center justify-center rounded-full bg-secondary px-1 text-[11px] font-bold text-muted-foreground">
                   {tableOrders.length}
@@ -737,8 +744,8 @@ export function ClientShell({
         </div>
 
         {/* The brochure's sections: jump to a page; the current one follows the swipe. */}
-        <nav aria-label="Menu sections" className="mx-auto mt-3 flex w-full max-w-2xl gap-2 overflow-x-auto">
-          {["Contents", ...validCategories.map((c) => c.name)].map((name, i) => (
+        <nav aria-label={t("client.sections")} className="mx-auto mt-3 flex w-full max-w-2xl gap-2 overflow-x-auto">
+          {[t("client.contents"), ...validCategories.map((c) => c.name)].map((name, i) => (
             <button
               key={name + i}
               type="button"
@@ -759,11 +766,11 @@ export function ClientShell({
 
       <main className="min-h-0 flex-1">
         <BrochurePager
-          label="Menu, swipe left or right to turn the page"
+          label={t("client.pagerLabel")}
           index={page}
           onIndexChange={setPage}
           pages={[
-            { id: "cover", title: "Contents", content: coverPage() },
+            { id: "cover", title: t("client.contents"), content: coverPage() },
             ...validCategories.map((category, i) => ({
               id: category.id,
               title: category.name,
@@ -781,19 +788,19 @@ export function ClientShell({
               type="button"
               onClick={() => setPage(page - 1)}
               disabled={page === 0}
-              aria-label="Previous page"
+              aria-label={t("client.previous")}
               className="flex size-9 items-center justify-center rounded-full border text-foreground disabled:opacity-30"
             >
               <CaretLeft size={16} weight="bold" aria-hidden />
             </button>
             <span className="text-[13px] font-semibold text-muted-foreground tabular-nums" aria-live="polite">
-              Page {page + 1} of {pageCount}
+              {t("client.pageOf", { n: page + 1, total: pageCount })}
             </span>
             <button
               type="button"
               onClick={() => setPage(page + 1)}
               disabled={page === pageCount - 1}
-              aria-label="Next page"
+              aria-label={t("client.next")}
               className="flex size-9 items-center justify-center rounded-full border text-foreground disabled:opacity-30"
             >
               <CaretRight size={16} weight="bold" aria-hidden />
@@ -810,8 +817,8 @@ export function ClientShell({
           >
             <span>
               {cartCount
-                ? `${canOrder ? "Order" : "View cart"} · ${cartCount} ${cartCount === 1 ? "item" : "items"}`
-                : "Order"}
+                ? t(canOrder ? "client.orderItems" : "client.cartItems", { count: cartCount, n: cartCount })
+                : t("client.order")}
             </span>
             <span className="flex-1" />
             <span>{cartCount ? fmt(cartTotal) : ""}</span>
@@ -834,7 +841,7 @@ export function ClientShell({
           </DialogHeader>
           <DialogFooter>
             <Button onClick={closeNotice} className="w-full sm:w-auto">
-              Got it
+              {t("client.gotIt")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -843,14 +850,14 @@ export function ClientShell({
       <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
         <DialogContent className="flex max-h-[80vh] w-[90%] flex-col rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Order history</DialogTitle>
+            <DialogTitle>{t("client.historyLabel")}</DialogTitle>
             <DialogDescription>{tableName}</DialogDescription>
           </DialogHeader>
 
           {tableOrders.length > 0 && (
             <div className="flex items-center justify-between rounded-xl bg-secondary/50 px-4 py-3">
               <span className="text-sm font-semibold">
-                Total across {tableOrders.length} {tableOrders.length === 1 ? "order" : "orders"}
+                {t("client.totalAcross", { count: tableOrders.length, n: tableOrders.length })}
               </span>
               <span className="text-lg font-bold">{fmt(tableOrdersTotal)}</span>
             </div>
@@ -859,7 +866,7 @@ export function ClientShell({
           <div className="-mx-6 flex-1 space-y-4 overflow-y-auto px-6">
             {tableOrders.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                No orders yet for this table.
+                {t("client.noOrders")}
               </p>
             ) : (
               tableOrders.map((order) => {
@@ -873,7 +880,7 @@ export function ClientShell({
                     </div>
                     {order.lines.map((line) => (
                       <div
-                        key={line.itemId}
+                        key={line.id ?? line.itemId}
                         className="mt-2.5 flex items-start gap-3 border-t pt-2.5 text-sm"
                       >
                         <span className="w-6 font-bold text-muted-foreground/70">
@@ -885,22 +892,22 @@ export function ClientShell({
                             {line.note ? `, ${line.note}` : ""}
                           </span>
                           {dishes.find((d) => d.id === line.itemId)?.isVegan && (
-                            <Badge className={cn(TONE_CLASSES.green, "mt-1")}>Vegan</Badge>
+                            <Badge className={cn(TONE_CLASSES.green, "mt-1")}>{t("common.tags.vegan")}</Badge>
                           )}
                         </span>
                         <span className="font-semibold">{fmt(line.price * line.qty)}</span>
                       </div>
                     ))}
                     <div className="mt-3 flex justify-between border-t pt-3 text-[13px] text-muted-foreground">
-                      <span>Net</span>
+                      <span>{t("client.net")}</span>
                       <span>{fmt(orderNet)}</span>
                     </div>
                     <div className="mt-1.5 flex justify-between text-[13px] text-muted-foreground">
-                      <span>Tax ({order.taxRate}%)</span>
+                      <span>{t("client.tax", { pct: order.taxRate })}</span>
                       <span>{fmt(orderTax)}</span>
                     </div>
                     <div className="mt-2.5 flex items-center justify-between border-t pt-2.5">
-                      <span className="text-sm font-semibold">Total</span>
+                      <span className="text-sm font-semibold">{t("client.total")}</span>
                       <span className="text-lg font-bold">{fmt(order.total)}</span>
                     </div>
                   </div>
@@ -911,7 +918,7 @@ export function ClientShell({
 
           <DialogFooter>
             <Button onClick={() => setHistoryOpen(false)} className="w-full sm:w-auto">
-              Close
+              {t("client.close")}
             </Button>
           </DialogFooter>
         </DialogContent>

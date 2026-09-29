@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/Button";
 import { formatNumber as fmt } from "@/lib/format";
@@ -17,26 +18,33 @@ export function PaginationBar({
   pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
-  noun?: string;
+  /** What the list holds, pluralised for the count (common.nouns). */
+  noun?: "orders" | "bookings" | "sessions";
 }) {
+  const { t } = useTranslation();
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   return (
     <div className="flex items-center justify-between gap-3 px-5 py-3.5">
       <span className="text-[13px] text-muted-foreground">
         {total
-          ? `Showing ${fmt((page - 1) * pageSize + 1)}–${fmt(Math.min(page * pageSize, total))} of ${fmt(total)} ${noun}`
-          : `No ${noun}`}
+          ? t("common.pagination.showing", {
+              from: fmt((page - 1) * pageSize + 1),
+              to: fmt(Math.min(page * pageSize, total)),
+              total: fmt(total),
+              what: t(`common.nouns.${noun}`, { count: total }),
+            })
+          : t("common.pagination.none", { what: t(`common.nouns.${noun}`, { count: 2 }) })}
       </span>
       <span className="flex items-center gap-2">
         <span className="text-[13px] text-muted-foreground">
-          Page {fmt(page)} of {fmt(pageCount)}
+          {t("common.pagination.page", { page: fmt(page), pages: fmt(pageCount) })}
         </span>
         <Button
           variant="outline"
           size="icon"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          aria-label="Previous page"
+          aria-label={t("common.pagination.previous")}
         >
           <CaretLeft size={14} weight="bold" />
         </Button>
@@ -45,7 +53,7 @@ export function PaginationBar({
           size="icon"
           disabled={page >= pageCount}
           onClick={() => onPageChange(page + 1)}
-          aria-label="Next page"
+          aria-label={t("common.pagination.next")}
         >
           <CaretRight size={14} weight="bold" />
         </Button>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ArrowRight, SignOut, SquaresFour } from "@phosphor-icons/react";
 import { signOutAction } from "@/app/actions";
 import { Button } from "@/components/ui/Button";
@@ -38,6 +39,7 @@ export function ConnectionsStep({
   /** Why saving the checked connections failed after the business was created. */
   error?: string | null;
 }) {
+  const { t } = useTranslation();
   const { connections } = useConnections();
   const canSkip = !!connections?.sharedInfraAllowed && !connectedAll(connections);
   // Before the business exists, "Test & continue" moves on by itself; the
@@ -51,8 +53,8 @@ export function ConnectionsStep({
           <span className="flex size-7 items-center justify-center rounded-lg bg-brand-500 text-white">
             <SquaresFour size={15} weight="bold" />
           </span>
-          <span className="text-xs font-semibold tracking-wide text-muted-foreground">
-            WORKSPACE SETUP · STEP 1 OF 2
+          <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            {t("onboarding.stepOf", { n: 1 })}
           </span>
           <span className="flex-1" />
           <form action={signOutAction}>
@@ -61,20 +63,18 @@ export function ConnectionsStep({
               className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
             >
               <SignOut size={14} weight="bold" />
-              Sign out
+              {t("onboarding.signOut")}
             </button>
           </form>
         </div>
 
         <div className="rounded-xl border bg-card p-10">
-          <h1 className="text-2xl font-bold">Connect your own services</h1>
+          <h1 className="text-2xl font-bold">{t("onboarding.connections.title")}</h1>
           <p className="mt-2 mb-8 text-sm text-muted-foreground text-pretty">
-            Your menu, orders and bookings are stored in your own PostgreSQL
-            database, live updates go through your own Pusher app, and dish
-            photos are kept in your own storage.{" "}
+            {t("onboarding.connections.body")}{" "}
             {connections?.sharedInfraAllowed
-              ? "You can also start on the shared service and connect these later in Settings."
-              : "Connect all three to continue."}
+              ? t("onboarding.connections.canSkip")
+              : t("onboarding.connections.mustConnect")}
           </p>
 
           {error && (
@@ -89,18 +89,18 @@ export function ConnectionsStep({
             {onBack && (
               <Button variant="outline" onClick={onBack}>
                 <ArrowLeft size={14} weight="bold" />
-                Back
+                {t("onboarding.back")}
               </Button>
             )}
             <span className="flex-1" />
             {canSkip && (
               <Button variant="outline" onClick={onSkip}>
-                Use the shared service for now
+                {t("onboarding.connections.useShared")}
               </Button>
             )}
             {showContinue && (
               <Button onClick={onContinue} disabled={!checked && !connectionsReady(connections)}>
-                Continue
+                {t("onboarding.continue")}
                 <ArrowRight size={14} weight="bold" />
               </Button>
             )}

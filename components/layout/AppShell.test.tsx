@@ -4,7 +4,7 @@ import { CalendarCheck, ForkKnife, Receipt } from "@phosphor-icons/react";
 import { axeViolations } from "@/test/axe";
 
 let search = new URLSearchParams("tab=orders");
-vi.mock("next/navigation", () => ({ useSearchParams: () => search }));
+vi.mock("next/navigation", () => ({ useSearchParams: () => search, useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }) }));
 vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("@/app/actions", () => ({ signOutAction: vi.fn() }));
 vi.mock("@/hooks/useSidebarCollapse", () => ({

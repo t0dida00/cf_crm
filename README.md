@@ -2,11 +2,11 @@
 
 Next.js 15 (App Router) frontend for a restaurant/cafe ordering and
 management platform: a staff/admin app for running the floor, and a
-guest-facing ordering app reached by scanning a table's QR code. Talks to
-the `CRM_backend` Express + Prisma API.
+guest-facing ordering app reached by scanning a table's QR code, in English
+and Vietnamese. Talks to the `CRM_backend` Express + Prisma API.
 
 Stack: **Next.js 15 · TypeScript · Tailwind CSS v4 · shadcn/ui · NextAuth v5
-(credentials) · Pusher Channels** (real-time) · Phosphor Icons.
+(credentials) · Pusher Channels** (real-time) · react-i18next · Phosphor Icons.
 
 ## Running locally
 
@@ -134,7 +134,7 @@ without their own storage use the shared Vercel Blob store, whose
 |---|---|---|
 | `/login` | anyone | email and password sign-in, choosing **Owner** or **Staff** first (remembered per browser). A wrong choice gets the same "Email or password is wrong" message as a wrong password. Owners land on `/admin`, staff on `/staff` |
 | `/signup` | anyone | create an owner account and email the admin, then continue to `/`. When the backend has `REQUIRE_ACCOUNT_APPROVAL=true`, it shows "Dear <name>, your request is being reviewed…" with an OK button (to `/login`) instead, and sign-in is refused until the account is approved |
-| `/terms`, `/privacy`, `/cookies` | anyone | terms of use, privacy policy and cookie policy (`components/marketing/LegalPage.tsx`). They describe what the code does (Auth.js cookies, browser-storage keys, Resend, Pusher, Vercel), so update them with any change to those, along with `LEGAL_UPDATED` |
+| `/terms`, `/privacy`, `/cookies` | anyone | terms of use, privacy policy and cookie policy (`components/marketing/LegalPage.tsx`). They describe what the code does (Auth.js cookies, browser-storage keys, Resend, Pusher, Vercel), so update them with any change to those, along with `legal.date` in both locale files. Their text is in `lib/i18n/locales/*.json` |
 | `/` | signed-in, no platform yet | step 1: connect the business's own database, Pusher app and image storage (only checked here, since the business doesn't exist yet; skippable while the backend allows the shared service) → step 2: business details, which creates the business, then saves the checked connections and uploads the logo to them → build animation → `/admin` |
 | `/admin` | signed-in staff (owner) | full admin panel: Dashboard, Tables, Categories, Menu, Orders, Bookings, Settings |
 | `/staff` | signed-in staff | day-to-day floor app: Orders, Tables, Bookings, Menu, History |
@@ -199,16 +199,40 @@ No auth on the channel — a guest only ever knows their own `platformId`
 anyway, and the same data is already readable through the public REST
 endpoints with just that id.
 
+## Languages
+
+Every screen (landing, legal, sign-in/up, onboarding, admin, staff and the
+guest brochure) is in English and Vietnamese, with react-i18next.
+
+- **Which language.** A saved choice (the `lang` cookie, one year) wins;
+  otherwise the browser's `Accept-Language` picks the best supported one
+  (`pickLocale()`, `lib/i18n/config.ts`), falling back to English. The root
+  layout sets `<html lang>` and page titles from it, so the server renders
+  the right language on the first paint.
+- **Switching.** `LanguageSwitcher` sits in the marketing header, the app
+  footer and on the guest brochure's cover. It saves the cookie, switches the
+  page, and refreshes server content.
+- **Text.** All copy lives in `lib/i18n/locales/en.json` and `vi.json`. Keys
+  are typed from `en.json`, and `vi.json` must have exactly the same keys
+  (a type error and a test otherwise). Business data (dish, category, table
+  and zone names) isn't translated. Stored values stay English (order and
+  booking statuses, table states) and are translated only for display.
+- **Money** in đồng prints the Vietnamese way: `money(120000, "₫")` →
+  "120.000 ₫".
+
 ## Structure
 
 ```
 Dockerfile                   production image (standalone server, port 3001)
 docker-compose.yml           builds and runs that image with .env.production.local
 app/
-  layout.tsx                Nunito Sans font, WorkspaceProvider, page <title>
+  layout.tsx                Nunito Sans font (Latin + Vietnamese), the
+                            language (cookie or Accept-Language) for
+                            <html lang> and I18nProvider, WorkspaceProvider,
+                            page <title>
   page.tsx                  setup form -> build animation -> /admin
   login/page.tsx             credentials sign-in (the form as a ticket on
-                             the pass rail, plus the demo account)
+                             the pass rail)
   terms/ privacy/ cookies/   legal pages, on LegalPage
   admin/page.tsx             AdminShell, gated on hydrated workspace
   staff/page.tsx              StaffShell, same gating
@@ -236,11 +260,14 @@ components/                   one folder per part of the UI; one PascalCase
                               PaginationBar, RequestState, RequiredLabel,
                               ContactForm, TableTile (a table drawn with its
                               chairs, coloured by state; the admin and staff
-                              floor plans)
+                              floor plans), LanguageSwitcher (English /
+                              Tiếng Việt radios; saves the lang cookie)
   providers/                  WorkspaceProvider (staff-side data: loads the
                               workspace, CRUD actions, applies real-time
                               events), ClientWorkspaceProvider (guest side,
-                              public endpoints only), QueryProvider
+                              public endpoints only), QueryProvider,
+                              I18nProvider (a per-page i18next instance in
+                              the request's language)
   layout/                     AppShell (the shared frame: collapsible
                               sidebar / mobile drawer, header, footer) and
                               useShellTab (?tab= handling); AdminShell /
@@ -297,7 +324,16 @@ lib/
   api.ts / publicApi.ts      fetch wrappers for the two proxy routes
   platformApi.ts             server-side-only platform fetch/create (used
                              by layout.tsx and actions.ts, needs a raw JWT)
-  lexicon.ts                  per-domain (restaurant/cafe) copy and flow steps
+  lexicon.ts                  per-domain (restaurant/cafe) sample ids and flow
+                             steps (the words are under lexicon.* in the
+                             locale files)
+  i18n/                       index.ts (the app-wide instance, t(),
+                             intlLocale()), config.ts (LOCALES, the lang
+                             cookie, pickLocale()), server.ts (getLocale(),
+                             getServerT() for server components and
+                             metadata), labels.ts (statusLabel()),
+                             messages.ts (typed en/vi), locales/en.json and
+                             vi.json
   range.ts                    date formatting, currency formatting
   orderMath.ts               shared line-total math
   bestSellers.ts             bestSellerIds(): the top 5 dishes by soldCount
@@ -316,10 +352,6 @@ lib/
                              real-time events to the workspace without refetching
   focus.ts                    focusFirstInvalid(): failed submits focus the
                              first field with an error
-test/
-  axe.ts                      axeViolations(): axe-core WCAG 2.2 A/AA check
-                             for rendered components
-  a11y.test.tsx               axe on sign-in, sign-up and onboarding screens
   printReceipt.ts            printReceipt(): prints a bill in a hidden frame
                              as one page sized to the receipt (80 or 58 mm
                              paper, remembered per browser)
@@ -335,6 +367,12 @@ test/
   zone.ts                     hasZone() (blank and "—" both mean no zone),
                               groupByZone() for the floor plans
   utils.ts                    cn()
+test/
+  setup.ts                    loads the i18n instance (tests render real
+                             English text) and stands in for Next's router
+  axe.ts                      axeViolations(): axe-core WCAG 2.2 A/AA check
+                             for rendered components
+  a11y.test.tsx               axe on sign-in, sign-up and onboarding screens
 ```
 
 ## Data model notes

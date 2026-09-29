@@ -16,6 +16,7 @@ import { usePlatformSocket } from "@/hooks/usePlatformSocket";
 import { apiFetch } from "@/lib/api";
 import type { TableRequestType } from "@/lib/types";
 import { eventIsForTable } from "@/lib/tableEvents";
+import { useTranslation } from "react-i18next";
 
 function GuestClientPage({
   platformId,
@@ -36,9 +37,10 @@ function GuestClientPage({
     placeOrder,
     createTableRequest,
   } = useClientWorkspace();
+  const { t } = useTranslation();
 
   const tableName =
-    workspace.tables.find((t) => t.name === fixedTableName)?.name ??
+    workspace.tables.find((table) => table.name === fixedTableName)?.name ??
     workspace.tables[0]?.name ??
     fixedTableName;
 
@@ -73,11 +75,11 @@ function GuestClientPage({
   if (status === "error") {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
-        <ErrorState message={error ?? "Couldn't load the menu."} onRetry={reload} />
+        <ErrorState message={error ?? t("client.loadFailed")} onRetry={reload} />
       </div>
     );
   }
-  if (status !== "success") return <LoadingState label="Loading menu…" className="min-h-screen" />;
+  if (status !== "success") return <LoadingState label={t("client.loading")} className="min-h-screen" />;
 
   return (
     <ClientShell
@@ -100,6 +102,7 @@ function GuestClientPage({
 function SessionClientPage({ tableParam }: { tableParam: string | null }) {
   const router = useRouter();
   const { workspace, status, error, reload, fmt, placeOrder } = useWorkspace();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if ((status === "success" || status === "idle") && !workspace.name) router.replace("/");
@@ -108,16 +111,16 @@ function SessionClientPage({ tableParam }: { tableParam: string | null }) {
   if (status === "error") {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
-        <ErrorState message={error ?? "Couldn't load your workspace."} onRetry={reload} />
+        <ErrorState message={error ?? t("errors.workspaceLoad")} onRetry={reload} />
       </div>
     );
   }
   if (status !== "success" || !workspace.name) {
-    return <LoadingState label="Loading…" className="min-h-screen" />;
+    return <LoadingState label={t("common.loading")} className="min-h-screen" />;
   }
 
   const tableName =
-    workspace.tables.find((t) => t.name === tableParam)?.name ??
+    workspace.tables.find((table) => table.name === tableParam)?.name ??
     workspace.tables[0]?.name ??
     "Table 1";
 
@@ -150,6 +153,7 @@ interface ResolvedToken {
 }
 
 function TokenClientPage({ token }: { token: string }) {
+  const { t } = useTranslation();
   const tokenQuery = useQuery({
     queryKey: ["public", "token", token],
     queryFn: async ({ signal }): Promise<ResolvedToken> => {
@@ -168,14 +172,14 @@ function TokenClientPage({ token }: { token: string }) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
         <ErrorState
-          message={errorMessage(tokenQuery.error, "Invalid QR code")}
+          message={errorMessage(tokenQuery.error, t("client.invalidQr"))}
           onRetry={() => void tokenQuery.refetch()}
         />
       </div>
     );
   }
 
-  if (!resolved) return <LoadingState label="Opening your table…" className="min-h-screen" />;
+  if (!resolved) return <LoadingState label={t("client.opening")} className="min-h-screen" />;
 
   return (
     <ClientWorkspaceProvider platformId={resolved.platformId}>

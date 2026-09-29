@@ -1,56 +1,32 @@
+"use client";
+
 import type { CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
+import type { DishKey, ZoneKey } from "@/lib/lexicon";
+import { statusLabel } from "@/lib/i18n/labels";
 
 interface Ticket {
-  table: string;
-  zone: string;
+  table: number;
+  zone: ZoneKey;
   time: string;
+  /** An order status, as stored ("New", "Preparing"…). */
   status: string;
-  lines: [number, string, string?][];
+  /** Quantity, dish, and an optional note (a key under lexicon.lineNotes). */
+  lines: [number, DishKey, ("forOne" | "mediumRare")?][];
   /** Degrees; paper never hangs perfectly straight. */
   tilt: number;
   /** The order that just came in: it drops onto the rail on load. */
   fresh?: boolean;
 }
 
-/* Dishes and zones from the restaurant lexicon (lib/lexicon.ts). */
+/* Dishes and zones from the restaurant lexicon (lib/lexicon.ts), named in the visitor's language. */
 export const TICKETS: Ticket[] = [
-  {
-    table: "Table 7",
-    zone: "Terrace",
-    time: "19:58",
-    status: "Served",
-    lines: [[2, "Grilled sea bass"], [1, "Padrón peppers"], [2, "Crema catalana"]],
-    tilt: 0.9,
-  },
-  {
-    table: "Table 4",
-    zone: "Terrace",
-    time: "20:06",
-    status: "Preparing",
-    lines: [[2, "Pan con tomate"], [1, "Padrón peppers"], [1, "Seafood paella", "For one"]],
-    tilt: -1.5,
-  },
-  {
-    table: "Table 9",
-    zone: "Main hall",
-    time: "20:11",
-    status: "Preparing",
-    lines: [[1, "Ribeye 300g", "Medium rare"], [1, "Grilled sea bass"], [2, "Crema catalana"]],
-    tilt: 1.2,
-  },
-  {
-    table: "Table 2",
-    zone: "Bar",
-    time: "20:14",
-    status: "New",
-    lines: [[1, "Iberian ham plate"], [2, "Padrón peppers"], [1, "Cheesecake"]],
-    tilt: -0.6,
-    fresh: true,
-  },
+  { table: 7, zone: "terrace", time: "19:58", status: "Served", lines: [[2, "seaBass"], [1, "padron"], [2, "cremaCatalana"]], tilt: 0.9 },
+  { table: 4, zone: "terrace", time: "20:06", status: "Preparing", lines: [[2, "panConTomate"], [1, "padron"], [1, "seafoodPaella", "forOne"]], tilt: -1.5 },
+  { table: 9, zone: "mainHall", time: "20:11", status: "Preparing", lines: [[1, "ribeye", "mediumRare"], [1, "seaBass"], [2, "cremaCatalana"]], tilt: 1.2 },
+  { table: 2, zone: "bar", time: "20:14", status: "New", lines: [[1, "iberianHam"], [2, "padron"], [1, "cheesecake"]], tilt: -0.6, fresh: true },
 ];
 
-const RAIL_LABEL =
-  "Order tickets on the kitchen rail. The newest, from table 2 at the bar, has just arrived.";
 
 /**
  * Which tickets hang at each width, by age (0 = newest): the two newest always;
@@ -65,8 +41,9 @@ export function ticketVisibility(age: number): string | undefined {
 
 /** The hero: order tickets hanging from the pass rail, the newest dropping in. */
 export function TicketRail() {
+  const { t } = useTranslation();
   return (
-    <div role="img" aria-label={RAIL_LABEL} className="relative pt-2">
+    <div role="img" aria-label={t("marketing.rail.label")} className="relative pt-2">
       <PassRail />
       {/* Under the text (below lg) the tickets spread along the whole rail; beside it they sit right. */}
       <div className="-mt-1.5 flex justify-end gap-3 overflow-hidden px-2 pb-6 sm:justify-around sm:gap-4 lg:justify-end">
@@ -92,6 +69,7 @@ export function TicketClip({ className = "" }: { className?: string }) {
 }
 
 function TicketSlip({ ticket, className = "" }: { ticket: Ticket; className?: string }) {
+  const { t } = useTranslation();
   const { table, zone, time, status, lines, tilt, fresh } = ticket;
   return (
     <div
@@ -101,17 +79,17 @@ function TicketSlip({ ticket, className = "" }: { ticket: Ticket; className?: st
       <TicketClip className="mx-auto" />
       <div className="ticket-torn -mt-1 bg-(--landing-card) px-3.5 pt-3 pb-6 shadow-[0_10px_18px_-10px_rgb(21_32_45/0.45)]">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="text-2xl font-extrabold [font-variation-settings:'wdth'_62]">{table}</p>
+          <p className="text-2xl font-extrabold [font-variation-settings:'wdth'_62]">{t("common.tableName", { n: table })}</p>
           <p className="text-sm tabular-nums">{time}</p>
         </div>
-        <p className="text-sm text-(--landing-muted)">{zone}</p>
+        <p className="text-sm text-(--landing-muted)">{t(`lexicon.zones.${zone}`)}</p>
         <ul className="mt-3 space-y-1.5 border-t border-dashed border-(--landing-edge) pt-3 text-sm leading-snug">
-          {lines.map(([qty, name, note]) => (
-            <li key={name} className="flex gap-2">
+          {lines.map(([qty, dish, note]) => (
+            <li key={dish} className="flex gap-2">
               <span className="w-5 shrink-0 font-bold tabular-nums">{qty}×</span>
               <span>
-                {name}
-                {note && <span className="block text-xs text-(--landing-muted)">{note}</span>}
+                {t(`lexicon.dishes.${dish}.name`)}
+                {note && <span className="block text-xs text-(--landing-muted)">{t(`lexicon.lineNotes.${note}`)}</span>}
               </span>
             </li>
           ))}
@@ -121,7 +99,7 @@ function TicketSlip({ ticket, className = "" }: { ticket: Ticket; className?: st
             fresh ? "bg-(--landing-saffron)" : "bg-(--landing-bg)"
           }`}
         >
-          {status}
+          {statusLabel(t, status)}
         </p>
       </div>
     </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { t } from "@/lib/i18n";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { playNotificationSound } from "@/lib/notificationSound";
@@ -11,11 +12,6 @@ interface ApiTableRequest {
   table_name: string;
   type: "call_staff" | "checkout";
 }
-
-const LABELS: Record<ApiTableRequest["type"], string> = {
-  call_staff: "called staff",
-  checkout: "requested checkout",
-};
 
 /** Live-updates on pending Call Staff / Checkout requests from /client (a
  * separate, often anonymous session) — toasts on table_request:created.
@@ -33,7 +29,7 @@ export function useTableRequestNotifications(
     if (!channel) return;
 
     const onCreated = ({ request }: { request: ApiTableRequest }) => {
-      toast(`${request.table_name} ${LABELS[request.type]}`);
+      toast(t(`shell.requests.toast.${request.type}`, { table: request.table_name }));
       playNotificationSound();
       onNewRequest();
     };

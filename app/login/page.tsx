@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { getServerT } from "@/lib/i18n/server";
 import { ArrowLeft } from "@phosphor-icons/react/ssr";
 import { AuthError } from "next-auth";
 import Link from "next/link";
@@ -8,13 +10,17 @@ import { MarketingFooter, MarketingHeader, MarketingShell } from "@/components/m
 import { PassRail, TicketClip } from "@/components/marketing/TicketRail";
 import { safeCallbackPath } from "@/lib/safeRedirect";
 
-export const metadata = { title: "Sign in" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerT();
+  return { title: t("meta.signIn") };
+}
 
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ callbackUrl?: string; error?: string; code?: string }>;
 }) {
+  const { t } = await getServerT();
   const { error, code } = await searchParams;
   const callbackUrl = safeCallbackPath((await searchParams).callbackUrl) ?? undefined;
 
@@ -56,7 +62,7 @@ export default async function LoginPage({
           className="flex items-center gap-1.5 rounded-sm text-sm font-medium text-(--landing-muted) hover:text-(--landing-ink)"
         >
           <ArrowLeft size={15} weight="bold" aria-hidden />
-          Back to home
+          {t("common.backToHome")}
         </Link>
       </MarketingHeader>
 

@@ -1,5 +1,8 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { INTL_LOCALE, isLocale } from "@/lib/i18n/config";
 import { useEffect, useMemo, useState } from "react";
 import { CaretLeft, CaretRight, Trash } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/Badge";
@@ -25,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
-import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/useAsyncAction";
+import { savedMessage, useAsyncAction } from "@/hooks/useAsyncAction";
 import { PaginationBar } from "@/components/common/PaginationBar";
 import { BookingAssignDialog } from "./BookingAssignDialog";
 import {
@@ -39,7 +42,8 @@ import {
 import { TONE_CLASSES } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+/** Monday first; names under bookings.weekdays. */
+const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 const HISTORY_PAGE_SIZE = 10;
 
 /** The preferred start time if it's still bookable on `date`, else the first one that is. */
@@ -56,6 +60,8 @@ export function BookingsPanel({
   /** Staff seat bookings: adds an action to assign (or release) a free table. */
   allowTableAssign?: boolean;
 }) {
+  const { t, i18n } = useTranslation();
+  const locale = INTL_LOCALE[isLocale(i18n.language) ? i18n.language : "en"];
   const { workspace, saveBooking, toggleBooking, deleteBooking } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const todayKey = dayKey(new Date());
@@ -122,8 +128,8 @@ export function BookingsPanel({
         <Card>
           <CardContent>
             <div className="mb-3 flex items-center gap-2">
-              <p className="flex-1 text-base font-semibold">
-                {new Date(month.year, month.month, 1).toLocaleDateString("en-GB", {
+              <p className="flex-1 text-base font-semibold first-letter:uppercase">
+                {new Date(month.year, month.month, 1).toLocaleDateString(locale, {
                   month: "long",
                   year: "numeric",
                 })}
@@ -134,12 +140,12 @@ export function BookingsPanel({
                 onClick={() => selectDay(new Date())}
                 disabled={selected === todayKey}
               >
-                Today
+                {t("bookings.today")}
               </Button>
-              <Button variant="outline" size="icon" onClick={() => shiftMonth(-1)} aria-label="Previous month">
+              <Button variant="outline" size="icon" onClick={() => shiftMonth(-1)} aria-label={t("bookings.previousMonth")}>
                 <CaretLeft size={14} weight="bold" />
               </Button>
-              <Button variant="outline" size="icon" onClick={() => shiftMonth(1)} aria-label="Next month">
+              <Button variant="outline" size="icon" onClick={() => shiftMonth(1)} aria-label={t("bookings.nextMonth")}>
                 <CaretRight size={14} weight="bold" />
               </Button>
             </div>
@@ -147,7 +153,7 @@ export function BookingsPanel({
             <div className="grid grid-cols-7 gap-1 text-center">
               {WEEKDAYS.map((d) => (
                 <span key={d} className="py-1 text-xs font-semibold text-muted-foreground">
-                  {d}
+                  {t(`bookings.weekdays.${d}`)}
                 </span>
               ))}
               {weeks.flat().map((d) => {
@@ -162,9 +168,12 @@ export function BookingsPanel({
                     type="button"
                     onClick={() => selectDay(d)}
                     aria-pressed={isSelected}
-                    aria-label={`${d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}${
-                      info ? `, ${info.bookings} booking${info.bookings === 1 ? "" : "s"}` : ", no bookings"
-                    }`}
+                    aria-label={(() => {
+                      const date = d.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
+                      return info
+                        ? t("bookings.dayLabel", { count: info.bookings, n: info.bookings, date })
+                        : t("bookings.dayLabelNone", { date });
+                    })()}
                     className={cn(
                       "flex h-14 flex-col items-center justify-start gap-0.5 rounded-lg border pt-1.5 text-sm transition-colors",
                       // Days with bookings are light brand tiles (brand-800 on brand-50 is
@@ -192,7 +201,7 @@ export function BookingsPanel({
               })}
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
-              Tinted days have bookings; the number shows how many.
+              {t("bookings.legend")}
             </p>
           </CardContent>
         </Card>
@@ -201,16 +210,19 @@ export function BookingsPanel({
           <CardContent>
             <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <p className="text-lg font-semibold">
-                {selectedDate.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
+                {selectedDate.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" })}
               </p>
               <p className="text-sm text-muted-foreground">
                 {summary
-                  ? `${summary.bookings} booking${summary.bookings === 1 ? "" : "s"}, ${summary.guests} guests`
-                  : "No bookings"}
+                  ? t("bookings.summary", {
+                      bookings: t("bookings.count", { count: summary.bookings, n: summary.bookings }),
+                      guests: t("bookings.guests", { count: summary.guests, n: summary.guests }),
+                    })
+                  : t("bookings.none")}
               </p>
             </div>
             {dayBookings.length === 0 ? (
-              <p className="py-10 text-center text-sm text-muted-foreground">No reservations on this day.</p>
+              <p className="py-10 text-center text-sm text-muted-foreground">{t("bookings.noneToday")}</p>
             ) : (
               dayBookings.map((booking) => (
                 <div
@@ -224,11 +236,11 @@ export function BookingsPanel({
                   <div className="flex-1">
                     <p className="text-[15px]">{booking.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {partyLine(booking)}
+                      {partyLine(t, booking)}
                     </p>
                   </div>
                   <Badge className={booking.status === "Arrived" ? ARRIVED_BADGE : TONE_CLASSES.sky}>
-                    {booking.status}
+                    {t(`bookings.status.${booking.status}`)}
                   </Badge>
                   {allowTableAssign && (
                     <button
@@ -236,27 +248,27 @@ export function BookingsPanel({
                       onClick={() => setAssignId(booking.id)}
                       className="text-[13px] font-semibold text-brand-700 hover:text-brand-800"
                     >
-                      {booking.tableName ? "Change table" : "Assign table"}
+                      {booking.tableName ? t("bookings.changeTable") : t("bookings.assignTable")}
                     </button>
                   )}
                   <button
                     type="button"
                     disabled={isPending(`toggle-${booking.id}`)}
                     onClick={() =>
-                      run(`toggle-${booking.id}`, () => toggleBooking(booking.id), "Failed to update booking.")
+                      run(`toggle-${booking.id}`, () => toggleBooking(booking.id), t("bookings.updateFailed"))
                     }
                     className="text-[13px] font-semibold text-brand-700 hover:text-brand-800 disabled:pointer-events-none disabled:opacity-50"
                   >
-                    {booking.status === "Arrived" ? "Undo arrival" : "Mark arrived"}
+                    {booking.status === "Arrived" ? t("bookings.undoArrival") : t("bookings.markArrived")}
                   </button>
                   <button
                     type="button"
                     disabled={isPending(`delete-${booking.id}`)}
                     onClick={() =>
-                      run(`delete-${booking.id}`, () => deleteBooking(booking.id), "Failed to delete booking.")
+                      run(`delete-${booking.id}`, () => deleteBooking(booking.id), t("bookings.deleteFailed"))
                     }
                     className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
-                    aria-label={`Delete booking for ${booking.name} at ${booking.time}`}
+                    aria-label={t("bookings.deleteLabel", { name: booking.name, time: booking.time })}
                   >
                     <Trash size={15} weight="bold" />
                   </button>
@@ -270,11 +282,11 @@ export function BookingsPanel({
       <Card className="mt-4 overflow-hidden">
         <CardContent className="px-0">
           <div className="flex items-baseline gap-3 px-6 pb-3">
-            <h2 className="font-semibold">Past bookings</h2>
-            <p className="text-sm text-muted-foreground">{history.length} {history.length === 1 ? "booking" : "bookings"}, newest first</p>
+            <h2 className="font-semibold">{t("bookings.past")}</h2>
+            <p className="text-sm text-muted-foreground">{t("bookings.pastCount", { count: history.length, n: history.length })}</p>
           </div>
           {history.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">No past bookings yet.</p>
+            <p className="py-10 text-center text-sm text-muted-foreground">{t("bookings.noPast")}</p>
           ) : (
             <>
               {historyRows.map((booking) => (
@@ -288,7 +300,7 @@ export function BookingsPanel({
                   )}
                 >
                   <span className="w-36 shrink-0 text-sm font-semibold">
-                    {parseDayKey(booking.date).toLocaleDateString("en-GB", {
+                    {parseDayKey(booking.date).toLocaleDateString(locale, {
                       weekday: "short",
                       day: "numeric",
                       month: "short",
@@ -299,11 +311,11 @@ export function BookingsPanel({
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[15px]">{booking.name}</span>
                     <span className="block text-xs text-muted-foreground">
-                      {partyLine(booking)}
+                      {partyLine(t, booking)}
                     </span>
                   </span>
                   <Badge className={booking.status === "Arrived" ? ARRIVED_BADGE : TONE_CLASSES.gray}>
-                    {booking.status}
+                    {t(`bookings.status.${booking.status}`)}
                   </Badge>
                 </button>
               ))}
@@ -329,16 +341,16 @@ export function BookingsPanel({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>New booking</DialogTitle>
+            <DialogTitle>{t("bookings.new")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="booking-name">Guest name</RequiredLabel>
+              <RequiredLabel htmlFor="booking-name">{t("bookings.guestName")}</RequiredLabel>
               <Input
                 id="booking-name"
                 required
                 value={form.name}
-                placeholder="Name on the booking"
+                placeholder={t("bookings.guestNamePlaceholder")}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 {...fieldErrorProps("booking-name", errors.name)}
                 onBlur={() => setErrors((e) => withFieldError(e, "name", validateBooking(form).name))}
@@ -347,7 +359,7 @@ export function BookingsPanel({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <RequiredLabel htmlFor="booking-date">Date</RequiredLabel>
+                <RequiredLabel htmlFor="booking-date">{t("bookings.date")}</RequiredLabel>
                 <Input
                   id="booking-date"
                 required
@@ -366,14 +378,14 @@ export function BookingsPanel({
                 />
               </div>
               <div className="space-y-1.5">
-                <RequiredLabel htmlFor="booking-time">Time</RequiredLabel>
+                <RequiredLabel htmlFor="booking-time">{t("bookings.time")}</RequiredLabel>
                 <Select
                   value={form.time}
                   onValueChange={(time) => setForm((f) => ({ ...f, time }))}
                   disabled={formTimes.length === 0}
                 >
                   <SelectTrigger id="booking-time" className="w-full">
-                    <SelectValue placeholder="No times left" />
+                    <SelectValue placeholder={t("bookings.noTimes")} />
                   </SelectTrigger>
                   <SelectContent className="max-h-72">
                     {formTimes.map((t) => (
@@ -389,7 +401,7 @@ export function BookingsPanel({
               <p className="-mt-2 text-xs text-destructive">No start times left today — pick a later date.</p>
             )}
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="booking-party">Party size</RequiredLabel>
+              <RequiredLabel htmlFor="booking-party">{t("bookings.party")}</RequiredLabel>
               <Input
                 id="booking-party"
                 required
@@ -405,7 +417,7 @@ export function BookingsPanel({
               <FieldError id="booking-party" message={errors.party} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="bookings-panel-table">Table</Label>
+              <Label htmlFor="bookings-panel-table">{t("bookings.table")}</Label>
               <Select value={form.tableName} onValueChange={(tableName) => setForm((f) => ({ ...f, tableName }))}>
                 <SelectTrigger id="bookings-panel-table" className="w-full">
                   <SelectValue />
@@ -422,7 +434,7 @@ export function BookingsPanel({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("bookings.cancel")}
             </Button>
             <Button
               loading={isPending("create-booking")}
@@ -439,7 +451,7 @@ export function BookingsPanel({
                     party: Number(form.party),
                     tableName: form.tableName,
                     status: "Confirmed",
-                  }), undefined, SAVED_MESSAGE
+                  }), undefined, savedMessage()
                 );
                 if (ok) {
                   setOpen(false);
@@ -447,7 +459,7 @@ export function BookingsPanel({
                 }
               }}
             >
-              Add booking
+              {t("bookings.add")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -462,7 +474,7 @@ const ARRIVED_ROW = "bg-green-50";
 const ARRIVED_BADGE = "bg-green-100 text-green-800";
 
 /** "4 guests at Table 2", or "4 guests, no table yet". */
-export function partyLine(booking: { party: number; tableName: string | null }): string {
-  const guests = `${booking.party} ${booking.party === 1 ? "guest" : "guests"}`;
-  return booking.tableName ? `${guests} at ${booking.tableName}` : `${guests}, no table yet`;
+export function partyLine(t: TFunction, booking: { party: number; tableName: string | null }): string {
+  const guests = t("bookings.guests", { count: booking.party, n: booking.party });
+  return booking.tableName ? t("bookings.atTable", { guests, table: booking.tableName }) : t("bookings.noTable", { guests });
 }

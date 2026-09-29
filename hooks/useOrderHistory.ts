@@ -1,5 +1,6 @@
 "use client";
 
+import { t } from "@/lib/i18n";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { toSession } from "@/lib/orderMath";
@@ -50,7 +51,7 @@ export function useOrderHistory({ status, query, page, pageSize, from }: OrderHi
     sessions: result.data?.sessions ?? [],
     total: result.data?.total ?? 0,
     status: result.isFetching ? "loading" as const : toRequestStatus(result),
-    error: result.isError ? errorMessage(result.error, "Couldn't load orders.") : null,
+    error: result.isError ? errorMessage(result.error, t("errors.orders")) : null,
     retry: () => void result.refetch(),
   };
 }

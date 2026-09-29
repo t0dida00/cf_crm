@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { PaperPlaneTilt } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -24,6 +25,7 @@ export function ContactForm({
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const { t } = useTranslation();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,14 +38,14 @@ export function ContactForm({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error || "Failed to send message.");
+        throw new Error(body?.error || t("marketing.contactForm.failed"));
       }
-      toast.success("Message sent — thanks for reaching out!");
+      toast.success(t("marketing.contactForm.sent"));
       setName("");
       setEmail("");
       setMessage("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to send message.");
+      toast.error(err instanceof Error ? err.message : t("marketing.contactForm.failed"));
     } finally {
       setSubmitting(false);
     }
@@ -53,17 +55,17 @@ export function ContactForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className={cn("grid grid-cols-1 gap-4", !stacked && "sm:grid-cols-2")}>
         <div className="space-y-1.5">
-          <Label htmlFor="contact-name">Name</Label>
+          <Label htmlFor="contact-name">{t("marketing.contactForm.name")}</Label>
           <Input
             id="contact-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
+            placeholder={t("marketing.contactForm.namePlaceholder")}
             required
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="contact-email">Email</Label>
+          <Label htmlFor="contact-email">{t("marketing.contactForm.email")}</Label>
           <Input
             id="contact-email"
             type="email"
@@ -75,12 +77,12 @@ export function ContactForm({
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="contact-message">Message</Label>
+        <Label htmlFor="contact-message">{t("marketing.contactForm.message")}</Label>
         <Textarea
           id="contact-message"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="What would you like to say?"
+          placeholder={t("marketing.contactForm.messagePlaceholder")}
           rows={5}
           required
         />
@@ -91,9 +93,9 @@ export function ContactForm({
         className={buttonClassName ?? (stacked ? "w-full" : "w-full sm:w-auto")}
         style={buttonStyle}
       >
-        {submitting ? "Sending…" : (
+        {submitting ? t("marketing.contactForm.sending") : (
           <>
-            Send message
+            {t("marketing.contactForm.send")}
             <PaperPlaneTilt size={16} weight="bold" />
           </>
         )}

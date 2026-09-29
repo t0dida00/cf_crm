@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { Printer } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/Button";
@@ -41,6 +42,7 @@ export function PrintableBillReceipt({
   total,
   fmt,
 }: BillReceiptProps) {
+  const { t } = useTranslation();
   return (
     <div>
       <div className="bill-center">
@@ -78,16 +80,16 @@ export function PrintableBillReceipt({
       ))}
 
       <div className="bill-row bill-muted">
-        <span>Net</span>
+        <span>{t("bill.net")}</span>
         <span>{fmt(net)}</span>
       </div>
       <div className="bill-row bill-muted">
-        <span>Tax ({formatTaxRates(orders)})</span>
+        <span>{t("bill.tax", { rates: formatTaxRates(orders) })}</span>
         <span>{fmt(tax)}</span>
       </div>
       <div className="bill-rule" />
       <div className="bill-total-row">
-        <span>Total due</span>
+        <span>{t("bill.totalDue")}</span>
         <span>{fmt(total)}</span>
       </div>
     </div>
@@ -105,6 +107,7 @@ export function BillReceipt({
   total,
   fmt,
 }: BillReceiptProps) {
+  const { t } = useTranslation();
   return (
     <div>
       <div className="text-center">
@@ -147,15 +150,15 @@ export function BillReceipt({
 
       <div className="mt-1">
         <div className="flex justify-between pt-3.5 text-[13px] text-muted-foreground">
-          <span>Net</span>
+          <span>{t("bill.net")}</span>
           <span>{fmt(net)}</span>
         </div>
         <div className="flex justify-between pt-1.5 text-[13px] text-muted-foreground">
-          <span>Tax ({formatTaxRates(orders)})</span>
+          <span>{t("bill.tax", { rates: formatTaxRates(orders) })}</span>
           <span>{fmt(tax)}</span>
         </div>
         <div className="mt-3 flex items-center justify-between border-t pt-3">
-          <span className="text-sm font-semibold">Total due</span>
+          <span className="text-sm font-semibold">{t("bill.totalDue")}</span>
           <span className="text-xl font-bold">{fmt(total)}</span>
         </div>
       </div>
@@ -169,6 +172,7 @@ export function BillReceipt({
  * PrintableBillReceipt as one receipt-length page (lib/print-receipt.ts).
  */
 export function PrintReceiptButton(props: BillReceiptProps) {
+  const { t } = useTranslation();
   const receiptRef = useRef<HTMLDivElement>(null);
   const [paper, setPaper] = useState<PaperWidth>(80);
   useEffect(() => setPaper(savedPaperWidth()), []);
@@ -176,7 +180,7 @@ export function PrintReceiptButton(props: BillReceiptProps) {
   return (
     <>
       <select
-        aria-label="Receipt paper width"
+        aria-label={t("bill.paperWidth")}
         value={paper}
         onChange={(e) => {
           const next = Number(e.target.value) as PaperWidth;
@@ -187,7 +191,7 @@ export function PrintReceiptButton(props: BillReceiptProps) {
       >
         {PAPER_WIDTHS.map((w) => (
           <option key={w} value={w}>
-            {w} mm
+            {t("bill.mm", { n: w })}
           </option>
         ))}
       </select>
@@ -196,7 +200,7 @@ export function PrintReceiptButton(props: BillReceiptProps) {
         style={{ backgroundColor: "#232F3F", color: "#FFF" }}
       >
         <Printer size={15} weight="bold" />
-        Print
+        {t("bill.print")}
       </Button>
       <div ref={receiptRef} hidden>
         <PrintableBillReceipt {...props} />

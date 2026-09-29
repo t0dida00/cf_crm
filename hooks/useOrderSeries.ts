@@ -1,5 +1,6 @@
 "use client";
 
+import { t } from "@/lib/i18n";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import type { ChartPlan, SeriesPoint } from "@/lib/chartBuckets";
@@ -28,7 +29,7 @@ export function useOrderSeries(plan: ChartPlan | null) {
   return {
     series: result.data ?? [],
     status: result.isFetching ? ("loading" as const) : toRequestStatus(result),
-    error: result.isError ? errorMessage(result.error, "Couldn't load the chart.") : null,
+    error: result.isError ? errorMessage(result.error, t("errors.chart")) : null,
     retry: () => void result.refetch(),
   };
 }

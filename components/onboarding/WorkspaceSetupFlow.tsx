@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ const message = (err: unknown, fallback: string) => (err instanceof Error ? err.
  * the checked services and uploads the logo to them.
  */
 export function WorkspaceSetupFlow() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { workspace, hydrated, reload } = useWorkspace();
   const { saveConnections } = useConnections();
@@ -41,7 +43,7 @@ export function WorkspaceSetupFlow() {
   // The workspace was loaded before the business existed. Reload it only at the
   // end: reloading earlier would redirect to /admin and skip the remaining steps.
   if (step === "opening" || (hydrated && workspace.name)) {
-    return <LoadingState label="Opening your workspace…" className="min-h-screen" />;
+    return <LoadingState label={t("onboarding.opening")} className="min-h-screen" />;
   }
   if (!hydrated) return null;
 
@@ -100,7 +102,7 @@ export function WorkspaceSetupFlow() {
           else await createPlatformAction(details);
           setCreated(details);
         } catch (err) {
-          setError(message(err, "Failed to create workspace"));
+          setError(message(err, t("onboarding.createFailed")));
           return;
         }
 

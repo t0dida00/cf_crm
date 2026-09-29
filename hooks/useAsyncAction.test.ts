@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 import { toast } from "sonner";
-import { SAVED_MESSAGE, useAsyncAction } from "./useAsyncAction";
+import { savedMessage, useAsyncAction } from "./useAsyncAction";
 
 beforeEach(() => vi.clearAllMocks());
 
@@ -13,7 +13,7 @@ describe("useAsyncAction", () => {
     const { result } = renderHook(() => useAsyncAction());
     let ok = false;
     await act(async () => {
-      ok = await result.current.run("save", async () => {}, undefined, SAVED_MESSAGE);
+      ok = await result.current.run("save", async () => {}, undefined, savedMessage());
     });
     expect(ok).toBe(true);
     expect(toast.success).toHaveBeenCalledWith("Saved successfully");
@@ -30,7 +30,7 @@ describe("useAsyncAction", () => {
     await act(async () => {
       ok = await result.current.run("save", async () => {
         throw new Error("Phone must contain only digits");
-      }, undefined, SAVED_MESSAGE);
+      }, undefined, savedMessage());
     });
     expect(ok).toBe(false);
     expect(toast.success).not.toHaveBeenCalled();

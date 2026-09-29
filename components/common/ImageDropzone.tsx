@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import { ImageSquare } from "@phosphor-icons/react";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
@@ -16,7 +17,7 @@ export function ImageDropzone({
   onChange,
   className,
   imageClassName,
-  placeholder = "Drag & drop an image, or click to browse",
+  placeholder,
   compact = false,
   onFile,
   label = "image",
@@ -34,6 +35,7 @@ export function ImageDropzone({
   /** What the image is, for its accessible name ("Choose logo" / "Replace logo"). */
   label?: string;
 }) {
+  const { t } = useTranslation();
   const { run, isPending } = useAsyncAction();
   const [dragActive, setDragActive] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -49,7 +51,7 @@ export function ImageDropzone({
       const url = await uploadImage(file);
       setImageError(false);
       onChange(url);
-    }, "Failed to upload image.");
+    }, t("common.image.uploadFailed"));
   };
 
   const trimmed = value.trim();
@@ -59,7 +61,7 @@ export function ImageDropzone({
       <div
         role="button"
         tabIndex={0}
-        aria-label={`${trimmed ? "Replace" : "Choose"} ${label}`}
+        aria-label={trimmed ? t("common.image.replace", { what: label }) : t("common.image.choose", { what: label })}
         aria-busy={isPending("upload-image") || undefined}
         onClick={() => fileInputRef.current?.click()}
         onKeyDown={(e) => {
@@ -99,7 +101,7 @@ export function ImageDropzone({
         ) : (
           <>
             <ImageSquare size={24} className="text-muted-foreground" />
-            <p className="px-4 text-xs text-muted-foreground">{placeholder}</p>
+            <p className="px-4 text-xs text-muted-foreground">{placeholder ?? t("common.image.placeholder")}</p>
           </>
         )}
         {trimmed && !isPending("upload-image") && (

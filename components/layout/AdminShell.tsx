@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   CalendarCheck,
   ChartBar,
@@ -27,57 +28,35 @@ import type { TabId } from "@/lib/types";
 import { useNewOrderNotifications } from "@/hooks/useNewOrderNotifications";
 import { AppShell, HeaderActionButton, useShellTab, type NavItem } from "./AppShell";
 
-const NAV: NavItem<TabId>[] = [
-  { id: "dash", label: "Dashboard", Icon: ChartBar },
-  { id: "tables", label: "Tables", Icon: SquaresFour },
-  { id: "categories", label: "Categories", Icon: Folders },
-  { id: "menu", label: "Menu", Icon: ForkKnife },
-  { id: "orders", label: "Orders", Icon: Receipt },
-  { id: "bookings", label: "Bookings", Icon: CalendarCheck },
-  { id: "staff", label: "Staff", Icon: Users },
-  { id: "qr", label: "Table QR codes", Icon: QrCode },
-  { id: "settings", label: "Settings", Icon: Gear },
+/* Tab names, subtitles and header actions are under shell.* in the translations. */
+const NAV: Omit<NavItem<TabId>, "label">[] = [
+  { id: "dash", Icon: ChartBar },
+  { id: "tables", Icon: SquaresFour },
+  { id: "categories", Icon: Folders },
+  { id: "menu", Icon: ForkKnife },
+  { id: "orders", Icon: Receipt },
+  { id: "bookings", Icon: CalendarCheck },
+  { id: "staff", Icon: Users },
+  { id: "qr", Icon: QrCode },
+  { id: "settings", Icon: Gear },
 ];
 
-const TITLES: Record<TabId, string> = {
-  dash: "Dashboard",
-  tables: "Tables",
-  categories: "Categories",
-  menu: "Menu",
-  orders: "Orders",
-  bookings: "Bookings",
-  staff: "Staff",
-  settings: "Settings",
-  qr: "Table QR codes",
-};
-
-const SUBTITLES: Record<TabId, string> = {
-  dash: "Financial performance for the selected period.",
-  tables: "Create, edit and remove the tables guests are seated at.",
-  categories: "Group your dishes. Hidden categories stay off the guest menu.",
-  menu: "Every dish, its price and the category it belongs to.",
-  orders: "Full order history. Filter, page through and export.",
-  bookings: "Pick a day on the calendar to see its reservations.",
-  staff: "Staff accounts for this workspace. Disable an account to revoke access.",
-  settings: "Your restaurant's details, taxes and currency, and where its data is kept.",
-  qr: "Print one per table. Scanning opens the menu for that table, with no app or sign-in needed.",
-};
-
-const ACTION_LABELS: Partial<Record<TabId, string>> = {
-  tables: "Add table",
-  categories: "Add category",
-  menu: "Add dish",
-  // orders: "New order",
-  bookings: "New booking",
-  staff: "Add staff",
-};
+/** The tabs with a header action ("Add table"…). */
+const ACTION_TABS = ["tables", "categories", "menu", "bookings", "staff"] as const;
+const hasAction = (tab: TabId): tab is (typeof ACTION_TABS)[number] => (ACTION_TABS as readonly string[]).includes(tab);
 
 const TAB_IDS: TabId[] = NAV.map((n) => n.id);
 
 /** The owner's admin app: the shared AppShell with the admin tabs. */
 export function AdminShell() {
   const { workspace, fmt } = useWorkspace();
-  const { tab, setTab } = useShellTab({ basePath: "/admin", ids: TAB_IDS, fallback: "dash", titles: TITLES, area: "Admin" });
+  const { t } = useTranslation();
+  const titles = useMemo(
+    () => Object.fromEntries(TAB_IDS.map((id) => [id, t(`shell.tabs.${id}`)])) as Record<TabId, string>,
+    [t],
+  );
+  const nav = useMemo(() => NAV.map((n) => ({ ...n, label: titles[n.id] })), [titles]);
+  const { tab, setTab } = useShellTab({ basePath: "/admin", ids: TAB_IDS, fallback: "dash", titles, area: t("shell.area.admin") });
   const [createSignal, setCreateSignal] = useState(0);
 
   useNewOrderNotifications(true, workspace.id, undefined, fmt, workspace.orders, undefined, workspace.pusher);
@@ -89,24 +68,24 @@ export function AdminShell() {
     menu: workspace.dishes.length,
     bookings: workspace.bookings.filter((b) => b.ts >= startOfToday).length,
   };
-  const actionLabel = ACTION_LABELS[tab];
+  const actionLabel = hasAction(tab) ? t(`shell.actions.${tab}`) : undefined;
 
   return (
     <AppShell
-      section="ADMIN"
+      section={t("shell.area.admin").toUpperCase()}
       logoFallback={SquaresFour}
       showDatabase
-      nav={NAV}
+      nav={nav}
       tab={tab}
       onTabChange={(next) => {
         setCreateSignal(0);
         setTab(next);
       }}
       counts={counts}
-      title={TITLES[tab]}
+      title={titles[tab]}
       actions={actionLabel && <HeaderActionButton label={actionLabel} onClick={() => setCreateSignal((n) => n + 1)} />}
     >
-      <p className="mb-5 text-sm text-muted-foreground">{SUBTITLES[tab]}</p>
+      <p className="mb-5 text-sm text-muted-foreground">{t(`shell.subtitles.${tab}`)}</p>
       {tab === "dash" && <DashboardPanel />}
       {tab === "tables" && <TablesPanel createSignal={createSignal} />}
       {tab === "categories" && <CategoriesPanel createSignal={createSignal} />}

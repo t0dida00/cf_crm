@@ -1,0 +1,1355 @@
+{
+  "common": {
+    "language": "Language",
+    "status": {
+      "New": "New",
+      "Preparing": "Preparing",
+      "Served": "Served",
+      "Ready": "Ready",
+      "Paid": "Paid"
+    },
+    "backToHome": "Back to home",
+    "tableName": "Table {{n}}",
+    "loading": "Loading…",
+    "loadFailed": "Couldn't load this data.",
+    "tryAgain": "Try again",
+    "nothing": "Nothing to show.",
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "saved": "Saved successfully",
+    "timedOut": "Request timed out",
+    "somethingWrong": "Something went wrong. Please try again.",
+    "pagination": {
+      "showing": "Showing {{from}}–{{to}} of {{total}} {{what}}",
+      "none": "No {{what}}",
+      "page": "Page {{page}} of {{pages}}",
+      "previous": "Previous page",
+      "next": "Next page"
+    },
+    "nouns": {
+      "orders_one": "order",
+      "orders_other": "orders",
+      "bookings_one": "booking",
+      "bookings_other": "bookings",
+      "sessions_one": "session",
+      "sessions_other": "sessions"
+    },
+    "image": {
+      "placeholder": "Drag & drop an image, or click to browse",
+      "replace": "Replace {{what}}",
+      "choose": "Choose {{what}}",
+      "uploadFailed": "Couldn't upload the image.",
+      "remove": "Remove {{what}}",
+      "uploading": "Uploading…",
+      "logo": "logo",
+      "dishPhoto": "dish photo"
+    },
+    "tags": {
+      "vegan": "Vegan",
+      "bestSeller": "Best seller",
+      "soldOut": "Sold out"
+    }
+  },
+  "lexicon": {
+    "restaurant": {
+      "label": "Restaurant",
+      "blurb": "Covers, tables, kitchen"
+    },
+    "cafe": {
+      "label": "Café / Bakery",
+      "blurb": "Counter and table service"
+    },
+    "zones": {
+      "mainHall": "Main hall",
+      "terrace": "Terrace",
+      "bar": "Bar",
+      "window": "Window",
+      "backRoom": "Back room",
+      "counter": "Counter"
+    },
+    "categories": {
+      "starters": "Starters",
+      "mains": "Mains",
+      "desserts": "Desserts",
+      "coffee": "Coffee",
+      "bakery": "Bakery",
+      "brunch": "Brunch"
+    },
+    "dishes": {
+      "panConTomate": {
+        "name": "Pan con tomate",
+        "note": "Toasted sourdough, tomato, olive oil"
+      },
+      "padron": {
+        "name": "Padrón peppers",
+        "note": "Blistered, sea salt"
+      },
+      "iberianHam": {
+        "name": "Iberian ham plate",
+        "note": "24-month cured, 80g"
+      },
+      "seafoodPaella": {
+        "name": "Seafood paella",
+        "note": "For one, 25 min: prawn, mussel, squid"
+      },
+      "seaBass": {
+        "name": "Grilled sea bass",
+        "note": "Whole fish, lemon, roast potatoes"
+      },
+      "ribeye": {
+        "name": "Ribeye 300g",
+        "note": "Served medium rare unless asked"
+      },
+      "cremaCatalana": {
+        "name": "Crema catalana",
+        "note": "Burnt cinnamon sugar"
+      },
+      "cheesecake": {
+        "name": "Cheesecake",
+        "note": "Basque style, lightly burnt"
+      },
+      "flatWhite": {
+        "name": "Flat white",
+        "note": "Double shot, steamed milk"
+      },
+      "cortado": {
+        "name": "Cortado",
+        "note": "Espresso cut with warm milk"
+      },
+      "filterBatch": {
+        "name": "Filter batch",
+        "note": "Rotating single origin"
+      },
+      "almondCroissant": {
+        "name": "Almond croissant",
+        "note": "Twice-baked, almond cream"
+      },
+      "sourdoughLoaf": {
+        "name": "Sourdough loaf",
+        "note": "48-hour ferment, whole loaf"
+      },
+      "cinnamonBun": {
+        "name": "Cinnamon bun",
+        "note": "Cardamom sugar, cream cheese glaze"
+      },
+      "avocadoToast": {
+        "name": "Avocado toast",
+        "note": "Sourdough, chilli oil, lime"
+      },
+      "eggsBenedict": {
+        "name": "Eggs benedict",
+        "note": "Poached eggs, hollandaise, muffin"
+      }
+    },
+    "lineNotes": {
+      "forOne": "For one",
+      "mediumRare": "Medium rare"
+    }
+  },
+  "marketing": {
+    "nav": {
+      "label": "Sections",
+      "features": "Features",
+      "demo": "Demo",
+      "menu": "Menu",
+      "contact": "Contact"
+    },
+    "tryDemo": "Try the demo",
+    "createAccount": "Create an account",
+    "hero": {
+      "title": "Every order, straight to the pass.",
+      "body": "Guests order from the QR code on their table. The ticket reaches your kitchen and floor screens the moment they send it, with tonight's bookings and the day's takings in the same place."
+    },
+    "features": {
+      "title": "From the scan to the closing count",
+      "intro": "One system for the guest at the table, the team on the floor and you at the end of the night. Here is one table's evening.",
+      "qr": {
+        "title": "QR ordering, no app",
+        "body": "Guests scan the code on their table and order from their own phone. No install, no account, no waiting to catch someone's eye."
+      },
+      "live": {
+        "title": "Live on every screen",
+        "body": "New orders reach the kitchen and floor screens the moment they're sent, without a refresh or anyone shouting across the pass."
+      },
+      "tables": {
+        "title": "Tables and bookings together",
+        "body": "See which tables are seated, free or booked for tonight, updated as guests come and go."
+      },
+      "numbers": {
+        "title": "The day's numbers",
+        "body": "Takings, best-selling dishes and busy hours, without adding it all up at closing time."
+      }
+    },
+    "demo": {
+      "title": "Want a demo?",
+      "body": "Get in touch and I'll share a demo account to explore the tables, menu, live orders and reports.",
+      "contact": "Contact me",
+      "roles": "See what each role can do"
+    },
+    "menu": {
+      "title": "Write the menu once, every table has it",
+      "body": "Group dishes by category, set prices and descriptions, and changes reach every table straight away."
+    },
+    "steps": {
+      "title": "Ready for tonight in three steps",
+      "setup": {
+        "title": "Set up your business",
+        "body": "Add your details and choose restaurant or café. No onboarding call needed."
+      },
+      "menu": {
+        "title": "Add your menu and tables",
+        "body": "Group dishes by category, set prices, and every table gets its own QR code."
+      },
+      "live": {
+        "title": "Take orders live",
+        "body": "Guests order from their phones and staff follow every ticket until it's paid."
+      }
+    },
+    "signup": {
+      "title": "Your next service, already seated.",
+      "body": "Free to try, no credit card, works on any phone."
+    },
+    "contact": {
+      "title": "Get in touch",
+      "body": "A question about Tably, feedback, or a project you have in mind? Send a message and I usually reply within a day."
+    },
+    "rail": {
+      "label": "Order tickets on the kitchen rail. The newest, from table 2 at the bar, has just arrived."
+    },
+    "flow": {
+      "caption": "One table's evening with Tably, step by step",
+      "lanes": {
+        "Guest": "Guest",
+        "Staff": "Staff",
+        "Owner": "Owner"
+      },
+      "scan": "Sits down and scans Table 4's QR code",
+      "order": "Orders from their phone; the table shows as seated",
+      "ticket": "The ticket lands on every screen",
+      "cook": "Kitchen cooks, the floor serves",
+      "bill": "Asks for the bill from their phone",
+      "checkout": "Checks out and prints the receipt",
+      "takings": "Takings and best sellers update"
+    },
+    "footer": {
+      "tagline": "QR ordering, live kitchen tickets and bookings for restaurants and cafés.",
+      "product": "Product",
+      "sampleMenu": "Sample menu",
+      "roles": "What each role can do",
+      "contact": "Contact",
+      "sendMessage": "Send a message",
+      "legal": "Legal",
+      "terms": "Terms of use",
+      "privacy": "Privacy policy",
+      "cookies": "Cookies",
+      "rights": "© {{year}} Tably. All rights reserved.",
+      "builtBy": "Built by {{name}}"
+    },
+    "contactForm": {
+      "name": "Name",
+      "namePlaceholder": "Your name",
+      "email": "Email",
+      "message": "Message",
+      "messagePlaceholder": "What would you like to say?",
+      "send": "Send message",
+      "sending": "Sending…",
+      "sent": "Message sent. Thanks for reaching out!",
+      "failed": "Couldn't send the message. Please try again."
+    },
+    "guide": {
+      "kicker": "How Tably works",
+      "title": "One app, three roles",
+      "intro": "Every table interaction in Tably flows through one of three views. Here's what each one can do.",
+      "roles": {
+        "client": {
+          "label": "Client",
+          "eyebrow": "no login required",
+          "title": "The guest ordering from their table",
+          "body": "Guests reach Tably by scanning the QR code on their table: no app install, no account."
+        },
+        "staff": {
+          "label": "Staff",
+          "eyebrow": "sign in required",
+          "title": "The floor and kitchen team",
+          "body": "Staff sign in to a shared dashboard that tracks every table and ticket in real time."
+        },
+        "admin": {
+          "label": "Admin",
+          "eyebrow": "owner access",
+          "title": "The workspace owner",
+          "body": "Admins configure the workspace and get the full picture across every table and shift."
+        }
+      },
+      "features": {
+        "scan": {
+          "title": "Scan & browse",
+          "body": "Scan the table's QR code to open the menu, grouped by category, right in the browser."
+        },
+        "cart": {
+          "title": "Build an order",
+          "body": "Add items to a cart, adjust quantities, and leave a note for the kitchen on any item."
+        },
+        "call": {
+          "title": "Call staff or checkout",
+          "body": "Tap \"Call staff\" or \"Checkout\" to ping the floor instantly, no waving to get attention."
+        },
+        "history": {
+          "title": "Order history",
+          "body": "Review every order placed at the table this visit, with line items and totals."
+        },
+        "liveOrders": {
+          "title": "Live orders",
+          "body": "New orders land on the board instantly, with a notification the moment a guest checks out."
+        },
+        "tableStatus": {
+          "title": "Table status",
+          "body": "See every table's state (free, seated, booked or finished) and print the bill at checkout."
+        },
+        "bookings": {
+          "title": "Bookings",
+          "body": "View upcoming reservations alongside live table activity."
+        },
+        "menuRef": {
+          "title": "Menu reference",
+          "body": "Look up dish details while serving, plus a closed-orders history for past service."
+        },
+        "requests": {
+          "title": "Guest requests",
+          "body": "A bell icon surfaces pending \"call staff\" and \"checkout\" requests from guests, ready to resolve."
+        },
+        "dashboard": {
+          "title": "Dashboard",
+          "body": "Track revenue, top dishes, and busy hours over any period."
+        },
+        "tablesCats": {
+          "title": "Tables & categories",
+          "body": "Set up the floor plan and organize the menu into categories."
+        },
+        "menuMgmt": {
+          "title": "Menu management",
+          "body": "Add, edit, and price every dish guests can order."
+        },
+        "ordersBookings": {
+          "title": "Orders & bookings",
+          "body": "Browse, filter, and export order history, and manage upcoming reservations."
+        },
+        "staffAccounts": {
+          "title": "Staff accounts",
+          "body": "Add staff members or disable their access when needed."
+        },
+        "qr": {
+          "title": "Table QR codes",
+          "body": "Generate the QR code for every table: the link guests scan to reach the menu."
+        },
+        "settings": {
+          "title": "Settings",
+          "body": "Configure the workspace's tax rate and currency."
+        }
+      },
+      "loop": {
+        "kicker": "End to end",
+        "title": "From sign-up to a paid order",
+        "intro": "Here's the full loop, start to finish.",
+        "step": "Step {{n}}"
+      },
+      "steps": {
+        "account": {
+          "title": "Create an account",
+          "body": "Sign up and set up your workspace as the admin."
+        },
+        "table": {
+          "title": "Create a table",
+          "body": "Add each table in your venue from the Tables panel."
+        },
+        "qr": {
+          "title": "QR generates automatically",
+          "body": "Every table gets its own QR code the moment it's created, nothing else to set up."
+        },
+        "download": {
+          "title": "Download & place the QR",
+          "body": "Download the code and stick it on the matching table for guests to scan."
+        },
+        "order": {
+          "title": "Guests scan & order",
+          "body": "Scanning opens the menu: guests browse and place their order straight from their phone."
+        },
+        "see": {
+          "title": "Staff & admin see the order",
+          "body": "The order lands on the live board instantly, tied to its table."
+        },
+        "status": {
+          "title": "Order moves through status",
+          "body": "Staff track it from New to Preparing, Served and Paid as service progresses."
+        }
+      }
+    }
+  },
+  "legal": {
+    "updated": "Last updated {{date}}",
+    "date": "29 September 2026",
+    "tableName": "Name",
+    "tablePurpose": "What it's for",
+    "terms": {
+      "title": "Terms of use",
+      "intro": "These terms cover using Tably: the owner and staff apps, the guest menu reached from a table's QR code, and this website. By using Tably you agree to them.",
+      "sections": {
+        "what": {
+          "h": "What Tably is",
+          "p": "It is free to use and offered as it is, to show how restaurant and café ordering can work. It is not a paid service and comes with no service-level commitment."
+        },
+        "accounts": {
+          "h": "Accounts",
+          "items": {
+            "a": "Owners create an account with their full name, email and a password, and keep the details accurate.",
+            "b": "Owners create the staff accounts for their business and are responsible for who gets one.",
+            "c": "Keep your password to yourself. Tell us straight away if you think someone else has used your account.",
+            "d": "We can suspend or close an account that breaks these terms."
+          }
+        },
+        "demo": {
+          "h": "The demo account",
+          "p": "The demo account is shared: anyone can sign in and change its menu, tables, orders and bookings. Don't enter real personal details there. Its data can be reset at any time."
+        },
+        "data": {
+          "h": "Your business data",
+          "p": "The menu, tables, orders, bookings, images and settings you add stay yours. Tably only uses them to run the service for you. If you connect your own database, real-time (Pusher) app or image storage, those services' own terms apply to them, and you're responsible for your accounts there."
+        },
+        "guests": {
+          "h": "Guests ordering at a table",
+          "p": "Guests order through the business, not through Tably. The business sets its menu, prices and taxes, and handles service and payment. Questions about an order go to the restaurant or café."
+        },
+        "use": {
+          "h": "Acceptable use",
+          "items": {
+            "a": "Don't use Tably for anything unlawful.",
+            "b": "Don't try to reach another business's data, break the service or overload it.",
+            "c": "Only upload images and text you have the right to use."
+          }
+        },
+        "liability": {
+          "h": "Availability and liability",
+          "p": "Tably can change, pause or stop at any time. It is provided without warranties, and as far as the law allows, {{name}} isn't liable for lost data, lost orders or lost income from using it. Keep your own records of anything your business depends on."
+        },
+        "changes": {
+          "h": "Changes and contact",
+          "p": "When these terms change, the date at the top changes too. See also the <privacy>privacy policy</privacy> and <cookies>cookie policy</cookies>. Questions: <email>{{email}}</email>."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "intro": "What Tably collects, why, and who else handles it. Tably is run by {{name}}, who you can reach at {{email}}.",
+      "sections": {
+        "collect": {
+          "h": "What we collect",
+          "items": {
+            "owners": "<b>Owner accounts:</b> full name, email and password. Passwords are stored only as a bcrypt hash, never as you typed them.",
+            "staff": "<b>Staff accounts:</b> the name, email and password an owner sets for each staff member.",
+            "business": "<b>Business data:</b> menu, prices, tables, orders, bookings, settings, the logo and dish photos. Bookings hold the guest name and phone number staff enter.",
+            "guests": "<b>Guests at a table:</b> no account and no personal details. Orders and requests such as “call staff” are tied to the table, not to a person.",
+            "messages": "<b>Messages:</b> the name, email and message you send with a contact form.",
+            "usage": "<b>Usage:</b> anonymous page-view counts from Vercel Analytics, which uses no cookies."
+          }
+        },
+        "why": {
+          "h": "Why we use it",
+          "items": {
+            "a": "To sign you in and run your business's tables, orders and bookings.",
+            "b": "To email the site owner about new sign-ups and contact messages, so they can reply.",
+            "c": "To see which pages are used and improve them."
+          },
+          "after": "We don't sell your data or use it for advertising."
+        },
+        "who": {
+          "h": "Who else handles it",
+          "items": {
+            "a": "Vercel hosts the website, its analytics and, unless you connect your own, image storage.",
+            "b": "Pusher delivers live updates, such as a new order reaching the staff screens.",
+            "c": "Resend delivers the sign-up and contact-form emails.",
+            "d": "If an owner connects their own database, Pusher app or image storage, that business's data is kept there instead."
+          }
+        },
+        "keep": {
+          "h": "How long we keep it",
+          "p": "Account and business data are kept while the account exists. Contact messages stay in the site owner's inbox. The shared demo account can be reset at any time."
+        },
+        "choices": {
+          "h": "Your choices",
+          "p": "To see, correct or delete your data, or to close your account, email <email>{{email}}</email>. Owners can edit or remove their staff accounts in the Staff tab. For what's stored in your browser, see the <cookies>cookie policy</cookies>."
+        }
+      }
+    },
+    "cookies": {
+      "title": "Cookie policy",
+      "intro": "Tably sets only the cookies it needs to sign you in and to remember your language. There are no advertising or tracking cookies, so there's nothing to accept or turn off.",
+      "cookiesCaption": "Cookies Tably sets",
+      "storageCaption": "Preferences kept in browser storage",
+      "rows": {
+        "session": "Keeps you signed in. Removed when you sign out or the session ends.",
+        "csrf": "Protects the sign-in form from forged requests.",
+        "callback": "Remembers the page to return to after signing in.",
+        "lang": "The language you chose (English or Tiếng Việt). Kept for a year.",
+        "signInAs": "Whether you last signed in as Owner or Staff.",
+        "sidebar": "Whether you collapsed the app's sidebar.",
+        "paper": "The receipt paper width you print on (80 or 58 mm).",
+        "building": "That you've seen the workspace setup animation. Cleared when the tab closes."
+      },
+      "sections": {
+        "cookies": {
+          "h": "Cookies",
+          "p": "Set by Auth.js when you sign in to the owner or staff app, plus <code>lang</code> when you pick a language. Guests ordering from a table get only <code>lang</code>, and only if they pick one. On a secure (https) connection the sign-in cookies' names start with <code>__Secure-</code> or <code>__Host-</code>."
+        },
+        "storage": {
+          "h": "Stored in your browser",
+          "p": "A few preferences are kept in your browser's own storage. They never leave your device and aren't sent to us."
+        },
+        "analytics": {
+          "h": "Analytics",
+          "p": "Vercel Analytics counts page views without cookies and without identifying you."
+        },
+        "control": {
+          "h": "Your control",
+          "p": "You can clear or block cookies and site data in your browser settings. Blocking the session cookie means you can't sign in. More on what we collect is in the <privacy>privacy policy</privacy>."
+        }
+      }
+    }
+  },
+  "meta": {
+    "description": "Set up a restaurant or café workspace and manage it.",
+    "guide": "How Tably works",
+    "guideDescription": "What clients, staff, and admins can each do in Tably.",
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "admin": "Admin",
+    "staff": "Staff",
+    "menu": "Menu"
+  },
+  "validation": {
+    "phone": "Enter a phone number using digits, with an optional + at the start.",
+    "email": "Enter a valid email, like name@example.com.",
+    "fullName": "Enter a first and last name.",
+    "password": "Password must be at least 8 characters.",
+    "required": "{{field}} is required.",
+    "requiredChoice": "{{field}} is required.",
+    "price": "Enter a price of 0 or more.",
+    "seats": "Seats must be a whole number from 1.",
+    "count": "{{field}} must be a whole number from 1.",
+    "percent": "{{field}} must be 0 or more.",
+    "percentMax": "{{field}} can't be more than {{max}}%.",
+    "fields": {
+      "phone": "Phone",
+      "email": "Email",
+      "fullName": "Full name",
+      "businessName": "Business name",
+      "address": "Address",
+      "name": "Name",
+      "price": "Price",
+      "category": "Category",
+      "tax": "Tax",
+      "tableName": "Table name",
+      "seats": "Seats",
+      "categoryName": "Category name",
+      "guestName": "Guest name",
+      "partySize": "Party size",
+      "quantity": "Quantity",
+      "commonTax": "Common tax",
+      "taxPercentage": "Tax percentage"
+    }
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "signInTitle": "Sign in to Tably",
+    "signInAs": "Sign in as",
+    "owner": "Owner",
+    "staff": "Staff",
+    "ownerHint": "Manage your menu, tables, staff and reports.",
+    "staffHint": "Take orders and look after your tables.",
+    "email": "Email",
+    "password": "Password",
+    "newBusiness": "Setting up a new business?",
+    "createAccount": "Create an account",
+    "noAccount": "No account yet? Ask your owner for one, or <contact>contact us</contact>.",
+    "backToSignIn": "Back to sign in",
+    "requestTitle": "Request an account",
+    "requestBody": "Tell us a bit about your business and we'll set you up with staff and admin access.",
+    "notice": {
+      "pending": "Your account is still being reviewed. We'll notify you at your registered email once it's approved.",
+      "disabled": "Your account is disabled temporarily. Please contact your owner(s).",
+      "wrong": "Email or password is wrong, please try again.",
+      "failed": "Something went wrong signing in. Please try again."
+    },
+    "signup": {
+      "title": "Create your owner account",
+      "body": "For whoever runs the restaurant or café. Your staff get their own sign-ins from you later.",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Ana Ruiz",
+      "passwordHint": "At least {{n}} characters.",
+      "submit": "Create account",
+      "submitting": "Creating account…",
+      "haveAccount": "Already have an account?",
+      "exists": "An account with this email already exists. Sign in instead.",
+      "invalid": "Check your details and try again.",
+      "failed": "Something went wrong creating your account. Please try again.",
+      "pendingTitle": "Dear {{name}},",
+      "pendingBody": "Your request is being reviewed. We'll notify you at <b>{{email}}</b> once your account is approved. Then you can sign in and set up your business.",
+      "ok": "OK"
+    },
+    "steps": {
+      "title": "From signup to your first service",
+      "here": "You're here",
+      "account": {
+        "title": "Create your account",
+        "body": "Your name, email and a password."
+      },
+      "connections": {
+        "title": "Connect your services",
+        "body": "Where your orders, live updates and dish photos are kept: your own, or the shared ones to start."
+      },
+      "business": {
+        "title": "Describe your business",
+        "body": "Its name, logo, and whether it's a restaurant or a café."
+      },
+      "menu": {
+        "title": "Add your menu and tables",
+        "body": "Then print each table's QR code and add your staff."
+      }
+    },
+    "unauthorized": {
+      "title": "You don't have access to this page",
+      "body": "This page is only available to workspace owners. If you think this is a mistake, ask an owner to give you access.",
+      "backToStaff": "Back to Staff",
+      "signOut": "Sign out"
+    }
+  },
+  "onboarding": {
+    "stepOf": "Workspace setup: step {{n}} of 2",
+    "signOut": "Sign out",
+    "back": "Back",
+    "continue": "Continue",
+    "createFailed": "Couldn't create the workspace. Please try again.",
+    "connections": {
+      "title": "Connect your own services",
+      "body": "Your menu, orders and bookings are stored in your own PostgreSQL database, live updates go through your own Pusher app, and dish photos are kept in your own storage.",
+      "canSkip": "You can also start on the shared service and connect these later in Settings.",
+      "mustConnect": "Connect all three to continue.",
+      "useShared": "Use the shared service for now"
+    },
+    "setup": {
+      "title": "Let's set up your workspace",
+      "body": "Tell us who you are. We'll build the tables, menu and order tools that fit your business.",
+      "logo": "Logo",
+      "logoPlaceholder": "Drop a logo, or click to browse",
+      "name": "Enter your business name",
+      "namePlaceholder": "e.g. Casa Marina",
+      "phone": "Phone",
+      "phonePlaceholder": "e.g. +34 600 000 000",
+      "address": "Address",
+      "addressPlaceholder": "e.g. Carrer del Mar 12, Barcelona",
+      "emailNote": "Your business email is the one you signed up with.",
+      "kind": "What kind of business is it?",
+      "later": "You can change all of this later.",
+      "build": "Build my workspace",
+      "building": "Building…"
+    },
+    "building": {
+      "kicker": "Setting up",
+      "welcome": "Welcome, {{name}}",
+      "assembling": "Assembling your {{kind}} workspace.",
+      "workspace": "Workspace",
+      "tables": "Tables",
+      "categories": "Categories",
+      "menu": "Menu",
+      "orders": "Orders",
+      "bookings": "Bookings",
+      "readyToAdd": "Ready to add",
+      "historyImported": "History imported",
+      "calendarSynced": "Calendar synced"
+    },
+    "form": {
+      "noKey": "The server can't store credentials yet (CREDENTIALS_KEY isn't set). Ask whoever runs this app to add it.",
+      "notConnected": "Not connected: using the shared service.",
+      "checked": "checked {{date}}",
+      "database": "Database (PostgreSQL)",
+      "pusher": "Live updates (Pusher)",
+      "storage": "Images (storage)",
+      "pusherApp": "App {{id}}",
+      "databaseUrl": "Database connection URL",
+      "databaseHelp": "Use an <b>empty</b> database; we create the tables. A pooled URL works best (Neon, Supabase and Prisma Postgres all offer one).",
+      "databaseSwitch": "Switching databases doesn't move your existing menu, orders or bookings.",
+      "paste": "Paste from Pusher",
+      "pasteHelp": "In your Pusher Channels app, open <b>App Keys</b>, click <b>Copy</b> and paste here to fill the fields below. Or type them in yourself.",
+      "pasteFilled": "Filled the Pusher {{names}}.",
+      "pasteRest": "Fill in the rest below.",
+      "pasteNone": "Couldn't find Pusher credentials in that text. Copy them from your app's App Keys page.",
+      "pusherNames": {
+        "appId": "app ID",
+        "key": "key",
+        "secret": "secret",
+        "cluster": "cluster"
+      },
+      "and": "and",
+      "pusherAppId": "Pusher app ID",
+      "pusherCluster": "Pusher cluster",
+      "pusherKey": "Pusher key",
+      "pusherSecret": "Pusher secret",
+      "imageStorage": "Image storage",
+      "s3": "S3-compatible",
+      "storageHelp": "Where dish photos and your logo are stored. It must allow public reads, since guests' browsers load the images.",
+      "storageSwitch": "Switching storage doesn't move images already uploaded.",
+      "blobToken": "Vercel Blob read-write token",
+      "blobHelp": "In Vercel, open <b>Storage</b>, pick your public Blob store and copy <b>BLOB_READ_WRITE_TOKEN</b> from its <b>.env.local</b> tab.",
+      "endpoint": "Endpoint",
+      "region": "Region",
+      "bucket": "Bucket",
+      "publicUrl": "Public URL",
+      "accessKeyId": "Access key ID",
+      "secretAccessKey": "Secret access key",
+      "s3Help": "Works with AWS S3, Cloudflare R2, Backblaze B2, DigitalOcean Spaces, Supabase Storage and MinIO. On AWS, the endpoint is <code>https://s3.&lt;region&gt;.amazonaws.com</code> and the region is required. The public URL is the address the bucket's files are served from.",
+      "checking": "Checking…",
+      "testContinue": "Test & continue",
+      "testSave": "Test & save",
+      "cancel": "Cancel",
+      "checkNote": "All three are checked now (storage with a small test file, deleted again) and saved once your business is created in the next step.",
+      "saveNote": "All three are checked before anything is saved (storage with a small test file, deleted again).",
+      "secretsNote": "Passwords and secrets are stored encrypted and never shown again.",
+      "replace": "Replace connections"
+    },
+    "opening": "Opening your workspace…"
+  },
+  "shell": {
+    "area": {
+      "admin": "Admin",
+      "staff": "Staff"
+    },
+    "tabs": {
+      "dash": "Dashboard",
+      "tables": "Tables",
+      "categories": "Categories",
+      "menu": "Menu",
+      "orders": "Orders",
+      "bookings": "Bookings",
+      "staff": "Staff",
+      "qr": "Table QR codes",
+      "settings": "Settings",
+      "history": "History"
+    },
+    "subtitles": {
+      "dash": "Financial performance for the selected period.",
+      "tables": "Create, edit and remove the tables guests are seated at.",
+      "categories": "Group your dishes. Hidden categories stay off the guest menu.",
+      "menu": "Every dish, its price and the category it belongs to.",
+      "orders": "Full order history. Filter, page through and export.",
+      "bookings": "Pick a day on the calendar to see its reservations.",
+      "staff": "Staff accounts for this workspace. Disable an account to revoke access.",
+      "settings": "Your restaurant's details, taxes and currency, and where its data is kept.",
+      "qr": "Print one per table. Scanning opens the menu for that table, with no app or sign-in needed."
+    },
+    "actions": {
+      "tables": "Add table",
+      "categories": "Add category",
+      "menu": "Add dish",
+      "bookings": "New booking",
+      "staff": "Add staff"
+    },
+    "sharedDatabase": "Shared database",
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar",
+    "signOut": "Sign out",
+    "home": "Tably home",
+    "howItWorks": "How Tably works",
+    "rights": "© {{year}} Tably. All rights reserved.",
+    "navigation": "Navigation",
+    "skip": "Skip to content",
+    "requests": {
+      "button": "Table requests",
+      "buttonWaiting": "Table requests, {{count}} waiting",
+      "title": "Table requests",
+      "order": "Oldest first: first come, first served.",
+      "empty": "No pending requests.",
+      "since": "Since {{time}}",
+      "resolve": "Resolve",
+      "resolving": "Resolving…",
+      "loadFailed": "Couldn't load table requests.",
+      "type": {
+        "call_staff": "Called staff",
+        "checkout": "Requested checkout"
+      },
+      "toast": {
+        "call_staff": "{{table}} called staff",
+        "checkout": "{{table}} requested checkout"
+      }
+    },
+    "newOrder": {
+      "title": "New order {{code}}",
+      "body": "{{table}}, {{total}}",
+      "view": "View"
+    }
+  },
+  "errors": {
+    "requestFailed": "Request failed ({{status}}). Please try again.",
+    "timedOut": "Request timed out. Please try again.",
+    "imageTooBig": "Image must be smaller than 4MB.",
+    "uploadFailed": "Couldn't upload the image.",
+    "generic": "Something went wrong.",
+    "chart": "Couldn't load the chart.",
+    "connections": "Couldn't load connections.",
+    "orders": "Couldn't load orders.",
+    "dashboard": "Couldn't load dashboard figures.",
+    "workspaceRefresh": "Couldn't refresh your workspace.",
+    "workspaceLoad": "Couldn't load your workspace.",
+    "workspaceLoading": "Loading workspace…",
+    "askOwnerDatabase": "Your owner needs to connect the business's database before the app can be used."
+  },
+  "range": {
+    "today": "Today",
+    "week": "Last 7 days",
+    "month": "This month",
+    "year": "This year",
+    "all": "All time",
+    "custom": "Custom range",
+    "allCaption": "All time, {{from}} – {{to}}",
+    "start": "Start",
+    "todayWord": "Today"
+  },
+  "admin": {
+    "dashboard": {
+      "heading": {
+        "today": "Takings today",
+        "week": "Takings in the last 7 days",
+        "month": "Takings this month",
+        "year": "Takings this year",
+        "all": "Takings since you opened",
+        "custom": "Takings in the chosen dates"
+      },
+      "chart": {
+        "hour": "Takings by hour",
+        "day": "Takings by day",
+        "month": "Takings by month",
+        "year": "Takings by year"
+      },
+      "orders_one": "{{n}} order",
+      "orders_other": "{{n}} orders",
+      "average": "{{amount}} average order",
+      "bookings_one": "{{n}} booking",
+      "bookings_other": "{{n}} bookings",
+      "guests_one": "{{n}} guest",
+      "guests_other": "{{n}} guests",
+      "items_one": "{{n}} item",
+      "items_other": "{{n}} items",
+      "fromDate": "From date",
+      "toDate": "To date",
+      "to": "to",
+      "noOrders": "No orders in this range.",
+      "latest": "Latest orders",
+      "bestSellers": "Best sellers",
+      "nothingSold": "Nothing sold in this range.",
+      "sold": "{{n}} sold",
+      "columns": {
+        "items": "Items",
+        "amount": "Amount",
+        "checkout": "Checkout time"
+      },
+      "takings": "Takings",
+      "tooltipTakings": "Takings {{amount}}",
+      "tooltipOrders": "Orders {{n}}",
+      "tableCaption": "Takings per period",
+      "period": "Period",
+      "ordersHeader": "Orders"
+    },
+    "tables": {
+      "noZone": "No zone",
+      "tables": "Tables",
+      "count_one": "{{n}} table",
+      "count_other": "{{n}} tables",
+      "seats_one": "{{n}} seat",
+      "seats_other": "{{n}} seats",
+      "empty": "No tables yet. Add the tables guests sit at; each one gets its own QR code.",
+      "add": "Add table",
+      "edit": "Edit table",
+      "new": "New table",
+      "name": "Name",
+      "seatsLabel": "Seats",
+      "zone": "Zone (optional)",
+      "newZone": "+ New zone…",
+      "newZoneName": "New zone name",
+      "newZonePlaceholder": "e.g. Garden (leave blank for no zone)",
+      "deleteFailed": "Couldn't delete the table.",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "save": "Save table",
+      "create": "Create table",
+      "ordersAt": "Orders at {{name}}",
+      "noOrders": "No orders placed at this table yet.",
+      "orderCount": "{{n}} orders",
+      "orders": "Orders",
+      "editShort": "Edit",
+      "editName": "Edit {{name}}"
+    },
+    "categories": {
+      "reorderFailed": "Couldn't save the new order.",
+      "deleteFailed": "Couldn't delete the category.",
+      "edit": "Edit category",
+      "new": "New category",
+      "name": "Name",
+      "namePlaceholder": "e.g. Drinks",
+      "show": "Show on the menu",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "save": "Save category",
+      "create": "Create category",
+      "listLabel": "Categories, in menu order",
+      "empty": "No categories yet.",
+      "dishes_one": "{{n}} dish",
+      "dishes_other": "{{n}} dishes",
+      "onMenu": "On the menu",
+      "hidden": "Hidden",
+      "drag": "Drag to reorder {{name}}",
+      "moveUp": "Move {{name}} up",
+      "moveDown": "Move {{name}} down",
+      "editName": "Edit category {{name}}",
+      "deleteName": "Delete category {{name}}"
+    },
+    "menu": {
+      "status": {
+        "valid": "Available",
+        "sold_out": "Sold out",
+        "hidden": "Hidden"
+      },
+      "hiddenWithCategory": "Hidden with category",
+      "inclTax": "Incl. {{name}}",
+      "exclTax": "Excl. tax {{pct}}%",
+      "commonTax": "Common tax",
+      "search": "Search dishes",
+      "allCategories": "All categories",
+      "filterCategory": "Filter by category",
+      "importCsv": "Import CSV",
+      "exportCsv": "Export CSV",
+      "sampleFile": "Sample file",
+      "csvFile": "Menu CSV file",
+      "hidden": "Hidden",
+      "dishes_one": "{{n}} dish",
+      "dishes_other": "{{n}} dishes",
+      "noDishes": "No dishes in this category.",
+      "editName": "Edit {{name}}",
+      "deleteName": "Delete {{name}}",
+      "deleteFailed": "Couldn't delete the dish.",
+      "edit": "Edit dish",
+      "new": "New dish",
+      "name": "Name",
+      "namePlaceholder": "Dish name",
+      "price": "Price ({{currency}})",
+      "tax": "Tax",
+      "taxNone": "None",
+      "taxInclude": "Include tax",
+      "taxExclude": "Exclude tax",
+      "taxIncluded": "Tax included in the price",
+      "commonTaxRate": "Common tax ({{pct}}%)",
+      "specialTaxRate": "{{name}} ({{pct}}%)",
+      "taxAdded": "Tax added at checkout (%)",
+      "estimate": "Estimated final price: {{final}}, {{price}} + {{pct}}% tax",
+      "category": "Category",
+      "pickCategory": "Pick a category",
+      "addCategoryFirst": "Add a category first",
+      "description": "Description",
+      "descriptionPlaceholder": "Ingredients, prep notes…",
+      "vegan": "Vegan",
+      "statusLegend": "Status",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "save": "Save dish",
+      "create": "Create dish"
+    },
+    "csv": {
+      "empty": "The file is empty.",
+      "missing_one": "Missing column: {{cols}}.",
+      "missing_other": "Missing columns: {{cols}}.",
+      "categoryRequired": "Category is required.",
+      "nameRequired": "Dish name is required.",
+      "price": "Price must be a number, 0 or more.",
+      "tax": "Tax must be 0 (none), 1 (included) or 2 (added at checkout).",
+      "taxName": "Tax value must be \"{{common}}\" or one of your special taxes ({{taxes}}).",
+      "noneYet": "none yet",
+      "taxPct": "Tax value must be a percentage from 0 to {{max}}.",
+      "photo": "Photo must be an https:// link (Vercel Blob or S3).",
+      "vegan": "is_vegan must be 1 or 0.",
+      "status": "Status must be 0 (hidden), 1 (sold out) or 2 (available).",
+      "duplicate": "\"{{name}}\" appears twice in {{category}}.",
+      "noDishes": "The file has no dishes.",
+      "notUtf8": "This file isn't saved as UTF-8, so accented letters (Vietnamese, for example) would come out wrong. In Excel, use File > Save As > \"CSV UTF-8 (Comma delimited)\"; in Google Sheets, File > Download > CSV. Then import it again.",
+      "title": "Import menu",
+      "problems_one": "{{n}} problem to fix before importing. Nothing has been saved.",
+      "problems_other": "{{n}} problems to fix before importing. Nothing has been saved.",
+      "line": "Line {{n}}:",
+      "add_one": "<b>{{n}} dish</b> to add",
+      "add_other": "<b>{{n}} dishes</b> to add",
+      "update_one": "<b>{{n}} dish</b> to update (matched by category and name)",
+      "update_other": "<b>{{n}} dishes</b> to update (matched by category and name)",
+      "newCategories_one": "<b>{{n}} new category</b>: {{names}}",
+      "newCategories_other": "<b>{{n}} new categories</b>: {{names}}",
+      "unchanged": "Dishes that aren't in the file stay as they are.",
+      "cancel": "Cancel",
+      "import": "Import",
+      "importing": "Importing {{done}} of {{total}}…",
+      "stopped_one": "Import stopped after {{n}} change: {{reason}} Fix it and import the file again.",
+      "stopped_other": "Import stopped after {{n}} changes: {{reason}} Fix it and import the file again.",
+      "refused": "The server didn't accept a change."
+    },
+    "orders": {
+      "columns": {
+        "session": "Session",
+        "table": "Table",
+        "items": "Items",
+        "amount": "Amount",
+        "checkout": "Checkout time",
+        "status": "Status"
+      },
+      "notCheckedOut": "Not checked out",
+      "multiple": "{{n}} orders",
+      "search": "Search by ref or table",
+      "rows": "Rows",
+      "rowsPerPage": "Rows per page",
+      "export": "Export page (CSV)",
+      "noMatch": "No orders match.",
+      "none": "No orders yet.",
+      "new": "New order",
+      "table": "Table",
+      "dish": "Dish",
+      "quantity": "Quantity",
+      "cancel": "Cancel",
+      "open": "Open order",
+      "failed": "Couldn't create the order."
+    },
+    "staff": {
+      "maxReached": "Maximum of {{limit}} staff accounts reached. Remove an existing account to add a new one.",
+      "columns": {
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "added": "Added",
+        "status": "Status"
+      },
+      "active": "Active",
+      "disabled": "Disabled",
+      "editName": "Edit staff account {{name}}",
+      "updateFailed": "Couldn't update the staff account.",
+      "disable": "Disable",
+      "enable": "Enable",
+      "saveFailed": "Couldn't save the staff account.",
+      "empty": "No staff accounts yet.",
+      "loadFailed": "Couldn't load staff accounts.",
+      "edit": "Edit staff account",
+      "new": "New staff account",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "e.g. Jamie Rivera",
+      "email": "Email",
+      "emailPlaceholder": "e.g. jamie@example.com",
+      "phone": "Phone",
+      "phonePlaceholder": "e.g. +34 600 000 000",
+      "newPassword": "New password (leave blank to keep current)",
+      "password": "Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "saveChanges": "Save changes",
+      "create": "Create account",
+      "seats": "<b>{{used}} of {{limit}}</b> staff accounts used",
+      "full": "All {{limit}} are in use. Remove an account to add someone new."
+    },
+    "qr": {
+      "address": "Address phones on this network can reach",
+      "noDetect": "Couldn't detect this network's address. Enter one your phone can reach.",
+      "detected": "Auto-detected from this server. Edit if your phone can't reach this address.",
+      "loading": "Loading QR codes…",
+      "loadFailed": "Couldn't load table QR codes.",
+      "noTables": "No tables yet. Add tables from the Tables tab first.",
+      "needAddress": "Enter an address above to make this table's code.",
+      "seats": "{{n}} seats",
+      "downloadCard": "Download the table card for {{name}}",
+      "card": "Card",
+      "downloadCode": "Download the QR code for {{name}}",
+      "codeOnly": "Code only",
+      "cardLabel": "Table card for {{table}}: scan to see the menu and order",
+      "welcome": "Welcome",
+      "codeFor": "QR code for {{table}}",
+      "scan": "Scan to see the menu and order",
+      "noApp": "No app or sign-in needed"
+    },
+    "settings": {
+      "currencies": {
+        "eur": "Euro (€)",
+        "usd": "US dollar ($)",
+        "gbp": "Pound sterling (£)",
+        "vnd": "Vietnamese đồng (₫)"
+      },
+      "saveFailed": "Couldn't save the settings.",
+      "restaurant": "Restaurant",
+      "logo": "Logo",
+      "logoPlaceholder": "Drop a logo, or click to browse",
+      "name": "Name",
+      "phone": "Phone",
+      "address": "Address",
+      "billing": "Billing",
+      "commonTax": "Common tax",
+      "currency": "Currency",
+      "specialTaxes": "Special taxes",
+      "specialHelp": "Optional. Define them here, then apply one to a dish from the Menu tab.",
+      "noSpecial": "No special taxes yet.",
+      "remove": "Remove {{name}}",
+      "taxName": "Tax name",
+      "newTaxName": "New tax name",
+      "newTaxPct": "New tax percentage",
+      "taxNameRequired": "Tax name is required.",
+      "taxPctRequired": "Tax percentage is required.",
+      "add": "Add",
+      "saving": "Saving…",
+      "save": "Save",
+      "connections": "Connections",
+      "connectionsHelp": "Your own database, live-update service and image storage. Only you, the owner, can see or change these.",
+      "receipt": {
+        "label": "Sample receipt",
+        "yourRestaurant": "Your restaurant",
+        "tax": "Tax ({{pct}}%)",
+        "caption": "How a bill looks with these settings: the common tax is included in each price, so a {{total}} bill carries {{tax}} of tax."
+      }
+    }
+  },
+  "bookings": {
+    "weekdays": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "status": {
+      "Confirmed": "Confirmed",
+      "Arrived": "Arrived"
+    },
+    "today": "Today",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "dayLabel_one": "{{date}}, {{n}} booking",
+    "dayLabel_other": "{{date}}, {{n}} bookings",
+    "dayLabelNone": "{{date}}, no bookings",
+    "legend": "Tinted days have bookings; the number shows how many.",
+    "summary": "{{bookings}}, {{guests}}",
+    "count_one": "{{n}} booking",
+    "count_other": "{{n}} bookings",
+    "guests_one": "{{n}} guest",
+    "guests_other": "{{n}} guests",
+    "none": "No bookings",
+    "noneToday": "No reservations on this day.",
+    "changeTable": "Change table",
+    "assignTable": "Assign table",
+    "undoArrival": "Undo arrival",
+    "markArrived": "Mark arrived",
+    "deleteLabel": "Delete booking for {{name}} at {{time}}",
+    "updateFailed": "Couldn't update the booking.",
+    "deleteFailed": "Couldn't delete the booking.",
+    "past": "Past bookings",
+    "pastCount_one": "{{n}} booking, newest first",
+    "pastCount_other": "{{n}} bookings, newest first",
+    "noPast": "No past bookings yet.",
+    "atTable": "{{guests}} at {{table}}",
+    "noTable": "{{guests}}, no table yet",
+    "new": "New booking",
+    "guestName": "Guest name",
+    "guestNamePlaceholder": "Name on the booking",
+    "date": "Date",
+    "time": "Time",
+    "noTimes": "No times left",
+    "party": "Party size",
+    "table": "Table",
+    "cancel": "Cancel",
+    "add": "Add booking",
+    "saveFailed": "Couldn't save the booking.",
+    "assignTitle": "{{name}}, {{time}}",
+    "noFreeTables": "No free tables right now.",
+    "seats": "{{n}} seats",
+    "assignFailed": "Couldn't assign the table.",
+    "releaseFailed": "Couldn't release the table.",
+    "release": "Release table"
+  },
+  "bill": {
+    "commonTax": "Common tax ({{rates}})",
+    "multiTitle": "{{n}} orders, {{table}}",
+    "net": "Net",
+    "tax": "Tax ({{rates}})",
+    "total": "Total",
+    "combinedTotal": "Combined total",
+    "totalDue": "Total due",
+    "printBill": "Print bill",
+    "back": "Back",
+    "billTitle": "Bill, {{table}}",
+    "paperWidth": "Receipt paper width",
+    "mm": "{{n}} mm",
+    "print": "Print",
+    "receipt": "Receipt"
+  },
+  "staff": {
+    "tableState": {
+      "All": "All",
+      "Free": "Free",
+      "Booked": "Booked",
+      "Seated": "Seated",
+      "Finished": "Finished"
+    },
+    "orders": {
+      "search": "Search order ID",
+      "new": "New order",
+      "ticketLabel": "{{table}}, {{code}}, {{status}}",
+      "opened": "Opened {{time}}",
+      "total": "Total",
+      "modify": "Modify",
+      "updateFailed": "Couldn't update the order.",
+      "deleteFailed": "Couldn't delete the order.",
+      "deleteName": "Delete {{code}}",
+      "modifyTitle": "Modify {{code}} at {{table}}",
+      "decrease": "Decrease {{name}}",
+      "increase": "Increase {{name}}",
+      "addItem": "Add item",
+      "deleteOrder": "Delete order",
+      "done": "Done",
+      "confirmTitle": "Confirm {{code}}, {{table}}",
+      "checkOff": "Check off each dish as it leaves the kitchen.",
+      "cancel": "Cancel",
+      "table": "Table",
+      "dish": "Dish",
+      "quantity": "Quantity",
+      "open": "Open order",
+      "none": "No open orders.",
+      "addDish": "Add a dish",
+      "orderTotal": "Order total"
+    },
+    "tables": {
+      "seated": "Guests seated",
+      "finished": "Awaiting reset",
+      "bookedBy": "{{name}} at {{time}}",
+      "reserved": "Reserved",
+      "ready": "Ready for guests",
+      "noTables": "No tables yet. The owner adds them in the admin Tables tab.",
+      "noneInState": "No {{state}} tables right now.",
+      "nothingOrdered": "Nothing ordered yet.",
+      "orderNow": "Order now",
+      "preCheckout": "Pre-checkout total",
+      "seatFailed": "Couldn't seat the table.",
+      "seat": "Seat guests",
+      "checkOut": "Check out",
+      "freeFailed": "Couldn't free the table.",
+      "markFree": "Mark free",
+      "history": "History",
+      "close": "Close",
+      "billTitle": "Bill, {{table}}",
+      "back": "Back",
+      "checkoutFailed": "Couldn't check out the table.",
+      "confirmCheckout": "Confirm checkout",
+      "historyTitle": "Order history, {{table}}",
+      "noOrders": "No orders placed at this table yet.",
+      "multiple": "{{n}} orders",
+      "filter": "Filter tables by state"
+    },
+    "menu": {
+      "statusFailed": "Couldn't update the dish status.",
+      "search": "Search dishes",
+      "cart": "Cart",
+      "cartCount": "Cart, {{n}}",
+      "statusOf": "Status of {{name}}",
+      "offMenu": "Off menu",
+      "noteFor": "Note for the kitchen: {{name}}",
+      "notePlaceholder": "Note for the kitchen",
+      "clear": "Clear",
+      "done": "Done",
+      "noteButton": "Note for {{name}}",
+      "add": "Add",
+      "decrease": "Decrease {{name}}",
+      "increase": "Increase {{name}}",
+      "remove": "Remove {{name}}",
+      "newOrder": "New order",
+      "table": "Table",
+      "pickTable": "Pick a table",
+      "clearCart": "Clear cart",
+      "cancel": "Cancel",
+      "placing": "Placing…",
+      "place": "Place order",
+      "placeFailed": "Couldn't place the order.",
+      "noMatch": "No dishes match.",
+      "empty": "Your cart is empty.",
+      "total": "Total"
+    },
+    "history": {
+      "search": "Search session or order ID",
+      "noMatch": "No orders match.",
+      "none": "Nothing checked out today or yesterday.",
+      "multiple": "{{n}} orders"
+    }
+  },
+  "client": {
+    "loadFailed": "Couldn't load the menu.",
+    "loading": "Loading menu…",
+    "opening": "Opening your table…",
+    "invalidQr": "This QR code isn't valid. Ask a staff member for help.",
+    "noteFor": "Note for the kitchen: {{name}}",
+    "notePlaceholder": "Add a note for the kitchen, e.g. no onion",
+    "clear": "Clear",
+    "done": "Done",
+    "editNote": "Edit note for {{name}}",
+    "addNote": "Add a note for {{name}}",
+    "remove": "Remove {{name}}",
+    "removeOne": "Remove one {{name}}",
+    "add": "Add",
+    "addName": "Add {{name}}",
+    "addOne": "Add one {{name}}",
+    "inThisMenu": "In this menu",
+    "sectionPage": "{{name}}, page {{n}}",
+    "swipe": "Swipe to open the menu",
+    "placeFailed": "Couldn't place your order.",
+    "thanks": "Thanks for your order",
+    "preparing": "We're preparing your food.",
+    "enjoy": "Enjoy your meal!",
+    "net": "Net",
+    "tax": "Tax ({{pct}}%)",
+    "total": "Total",
+    "orderMore": "Order something else",
+    "backToMenu": "Back to menu",
+    "yourOrder": "Your order",
+    "empty": "Your cart is empty.",
+    "each": "{{price}} each",
+    "askStaff": "Ask a staff member to place your order for now.",
+    "edit": "Edit",
+    "placing": "Placing order…",
+    "confirm": "Confirm order",
+    "staffNotified": "Staff notified",
+    "staffComing": "Someone will be right with you.",
+    "billRequested": "Bill requested",
+    "billComing": "Staff will bring your bill shortly.",
+    "callStaff": "Call staff",
+    "checkout": "Checkout",
+    "historyLabel": "Order history",
+    "historyCount_one": "Order history, {{n}} order",
+    "historyCount_other": "Order history, {{n}} orders",
+    "history": "History",
+    "sections": "Menu sections",
+    "contents": "Contents",
+    "pagerLabel": "Menu, swipe left or right to turn the page",
+    "pageLabel": "Page {{n}} of {{total}}: {{title}}",
+    "previous": "Previous page",
+    "next": "Next page",
+    "pageOf": "Page {{n}} of {{total}}",
+    "order": "Order",
+    "orderItems_one": "Order, {{n}} item",
+    "orderItems_other": "Order, {{n}} items",
+    "cartItems_one": "View cart, {{n}} item",
+    "cartItems_other": "View cart, {{n}} items",
+    "gotIt": "Got it",
+    "totalAcross_one": "Total across {{n}} order",
+    "totalAcross_other": "Total across {{n}} orders",
+    "noOrders": "No orders yet for this table.",
+    "close": "Close"
+  }
+}

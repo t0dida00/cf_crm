@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import Link from "next/link";
 import { ArrowLeft, Hourglass, PaperPlaneTilt } from "@phosphor-icons/react";
 import { ContactForm } from "@/components/common/ContactForm";
@@ -12,33 +14,22 @@ import { cn } from "@/lib/utils";
 
 export type SignInAs = "owner" | "staff";
 
-const SIGN_IN_AS: [SignInAs, string][] = [
-  ["owner", "Owner"],
-  ["staff", "Staff"],
-];
-/** What each kind of account opens, under the heading. */
-const SIGN_IN_AS_HINT: Record<SignInAs, string> = {
-  owner: "Manage your menu, tables, staff and reports.",
-  staff: "Take orders and look after your tables.",
-};
+const SIGN_IN_AS: SignInAs[] = ["owner", "staff"];
 /** Remembers this browser's last choice (a convenience only). */
 const SIGN_IN_AS_KEY = "tably:sign-in-as";
 
 /** What to tell the user after a failed sign-in. `warning`: not an error, just not yet (the account is under review). */
-export function loginNotice(error?: string, code?: string): { text: string; tone: "error" | "warning" } | null {
+export function loginNotice(
+  t: TFunction,
+  error?: string,
+  code?: string,
+): { text: string; tone: "error" | "warning" } | null {
   if (!error) return null;
-  if (code === "account_pending") {
-    return {
-      text: "Your account is still being reviewed. We'll notify you at your registered email once it's approved.",
-      tone: "warning",
-    };
-  }
-  if (code === "account_disabled") {
-    return { text: "Your account is disabled temporarily. Please contact your owner(s).", tone: "error" };
-  }
+  if (code === "account_pending") return { text: t("auth.notice.pending"), tone: "warning" };
+  if (code === "account_disabled") return { text: t("auth.notice.disabled"), tone: "error" };
   // Also what a wrong Owner / Staff choice gets: the backend can't be asked which kind an email is.
-  if (error === "CredentialsSignin") return { text: "Email or password is wrong, please try again.", tone: "error" };
-  return { text: "Something went wrong signing in. Please try again.", tone: "error" };
+  if (error === "CredentialsSignin") return { text: t("auth.notice.wrong"), tone: "error" };
+  return { text: t("auth.notice.failed"), tone: "error" };
 }
 
 export function LoginCard({
@@ -50,9 +41,10 @@ export function LoginCard({
   error?: string;
   code?: string;
 }) {
+  const { t } = useTranslation();
   const [view, setView] = useState<"sign-in" | "contact">("sign-in");
   const [signInAs, setSignInAs] = useState<SignInAs>("owner");
-  const notice = loginNotice(error, code);
+  const notice = loginNotice(t, error, code);
 
   useEffect(() => {
     try {
@@ -79,14 +71,11 @@ export function LoginCard({
           className="mb-6 flex items-center gap-1.5 rounded-sm text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft size={15} weight="bold" aria-hidden />
-          Back to sign in
+          {t("auth.backToSignIn")}
         </button>
 
-        <h1 className={`${DISPLAY} text-5xl`}>Request an account</h1>
-        <p className="mt-2 mb-8 text-sm text-muted-foreground text-pretty">
-          Tell us a bit about your business and we&apos;ll set you up with staff and admin
-          access.
-        </p>
+        <h1 className={`${DISPLAY} text-5xl`}>{t("auth.requestTitle")}</h1>
+        <p className="mt-2 mb-8 text-sm text-muted-foreground text-pretty">{t("auth.requestBody")}</p>
         <ContactForm stacked />
       </div>
     );
@@ -94,8 +83,8 @@ export function LoginCard({
 
   return (
     <div>
-      <h1 className={`${DISPLAY} text-5xl sm:text-6xl`}>Sign in to Tably</h1>
-      <p className="mt-3 mb-7 text-muted-foreground text-pretty">{SIGN_IN_AS_HINT[signInAs]}</p>
+      <h1 className={`${DISPLAY} text-5xl sm:text-6xl`}>{t("auth.signInTitle")}</h1>
+      <p className="mt-3 mb-7 text-muted-foreground text-pretty">{t(`auth.${signInAs}Hint`)}</p>
 
       {notice?.tone === "warning" && (
         <p
@@ -117,9 +106,9 @@ export function LoginCard({
 
       <form action={loginWithCredentials} className="space-y-4">
         <fieldset className="space-y-1.5">
-          <legend className="mb-1.5 text-sm font-medium">Sign in as</legend>
+          <legend className="mb-1.5 text-sm font-medium">{t("auth.signInAs")}</legend>
           <div className="grid grid-cols-2 gap-2">
-            {SIGN_IN_AS.map(([value, label]) => (
+            {SIGN_IN_AS.map((value) => (
               <label
                 key={value}
                 className={cn(
@@ -138,13 +127,13 @@ export function LoginCard({
                   onChange={() => choose(value)}
                   className="sr-only"
                 />
-                {label}
+                {t(`auth.${value}`)}
               </label>
             ))}
           </div>
         </fieldset>
         <div className="space-y-1.5">
-          <RequiredLabel htmlFor="email">Email</RequiredLabel>
+          <RequiredLabel htmlFor="email">{t("auth.email")}</RequiredLabel>
           <Input
             id="email"
             name="email"
@@ -155,7 +144,7 @@ export function LoginCard({
           />
         </div>
         <div className="space-y-1.5">
-          <RequiredLabel htmlFor="password">Password</RequiredLabel>
+          <RequiredLabel htmlFor="password">{t("auth.password")}</RequiredLabel>
           <Input
             id="password"
             name="password"
@@ -170,22 +159,25 @@ export function LoginCard({
 
       {signInAs === "owner" ? (
         <p className="mt-6 text-sm text-muted-foreground">
-          Setting up a new business?{" "}
+          {t("auth.newBusiness")}{" "}
           <Link href="/signup" className="rounded-sm font-semibold text-primary underline underline-offset-4">
-            Create an account
+            {t("auth.createAccount")}
           </Link>
         </p>
       ) : (
         <p className="mt-6 text-sm text-muted-foreground">
-          No account yet? Ask your owner for one, or{" "}
-          <button
-            type="button"
-            onClick={() => setView("contact")}
-            className="rounded-sm font-semibold text-primary underline underline-offset-4"
-          >
-            contact us
-          </button>
-          .
+          <Trans
+            i18nKey="auth.noAccount"
+            components={{
+              contact: (
+                <button
+                  type="button"
+                  onClick={() => setView("contact")}
+                  className="rounded-sm font-semibold text-primary underline underline-offset-4"
+                />
+              ),
+            }}
+          />
         </p>
       )}
     </div>

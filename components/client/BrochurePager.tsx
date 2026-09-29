@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 export interface BrochurePage {
   id: string;
@@ -30,6 +31,7 @@ export function BrochurePager({
   onIndexChange: (index: number) => void;
   label: string;
 }) {
+  const { t } = useTranslation();
   const scroller = useRef<HTMLDivElement>(null);
   // The page a programmatic turn is heading to: pages passed on the way aren't "current".
   const heading = useRef<number | null>(null);
@@ -65,7 +67,7 @@ export function BrochurePager({
         <section
           key={page.id}
           aria-roledescription="page"
-          aria-label={`Page ${i + 1} of ${pages.length}: ${page.title}`}
+          aria-label={t("client.pageLabel", { n: i + 1, total: pages.length, title: page.title })}
           inert={i !== index}
           className="h-full w-full shrink-0 snap-start snap-always overflow-y-auto overscroll-y-contain"
         >

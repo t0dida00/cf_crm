@@ -1,0 +1,1355 @@
+{
+  "common": {
+    "language": "Ngôn ngữ",
+    "status": {
+      "New": "Mới",
+      "Preparing": "Đang chuẩn bị",
+      "Served": "Đã phục vụ",
+      "Ready": "Sẵn sàng",
+      "Paid": "Đã thanh toán"
+    },
+    "backToHome": "Về trang chủ",
+    "tableName": "Bàn {{n}}",
+    "loading": "Đang tải…",
+    "loadFailed": "Không tải được dữ liệu này.",
+    "tryAgain": "Thử lại",
+    "nothing": "Không có gì để hiển thị.",
+    "close": "Đóng",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "saved": "Đã lưu thành công",
+    "timedOut": "Hết thời gian chờ phản hồi",
+    "somethingWrong": "Đã có lỗi. Vui lòng thử lại.",
+    "pagination": {
+      "showing": "Hiển thị {{from}}–{{to}} trong {{total}} {{what}}",
+      "none": "Không có {{what}}",
+      "page": "Trang {{page}}/{{pages}}",
+      "previous": "Trang trước",
+      "next": "Trang sau"
+    },
+    "nouns": {
+      "orders_one": "đơn hàng",
+      "orders_other": "đơn hàng",
+      "bookings_one": "lượt đặt bàn",
+      "bookings_other": "lượt đặt bàn",
+      "sessions_one": "lượt phục vụ",
+      "sessions_other": "lượt phục vụ"
+    },
+    "image": {
+      "placeholder": "Kéo thả ảnh vào đây, hoặc nhấn để chọn",
+      "replace": "Thay {{what}}",
+      "choose": "Chọn {{what}}",
+      "uploadFailed": "Không tải ảnh lên được.",
+      "remove": "Xóa {{what}}",
+      "uploading": "Đang tải lên…",
+      "logo": "logo",
+      "dishPhoto": "ảnh món"
+    },
+    "tags": {
+      "vegan": "Chay",
+      "bestSeller": "Bán chạy",
+      "soldOut": "Hết món"
+    }
+  },
+  "lexicon": {
+    "restaurant": {
+      "label": "Nhà hàng",
+      "blurb": "Khách, bàn, bếp"
+    },
+    "cafe": {
+      "label": "Quán cà phê / Tiệm bánh",
+      "blurb": "Phục vụ tại quầy và tại bàn"
+    },
+    "zones": {
+      "mainHall": "Sảnh chính",
+      "terrace": "Sân hiên",
+      "bar": "Quầy bar",
+      "window": "Cạnh cửa sổ",
+      "backRoom": "Phòng trong",
+      "counter": "Quầy"
+    },
+    "categories": {
+      "starters": "Khai vị",
+      "mains": "Món chính",
+      "desserts": "Tráng miệng",
+      "coffee": "Cà phê",
+      "bakery": "Bánh",
+      "brunch": "Brunch"
+    },
+    "dishes": {
+      "panConTomate": {
+        "name": "Pan con tomate",
+        "note": "Bánh mì men chua nướng, cà chua, dầu ô liu"
+      },
+      "padron": {
+        "name": "Ớt Padrón",
+        "note": "Áp chảo, muối biển"
+      },
+      "iberianHam": {
+        "name": "Đĩa jamón Iberia",
+        "note": "Ủ 24 tháng, 80g"
+      },
+      "seafoodPaella": {
+        "name": "Paella hải sản",
+        "note": "Suất một người, 25 phút: tôm, vẹm, mực"
+      },
+      "seaBass": {
+        "name": "Cá vược nướng",
+        "note": "Nguyên con, chanh, khoai tây nướng"
+      },
+      "ribeye": {
+        "name": "Bò ribeye 300g",
+        "note": "Mặc định chín tái vừa, trừ khi quý khách dặn khác"
+      },
+      "cremaCatalana": {
+        "name": "Crema catalana",
+        "note": "Mặt đường quế cháy giòn"
+      },
+      "cheesecake": {
+        "name": "Bánh phô mai",
+        "note": "Kiểu Basque, cháy nhẹ mặt"
+      },
+      "flatWhite": {
+        "name": "Flat white",
+        "note": "Hai shot espresso, sữa đánh nóng"
+      },
+      "cortado": {
+        "name": "Cortado",
+        "note": "Espresso thêm chút sữa ấm"
+      },
+      "filterBatch": {
+        "name": "Cà phê lọc",
+        "note": "Hạt đơn nguồn, đổi theo mùa"
+      },
+      "almondCroissant": {
+        "name": "Croissant hạnh nhân",
+        "note": "Nướng hai lần, kem hạnh nhân"
+      },
+      "sourdoughLoaf": {
+        "name": "Bánh mì men chua",
+        "note": "Ủ 48 giờ, nguyên ổ"
+      },
+      "cinnamonBun": {
+        "name": "Bánh cuộn quế",
+        "note": "Đường bạch đậu khấu, phủ kem phô mai"
+      },
+      "avocadoToast": {
+        "name": "Bánh mì bơ",
+        "note": "Bánh mì men chua, dầu ớt, chanh"
+      },
+      "eggsBenedict": {
+        "name": "Trứng benedict",
+        "note": "Trứng chần, sốt hollandaise, bánh muffin"
+      }
+    },
+    "lineNotes": {
+      "forOne": "Suất một người",
+      "mediumRare": "Tái vừa"
+    }
+  },
+  "marketing": {
+    "nav": {
+      "label": "Các phần",
+      "features": "Tính năng",
+      "demo": "Demo",
+      "menu": "Thực đơn",
+      "contact": "Liên hệ"
+    },
+    "tryDemo": "Dùng thử bản demo",
+    "createAccount": "Tạo tài khoản",
+    "hero": {
+      "title": "Mỗi món gọi, thẳng vào bếp.",
+      "body": "Khách gọi món bằng mã QR trên bàn. Phiếu gọi món đến màn hình bếp và phục vụ ngay khi khách gửi, cùng lịch đặt bàn tối nay và doanh thu trong ngày, tất cả ở một nơi."
+    },
+    "features": {
+      "title": "Từ lúc quét mã đến khi chốt sổ",
+      "intro": "Một hệ thống cho khách tại bàn, đội ngũ phục vụ và cả bạn lúc cuối ngày. Đây là buổi tối của một bàn.",
+      "qr": {
+        "title": "Gọi món bằng QR, không cần ứng dụng",
+        "body": "Khách quét mã trên bàn và gọi món ngay trên điện thoại của mình. Không cài đặt, không cần tài khoản, không phải chờ gọi nhân viên."
+      },
+      "live": {
+        "title": "Cập nhật tức thì trên mọi màn hình",
+        "body": "Món mới đến màn hình bếp và phục vụ ngay khi được gửi, không cần tải lại trang hay gọi to qua quầy."
+      },
+      "tables": {
+        "title": "Bàn và đặt bàn ở cùng một nơi",
+        "body": "Xem bàn nào đang có khách, còn trống hay đã được đặt tối nay, cập nhật khi khách đến và đi."
+      },
+      "numbers": {
+        "title": "Số liệu trong ngày",
+        "body": "Doanh thu, món bán chạy và giờ cao điểm, không phải cộng tay lúc đóng cửa."
+      }
+    },
+    "demo": {
+      "title": "Muốn xem demo?",
+      "body": "Tably là một dự án trong portfolio của tôi. Hãy liên hệ, tôi sẽ gửi tài khoản demo để bạn khám phá bàn, thực đơn, đơn hàng trực tiếp và báo cáo.",
+      "contact": "Liên hệ với tôi",
+      "roles": "Xem mỗi vai trò làm được gì"
+    },
+    "menu": {
+      "title": "Viết thực đơn một lần, bàn nào cũng có",
+      "body": "Nhóm món theo danh mục, đặt giá và mô tả, mọi thay đổi đến ngay từng bàn."
+    },
+    "steps": {
+      "title": "Sẵn sàng cho tối nay với ba bước",
+      "setup": {
+        "title": "Thiết lập cơ sở của bạn",
+        "body": "Nhập thông tin và chọn nhà hàng hoặc quán cà phê. Không cần gọi điện hướng dẫn."
+      },
+      "menu": {
+        "title": "Thêm thực đơn và bàn",
+        "body": "Nhóm món theo danh mục, đặt giá, và mỗi bàn có mã QR riêng."
+      },
+      "live": {
+        "title": "Nhận món theo thời gian thực",
+        "body": "Khách gọi món trên điện thoại, nhân viên theo dõi từng phiếu đến khi thanh toán xong."
+      }
+    },
+    "signup": {
+      "title": "Ca phục vụ tiếp theo, khách đã vào bàn.",
+      "body": "Dùng thử miễn phí, không cần thẻ tín dụng, chạy trên mọi điện thoại."
+    },
+    "contact": {
+      "title": "Liên hệ",
+      "body": "Có câu hỏi về Tably, góp ý, hay một dự án bạn đang nghĩ tới? Hãy gửi tin nhắn, tôi thường trả lời trong vòng một ngày."
+    },
+    "rail": {
+      "label": "Các phiếu gọi món trên thanh treo trong bếp. Phiếu mới nhất, từ bàn 2 ở quầy bar, vừa đến."
+    },
+    "flow": {
+      "caption": "Buổi tối của một bàn với Tably, từng bước",
+      "lanes": {
+        "Guest": "Khách",
+        "Staff": "Nhân viên",
+        "Owner": "Chủ quán"
+      },
+      "scan": "Ngồi vào bàn và quét mã QR của Bàn 4",
+      "order": "Gọi món trên điện thoại; bàn được đánh dấu có khách",
+      "ticket": "Phiếu gọi món hiện trên mọi màn hình",
+      "cook": "Bếp nấu, nhân viên mang món ra",
+      "bill": "Yêu cầu thanh toán ngay trên điện thoại",
+      "checkout": "Tính tiền và in hóa đơn",
+      "takings": "Doanh thu và món bán chạy được cập nhật"
+    },
+    "footer": {
+      "tagline": "Gọi món bằng mã QR, phiếu bếp theo thời gian thực và đặt bàn cho nhà hàng, quán cà phê.",
+      "product": "Sản phẩm",
+      "sampleMenu": "Thực đơn mẫu",
+      "roles": "Mỗi vai trò làm được gì",
+      "contact": "Liên hệ",
+      "sendMessage": "Gửi tin nhắn",
+      "legal": "Pháp lý",
+      "terms": "Điều khoản sử dụng",
+      "privacy": "Chính sách quyền riêng tư",
+      "cookies": "Cookie",
+      "rights": "© {{year}} Tably. Bảo lưu mọi quyền.",
+      "builtBy": "Phát triển bởi {{name}}"
+    },
+    "contactForm": {
+      "name": "Họ tên",
+      "namePlaceholder": "Tên của bạn",
+      "email": "Email",
+      "message": "Tin nhắn",
+      "messagePlaceholder": "Bạn muốn nhắn gì?",
+      "send": "Gửi tin nhắn",
+      "sending": "Đang gửi…",
+      "sent": "Đã gửi tin nhắn. Cảm ơn bạn đã liên hệ!",
+      "failed": "Không gửi được tin nhắn. Vui lòng thử lại."
+    },
+    "guide": {
+      "kicker": "Tably hoạt động thế nào",
+      "title": "Một ứng dụng, ba vai trò",
+      "intro": "Mọi thao tác tại bàn trong Tably đi qua một trong ba giao diện. Đây là những gì mỗi giao diện làm được.",
+      "roles": {
+        "client": {
+          "label": "Khách",
+          "eyebrow": "không cần đăng nhập",
+          "title": "Khách gọi món tại bàn",
+          "body": "Khách vào Tably bằng cách quét mã QR trên bàn: không cài ứng dụng, không cần tài khoản."
+        },
+        "staff": {
+          "label": "Nhân viên",
+          "eyebrow": "cần đăng nhập",
+          "title": "Đội phục vụ và bếp",
+          "body": "Nhân viên đăng nhập vào một bảng điều khiển chung, theo dõi mọi bàn và phiếu gọi món theo thời gian thực."
+        },
+        "admin": {
+          "label": "Quản trị",
+          "eyebrow": "quyền chủ quán",
+          "title": "Chủ quán",
+          "body": "Quản trị viên thiết lập cửa hàng và nắm toàn cảnh mọi bàn, mọi ca."
+        }
+      },
+      "features": {
+        "scan": {
+          "title": "Quét mã và xem thực đơn",
+          "body": "Quét mã QR của bàn để mở thực đơn theo danh mục, ngay trên trình duyệt."
+        },
+        "cart": {
+          "title": "Chọn món",
+          "body": "Thêm món vào giỏ, chỉnh số lượng và ghi chú cho bếp ở từng món."
+        },
+        "call": {
+          "title": "Gọi nhân viên hoặc thanh toán",
+          "body": "Chạm \"Gọi nhân viên\" hoặc \"Thanh toán\" để báo ngay cho nhân viên, không phải vẫy tay."
+        },
+        "history": {
+          "title": "Lịch sử gọi món",
+          "body": "Xem lại mọi món đã gọi tại bàn trong lần ghé này, kèm chi tiết và tổng tiền."
+        },
+        "liveOrders": {
+          "title": "Đơn hàng trực tiếp",
+          "body": "Đơn mới hiện lên bảng ngay lập tức, kèm thông báo khi khách yêu cầu thanh toán."
+        },
+        "tableStatus": {
+          "title": "Trạng thái bàn",
+          "body": "Xem tình trạng từng bàn (trống, có khách, đã đặt hoặc đã xong) và in hóa đơn khi thanh toán."
+        },
+        "bookings": {
+          "title": "Đặt bàn",
+          "body": "Xem các lượt đặt bàn sắp tới cùng hoạt động của bàn."
+        },
+        "menuRef": {
+          "title": "Tra cứu thực đơn",
+          "body": "Tra chi tiết món khi phục vụ, cùng lịch sử các đơn đã đóng."
+        },
+        "requests": {
+          "title": "Yêu cầu của khách",
+          "body": "Biểu tượng chuông hiện các yêu cầu \"gọi nhân viên\" và \"thanh toán\" đang chờ xử lý."
+        },
+        "dashboard": {
+          "title": "Tổng quan",
+          "body": "Theo dõi doanh thu, món bán chạy và giờ cao điểm theo bất kỳ khoảng thời gian nào."
+        },
+        "tablesCats": {
+          "title": "Bàn và danh mục",
+          "body": "Sắp xếp sơ đồ bàn và chia thực đơn thành các danh mục."
+        },
+        "menuMgmt": {
+          "title": "Quản lý thực đơn",
+          "body": "Thêm, sửa và đặt giá cho mọi món khách có thể gọi."
+        },
+        "ordersBookings": {
+          "title": "Đơn hàng và đặt bàn",
+          "body": "Xem, lọc và xuất lịch sử đơn hàng, quản lý các lượt đặt bàn sắp tới."
+        },
+        "staffAccounts": {
+          "title": "Tài khoản nhân viên",
+          "body": "Thêm nhân viên hoặc khóa quyền truy cập khi cần."
+        },
+        "qr": {
+          "title": "Mã QR cho bàn",
+          "body": "Tạo mã QR cho từng bàn: đường dẫn khách quét để mở thực đơn."
+        },
+        "settings": {
+          "title": "Cài đặt",
+          "body": "Thiết lập thuế suất và đơn vị tiền tệ của cửa hàng."
+        }
+      },
+      "loop": {
+        "kicker": "Từ đầu đến cuối",
+        "title": "Từ lúc đăng ký đến khi đơn được thanh toán",
+        "intro": "Toàn bộ quy trình, từ đầu đến cuối.",
+        "step": "Bước {{n}}"
+      },
+      "steps": {
+        "account": {
+          "title": "Tạo tài khoản",
+          "body": "Đăng ký và thiết lập cửa hàng với vai trò quản trị."
+        },
+        "table": {
+          "title": "Tạo bàn",
+          "body": "Thêm từng bàn trong quán ở mục Bàn."
+        },
+        "qr": {
+          "title": "Mã QR tạo tự động",
+          "body": "Mỗi bàn có mã QR riêng ngay khi được tạo, không cần thiết lập gì thêm."
+        },
+        "download": {
+          "title": "Tải và đặt mã QR",
+          "body": "Tải mã về và dán lên đúng bàn để khách quét."
+        },
+        "order": {
+          "title": "Khách quét mã và gọi món",
+          "body": "Quét mã là mở thực đơn: khách xem và gọi món ngay trên điện thoại."
+        },
+        "see": {
+          "title": "Nhân viên và quản trị thấy đơn",
+          "body": "Đơn hiện ngay trên bảng trực tiếp, gắn với đúng bàn."
+        },
+        "status": {
+          "title": "Đơn chuyển qua các trạng thái",
+          "body": "Nhân viên theo dõi đơn từ Mới, Đang chuẩn bị, Đã phục vụ đến Đã thanh toán."
+        }
+      }
+    }
+  },
+  "legal": {
+    "updated": "Cập nhật lần cuối {{date}}",
+    "date": "29 tháng 9 năm 2026",
+    "tableName": "Tên",
+    "tablePurpose": "Dùng để làm gì",
+    "terms": {
+      "title": "Điều khoản sử dụng",
+      "intro": "Các điều khoản này áp dụng khi bạn dùng Tably: ứng dụng cho chủ quán và nhân viên, thực đơn khách mở từ mã QR trên bàn, và trang web này. Khi dùng Tably, bạn đồng ý với các điều khoản này.",
+      "sections": {
+        "what": {
+          "h": "Tably là gì",
+          "p": "Tably là một dự án portfolio của {{name}}. Tably miễn phí và được cung cấp nguyên trạng, nhằm minh họa cách gọi món ở nhà hàng và quán cà phê có thể vận hành. Đây không phải dịch vụ trả phí và không cam kết mức độ dịch vụ."
+        },
+        "accounts": {
+          "h": "Tài khoản",
+          "items": {
+            "a": "Chủ quán tạo tài khoản bằng họ tên, email và mật khẩu, và giữ các thông tin này chính xác.",
+            "b": "Chủ quán tạo tài khoản nhân viên cho cơ sở của mình và chịu trách nhiệm về việc cấp tài khoản cho ai.",
+            "c": "Giữ mật khẩu cho riêng bạn. Hãy báo ngay cho chúng tôi nếu bạn nghĩ người khác đã dùng tài khoản của bạn.",
+            "d": "Chúng tôi có thể tạm khóa hoặc đóng tài khoản vi phạm các điều khoản này."
+          }
+        },
+        "demo": {
+          "h": "Tài khoản demo",
+          "p": "Tài khoản demo được dùng chung: bất kỳ ai cũng có thể đăng nhập và thay đổi thực đơn, bàn, đơn hàng và lượt đặt bàn. Đừng nhập thông tin cá nhân thật ở đó. Dữ liệu của tài khoản này có thể bị đặt lại bất cứ lúc nào."
+        },
+        "data": {
+          "h": "Dữ liệu của cơ sở bạn",
+          "p": "Thực đơn, bàn, đơn hàng, lượt đặt bàn, hình ảnh và cài đặt bạn thêm vào vẫn thuộc về bạn. Tably chỉ dùng chúng để vận hành dịch vụ cho bạn. Nếu bạn kết nối cơ sở dữ liệu, ứng dụng thời gian thực (Pusher) hoặc kho ảnh của riêng mình, điều khoản của các dịch vụ đó sẽ áp dụng, và bạn chịu trách nhiệm về tài khoản của mình ở đó."
+        },
+        "guests": {
+          "h": "Khách gọi món tại bàn",
+          "p": "Khách gọi món qua cơ sở kinh doanh, không phải qua Tably. Cơ sở tự đặt thực đơn, giá và thuế, và tự lo việc phục vụ, thanh toán. Mọi thắc mắc về đơn hàng xin gửi tới nhà hàng hoặc quán cà phê."
+        },
+        "use": {
+          "h": "Sử dụng đúng mục đích",
+          "items": {
+            "a": "Không dùng Tably cho bất kỳ việc gì trái pháp luật.",
+            "b": "Không tìm cách truy cập dữ liệu của cơ sở khác, phá hoại hay làm quá tải dịch vụ.",
+            "c": "Chỉ tải lên hình ảnh và nội dung bạn có quyền sử dụng."
+          }
+        },
+        "liability": {
+          "h": "Tính sẵn sàng và trách nhiệm",
+          "p": "Tably có thể thay đổi, tạm dừng hoặc ngừng hoạt động bất cứ lúc nào. Dịch vụ được cung cấp không kèm bảo đảm, và trong phạm vi pháp luật cho phép, {{name}} không chịu trách nhiệm về việc mất dữ liệu, mất đơn hàng hay mất doanh thu do sử dụng Tably. Hãy tự lưu giữ mọi thông tin mà cơ sở của bạn cần đến."
+        },
+        "changes": {
+          "h": "Thay đổi và liên hệ",
+          "p": "Khi các điều khoản này thay đổi, ngày ở đầu trang cũng thay đổi. Xem thêm <privacy>chính sách quyền riêng tư</privacy> và <cookies>chính sách cookie</cookies>. Thắc mắc xin gửi về: <email>{{email}}</email>."
+        }
+      }
+    },
+    "privacy": {
+      "title": "Chính sách quyền riêng tư",
+      "intro": "Tably thu thập những gì, vì sao, và còn ai khác xử lý dữ liệu đó. Tably do {{name}} vận hành, bạn có thể liên hệ qua {{email}}.",
+      "sections": {
+        "collect": {
+          "h": "Chúng tôi thu thập gì",
+          "items": {
+            "owners": "<b>Tài khoản chủ quán:</b> họ tên, email và mật khẩu. Mật khẩu chỉ được lưu dưới dạng băm bcrypt, không bao giờ lưu nguyên văn.",
+            "staff": "<b>Tài khoản nhân viên:</b> tên, email và mật khẩu mà chủ quán đặt cho từng nhân viên.",
+            "business": "<b>Dữ liệu cơ sở:</b> thực đơn, giá, bàn, đơn hàng, lượt đặt bàn, cài đặt, logo và ảnh món. Lượt đặt bàn gồm tên và số điện thoại của khách do nhân viên nhập.",
+            "guests": "<b>Khách tại bàn:</b> không có tài khoản và không có thông tin cá nhân. Đơn hàng và các yêu cầu như “gọi nhân viên” gắn với bàn, không gắn với một người cụ thể.",
+            "messages": "<b>Tin nhắn:</b> tên, email và nội dung bạn gửi qua biểu mẫu liên hệ.",
+            "usage": "<b>Mức độ sử dụng:</b> số lượt xem trang ẩn danh từ Vercel Analytics, không dùng cookie."
+          }
+        },
+        "why": {
+          "h": "Vì sao chúng tôi dùng dữ liệu",
+          "items": {
+            "a": "Để bạn đăng nhập và vận hành bàn, đơn hàng, đặt bàn của cơ sở.",
+            "b": "Để gửi email cho chủ trang về lượt đăng ký mới và tin nhắn liên hệ, giúp họ phản hồi.",
+            "c": "Để biết trang nào được dùng và cải thiện chúng."
+          },
+          "after": "Chúng tôi không bán dữ liệu của bạn và không dùng nó cho quảng cáo."
+        },
+        "who": {
+          "h": "Còn ai xử lý dữ liệu",
+          "items": {
+            "a": "Vercel lưu trữ trang web, dữ liệu phân tích và, nếu bạn không kết nối kho riêng, kho ảnh.",
+            "b": "Pusher chuyển các cập nhật trực tiếp, chẳng hạn một đơn mới đến màn hình nhân viên.",
+            "c": "Resend gửi email đăng ký và email từ biểu mẫu liên hệ.",
+            "d": "Nếu chủ quán kết nối cơ sở dữ liệu, ứng dụng Pusher hoặc kho ảnh riêng, dữ liệu của cơ sở đó sẽ được lưu ở đó."
+          }
+        },
+        "keep": {
+          "h": "Chúng tôi giữ dữ liệu bao lâu",
+          "p": "Dữ liệu tài khoản và cơ sở được giữ trong thời gian tài khoản còn tồn tại. Tin nhắn liên hệ nằm trong hộp thư của chủ trang. Tài khoản demo dùng chung có thể bị đặt lại bất cứ lúc nào."
+        },
+        "choices": {
+          "h": "Lựa chọn của bạn",
+          "p": "Để xem, sửa hoặc xóa dữ liệu của bạn, hoặc đóng tài khoản, hãy gửi email tới <email>{{email}}</email>. Chủ quán có thể sửa hoặc xóa tài khoản nhân viên ở mục Nhân viên. Về những gì được lưu trong trình duyệt, xem <cookies>chính sách cookie</cookies>."
+        }
+      }
+    },
+    "cookies": {
+      "title": "Chính sách cookie",
+      "intro": "Tably chỉ đặt những cookie cần thiết để bạn đăng nhập và để nhớ ngôn ngữ bạn chọn. Không có cookie quảng cáo hay theo dõi, nên bạn không cần chấp nhận hay tắt gì cả.",
+      "cookiesCaption": "Các cookie Tably đặt",
+      "storageCaption": "Tùy chọn lưu trong bộ nhớ trình duyệt",
+      "rows": {
+        "session": "Giữ bạn ở trạng thái đăng nhập. Bị xóa khi bạn đăng xuất hoặc phiên kết thúc.",
+        "csrf": "Bảo vệ biểu mẫu đăng nhập khỏi các yêu cầu giả mạo.",
+        "callback": "Ghi nhớ trang cần quay lại sau khi đăng nhập.",
+        "lang": "Ngôn ngữ bạn đã chọn (English hoặc Tiếng Việt). Lưu trong một năm.",
+        "signInAs": "Lần gần nhất bạn đăng nhập với vai trò Chủ quán hay Nhân viên.",
+        "sidebar": "Bạn có thu gọn thanh bên của ứng dụng hay không.",
+        "paper": "Khổ giấy in hóa đơn bạn dùng (80 hoặc 58 mm).",
+        "building": "Bạn đã xem hiệu ứng thiết lập cửa hàng. Bị xóa khi đóng thẻ trình duyệt."
+      },
+      "sections": {
+        "cookies": {
+          "h": "Cookie",
+          "p": "Do Auth.js đặt khi bạn đăng nhập vào ứng dụng chủ quán hoặc nhân viên, cùng với <code>lang</code> khi bạn chọn ngôn ngữ. Khách gọi món tại bàn chỉ nhận <code>lang</code>, và chỉ khi họ chọn ngôn ngữ. Trên kết nối bảo mật (https), tên các cookie đăng nhập bắt đầu bằng <code>__Secure-</code> hoặc <code>__Host-</code>."
+        },
+        "storage": {
+          "h": "Lưu trong trình duyệt",
+          "p": "Một vài tùy chọn được lưu trong bộ nhớ riêng của trình duyệt. Chúng không bao giờ rời khỏi thiết bị của bạn và không được gửi cho chúng tôi."
+        },
+        "analytics": {
+          "h": "Phân tích",
+          "p": "Vercel Analytics đếm lượt xem trang mà không dùng cookie và không nhận diện bạn."
+        },
+        "control": {
+          "h": "Quyền kiểm soát của bạn",
+          "p": "Bạn có thể xóa hoặc chặn cookie và dữ liệu trang web trong cài đặt trình duyệt. Chặn cookie phiên nghĩa là bạn không thể đăng nhập. Xem thêm về những gì chúng tôi thu thập trong <privacy>chính sách quyền riêng tư</privacy>."
+        }
+      }
+    }
+  },
+  "meta": {
+    "description": "Thiết lập và quản lý nhà hàng hoặc quán cà phê của bạn.",
+    "guide": "Tably hoạt động thế nào",
+    "guideDescription": "Khách, nhân viên và quản trị viên có thể làm gì trong Tably.",
+    "signIn": "Đăng nhập",
+    "signUp": "Tạo tài khoản",
+    "admin": "Quản trị",
+    "staff": "Nhân viên",
+    "menu": "Thực đơn"
+  },
+  "validation": {
+    "phone": "Nhập số điện thoại bằng chữ số, có thể thêm dấu + ở đầu.",
+    "email": "Nhập email hợp lệ, ví dụ ten@example.com.",
+    "fullName": "Nhập đầy đủ họ và tên.",
+    "password": "Mật khẩu phải có ít nhất 8 ký tự.",
+    "required": "Vui lòng nhập {{field}}.",
+    "requiredChoice": "Vui lòng chọn {{field}}.",
+    "price": "Nhập giá từ 0 trở lên.",
+    "seats": "Số chỗ phải là số nguyên từ 1 trở lên.",
+    "count": "Giá trị {{field}} phải là số nguyên từ 1 trở lên.",
+    "percent": "Giá trị {{field}} phải từ 0 trở lên.",
+    "percentMax": "Giá trị {{field}} không được vượt quá {{max}}%.",
+    "fields": {
+      "phone": "số điện thoại",
+      "email": "email",
+      "fullName": "họ tên",
+      "businessName": "tên cơ sở",
+      "address": "địa chỉ",
+      "name": "tên",
+      "price": "giá",
+      "category": "danh mục",
+      "tax": "thuế",
+      "tableName": "tên bàn",
+      "seats": "số chỗ",
+      "categoryName": "tên danh mục",
+      "guestName": "tên khách",
+      "partySize": "số khách",
+      "quantity": "số lượng",
+      "commonTax": "thuế chung",
+      "taxPercentage": "phần trăm thuế"
+    }
+  },
+  "auth": {
+    "signIn": "Đăng nhập",
+    "signingIn": "Đang đăng nhập…",
+    "signInTitle": "Đăng nhập Tably",
+    "signInAs": "Đăng nhập với vai trò",
+    "owner": "Chủ quán",
+    "staff": "Nhân viên",
+    "ownerHint": "Quản lý thực đơn, bàn, nhân viên và báo cáo.",
+    "staffHint": "Nhận món và chăm sóc các bàn của bạn.",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "newBusiness": "Mở một cơ sở mới?",
+    "createAccount": "Tạo tài khoản",
+    "noAccount": "Chưa có tài khoản? Hãy nhờ chủ quán cấp cho bạn, hoặc <contact>liên hệ với chúng tôi</contact>.",
+    "backToSignIn": "Quay lại đăng nhập",
+    "requestTitle": "Yêu cầu tài khoản",
+    "requestBody": "Hãy cho chúng tôi biết đôi chút về cơ sở của bạn, chúng tôi sẽ cấp quyền truy cập cho nhân viên và quản trị.",
+    "notice": {
+      "pending": "Tài khoản của bạn vẫn đang được xét duyệt. Chúng tôi sẽ báo qua email bạn đã đăng ký khi tài khoản được duyệt.",
+      "disabled": "Tài khoản của bạn đang tạm bị khóa. Vui lòng liên hệ chủ quán.",
+      "wrong": "Email hoặc mật khẩu không đúng, vui lòng thử lại.",
+      "failed": "Đã có lỗi khi đăng nhập. Vui lòng thử lại."
+    },
+    "signup": {
+      "title": "Tạo tài khoản chủ quán",
+      "body": "Dành cho người điều hành nhà hàng hoặc quán cà phê. Nhân viên của bạn sẽ được bạn cấp tài khoản đăng nhập riêng sau.",
+      "fullName": "Họ tên",
+      "fullNamePlaceholder": "Nguyễn Văn An",
+      "passwordHint": "Ít nhất {{n}} ký tự.",
+      "submit": "Tạo tài khoản",
+      "submitting": "Đang tạo tài khoản…",
+      "haveAccount": "Đã có tài khoản?",
+      "exists": "Email này đã có tài khoản. Hãy đăng nhập.",
+      "invalid": "Vui lòng kiểm tra lại thông tin và thử lại.",
+      "failed": "Đã có lỗi khi tạo tài khoản. Vui lòng thử lại.",
+      "pendingTitle": "Chào {{name}},",
+      "pendingBody": "Yêu cầu của bạn đang được xét duyệt. Chúng tôi sẽ báo qua <b>{{email}}</b> khi tài khoản được duyệt. Sau đó bạn có thể đăng nhập và thiết lập cơ sở của mình.",
+      "ok": "Đồng ý"
+    },
+    "steps": {
+      "title": "Từ lúc đăng ký đến ca phục vụ đầu tiên",
+      "here": "Bạn đang ở đây",
+      "account": {
+        "title": "Tạo tài khoản",
+        "body": "Họ tên, email và mật khẩu của bạn."
+      },
+      "connections": {
+        "title": "Kết nối dịch vụ",
+        "body": "Nơi lưu đơn hàng, cập nhật trực tiếp và ảnh món: của riêng bạn, hoặc dùng dịch vụ chung để bắt đầu."
+      },
+      "business": {
+        "title": "Mô tả cơ sở của bạn",
+        "body": "Tên, logo, và đó là nhà hàng hay quán cà phê."
+      },
+      "menu": {
+        "title": "Thêm thực đơn và bàn",
+        "body": "Sau đó in mã QR cho từng bàn và thêm nhân viên."
+      }
+    },
+    "unauthorized": {
+      "title": "Bạn không có quyền truy cập trang này",
+      "body": "Trang này chỉ dành cho chủ cửa hàng. Nếu bạn nghĩ đây là nhầm lẫn, hãy nhờ chủ quán cấp quyền cho bạn.",
+      "backToStaff": "Về trang Nhân viên",
+      "signOut": "Đăng xuất"
+    }
+  },
+  "onboarding": {
+    "stepOf": "Thiết lập cửa hàng: bước {{n}}/2",
+    "signOut": "Đăng xuất",
+    "back": "Quay lại",
+    "continue": "Tiếp tục",
+    "createFailed": "Không tạo được cửa hàng. Vui lòng thử lại.",
+    "connections": {
+      "title": "Kết nối dịch vụ của riêng bạn",
+      "body": "Thực đơn, đơn hàng và lượt đặt bàn được lưu trong cơ sở dữ liệu PostgreSQL của riêng bạn, cập nhật trực tiếp đi qua ứng dụng Pusher của bạn, và ảnh món được lưu trong kho của bạn.",
+      "canSkip": "Bạn cũng có thể bắt đầu với dịch vụ chung và kết nối sau trong phần Cài đặt.",
+      "mustConnect": "Hãy kết nối cả ba để tiếp tục.",
+      "useShared": "Tạm dùng dịch vụ chung"
+    },
+    "setup": {
+      "title": "Cùng thiết lập cửa hàng của bạn",
+      "body": "Hãy cho chúng tôi biết bạn là ai. Chúng tôi sẽ dựng sẵn bàn, thực đơn và công cụ gọi món phù hợp với cơ sở của bạn.",
+      "logo": "Logo",
+      "logoPlaceholder": "Kéo thả logo vào đây, hoặc nhấn để chọn",
+      "name": "Nhập tên cơ sở của bạn",
+      "namePlaceholder": "ví dụ: Quán Ngon",
+      "phone": "Số điện thoại",
+      "phonePlaceholder": "ví dụ: +84 90 123 4567",
+      "address": "Địa chỉ",
+      "addressPlaceholder": "ví dụ: 12 Lê Lợi, Quận 1, TP. Hồ Chí Minh",
+      "emailNote": "Email của cơ sở là email bạn dùng để đăng ký.",
+      "kind": "Đây là loại hình kinh doanh nào?",
+      "later": "Bạn có thể thay đổi tất cả những điều này sau.",
+      "build": "Tạo cửa hàng của tôi",
+      "building": "Đang tạo…"
+    },
+    "building": {
+      "kicker": "Đang thiết lập",
+      "welcome": "Chào mừng, {{name}}",
+      "assembling": "Đang dựng cửa hàng {{kind}} của bạn.",
+      "workspace": "Cửa hàng",
+      "tables": "Bàn",
+      "categories": "Danh mục",
+      "menu": "Thực đơn",
+      "orders": "Đơn hàng",
+      "bookings": "Đặt bàn",
+      "readyToAdd": "Sẵn sàng để thêm",
+      "historyImported": "Đã nhập lịch sử",
+      "calendarSynced": "Đã đồng bộ lịch"
+    },
+    "form": {
+      "noKey": "Máy chủ chưa thể lưu thông tin đăng nhập (chưa đặt CREDENTIALS_KEY). Hãy nhờ người vận hành ứng dụng thêm vào.",
+      "notConnected": "Chưa kết nối: đang dùng dịch vụ chung.",
+      "checked": "đã kiểm tra {{date}}",
+      "database": "Cơ sở dữ liệu (PostgreSQL)",
+      "pusher": "Cập nhật trực tiếp (Pusher)",
+      "storage": "Hình ảnh (kho lưu trữ)",
+      "pusherApp": "Ứng dụng {{id}}",
+      "databaseUrl": "URL kết nối cơ sở dữ liệu",
+      "databaseHelp": "Dùng một cơ sở dữ liệu <b>trống</b>; chúng tôi sẽ tạo các bảng. URL dạng pooled chạy tốt nhất (Neon, Supabase và Prisma Postgres đều có).",
+      "databaseSwitch": "Đổi cơ sở dữ liệu không chuyển thực đơn, đơn hàng hay lượt đặt bàn hiện có.",
+      "paste": "Dán từ Pusher",
+      "pasteHelp": "Trong ứng dụng Pusher Channels, mở <b>App Keys</b>, nhấn <b>Copy</b> rồi dán vào đây để điền các ô bên dưới. Hoặc tự nhập.",
+      "pasteFilled": "Đã điền {{names}} của Pusher.",
+      "pasteRest": "Hãy điền phần còn lại bên dưới.",
+      "pasteNone": "Không tìm thấy thông tin Pusher trong đoạn này. Hãy sao chép từ trang App Keys của ứng dụng.",
+      "pusherNames": {
+        "appId": "app ID",
+        "key": "key",
+        "secret": "secret",
+        "cluster": "cluster"
+      },
+      "and": "và",
+      "pusherAppId": "Pusher app ID",
+      "pusherCluster": "Pusher cluster",
+      "pusherKey": "Pusher key",
+      "pusherSecret": "Pusher secret",
+      "imageStorage": "Kho ảnh",
+      "s3": "Tương thích S3",
+      "storageHelp": "Nơi lưu ảnh món và logo của bạn. Kho phải cho phép đọc công khai, vì trình duyệt của khách tải ảnh từ đó.",
+      "storageSwitch": "Đổi kho không chuyển những ảnh đã tải lên.",
+      "blobToken": "Token đọc-ghi Vercel Blob",
+      "blobHelp": "Trong Vercel, mở <b>Storage</b>, chọn kho Blob công khai và sao chép <b>BLOB_READ_WRITE_TOKEN</b> từ thẻ <b>.env.local</b>.",
+      "endpoint": "Endpoint",
+      "region": "Vùng (region)",
+      "bucket": "Bucket",
+      "publicUrl": "URL công khai",
+      "accessKeyId": "Access key ID",
+      "secretAccessKey": "Secret access key",
+      "s3Help": "Dùng được với AWS S3, Cloudflare R2, Backblaze B2, DigitalOcean Spaces, Supabase Storage và MinIO. Trên AWS, endpoint là <code>https://s3.&lt;region&gt;.amazonaws.com</code> và bắt buộc có vùng. URL công khai là địa chỉ phục vụ các tệp của bucket.",
+      "checking": "Đang kiểm tra…",
+      "testContinue": "Kiểm tra và tiếp tục",
+      "testSave": "Kiểm tra và lưu",
+      "cancel": "Hủy",
+      "checkNote": "Cả ba được kiểm tra ngay bây giờ (kho ảnh bằng một tệp thử nhỏ, xóa ngay sau đó) và được lưu khi cơ sở của bạn được tạo ở bước tiếp theo.",
+      "saveNote": "Cả ba được kiểm tra trước khi lưu (kho ảnh bằng một tệp thử nhỏ, xóa ngay sau đó).",
+      "secretsNote": "Mật khẩu và khóa bí mật được mã hóa khi lưu và không bao giờ hiển thị lại.",
+      "replace": "Thay kết nối"
+    },
+    "opening": "Đang mở cửa hàng của bạn…"
+  },
+  "shell": {
+    "area": {
+      "admin": "Quản trị",
+      "staff": "Nhân viên"
+    },
+    "tabs": {
+      "dash": "Tổng quan",
+      "tables": "Bàn",
+      "categories": "Danh mục",
+      "menu": "Thực đơn",
+      "orders": "Đơn hàng",
+      "bookings": "Đặt bàn",
+      "staff": "Nhân viên",
+      "qr": "Mã QR cho bàn",
+      "settings": "Cài đặt",
+      "history": "Lịch sử"
+    },
+    "subtitles": {
+      "dash": "Kết quả kinh doanh trong khoảng thời gian đã chọn.",
+      "tables": "Tạo, sửa và xóa các bàn khách ngồi.",
+      "categories": "Nhóm các món ăn. Danh mục bị ẩn sẽ không hiện trên thực đơn của khách.",
+      "menu": "Mọi món ăn, giá và danh mục của món.",
+      "orders": "Toàn bộ lịch sử đơn hàng. Lọc, lật trang và xuất dữ liệu.",
+      "bookings": "Chọn một ngày trên lịch để xem các lượt đặt bàn.",
+      "staff": "Tài khoản nhân viên của cửa hàng. Khóa tài khoản để thu hồi quyền truy cập.",
+      "settings": "Thông tin, thuế và tiền tệ của nhà hàng, cùng nơi lưu dữ liệu.",
+      "qr": "In một mã cho mỗi bàn. Quét mã sẽ mở thực đơn của bàn đó, không cần ứng dụng hay đăng nhập."
+    },
+    "actions": {
+      "tables": "Thêm bàn",
+      "categories": "Thêm danh mục",
+      "menu": "Thêm món",
+      "bookings": "Đặt bàn mới",
+      "staff": "Thêm nhân viên"
+    },
+    "sharedDatabase": "Cơ sở dữ liệu chung",
+    "expand": "Mở rộng thanh bên",
+    "collapse": "Thu gọn thanh bên",
+    "signOut": "Đăng xuất",
+    "home": "Trang chủ Tably",
+    "howItWorks": "Tably hoạt động thế nào",
+    "rights": "© {{year}} Tably. Bảo lưu mọi quyền.",
+    "navigation": "Điều hướng",
+    "skip": "Chuyển đến nội dung",
+    "requests": {
+      "button": "Yêu cầu từ bàn",
+      "buttonWaiting": "Yêu cầu từ bàn, {{count}} đang chờ",
+      "title": "Yêu cầu từ bàn",
+      "order": "Cũ nhất lên trước: đến trước, phục vụ trước.",
+      "empty": "Không có yêu cầu nào đang chờ.",
+      "since": "Từ {{time}}",
+      "resolve": "Đã xử lý",
+      "resolving": "Đang xử lý…",
+      "loadFailed": "Không tải được yêu cầu từ bàn.",
+      "type": {
+        "call_staff": "Gọi nhân viên",
+        "checkout": "Yêu cầu thanh toán"
+      },
+      "toast": {
+        "call_staff": "{{table}} gọi nhân viên",
+        "checkout": "{{table}} yêu cầu thanh toán"
+      }
+    },
+    "newOrder": {
+      "title": "Đơn mới {{code}}",
+      "body": "{{table}}, {{total}}",
+      "view": "Xem"
+    }
+  },
+  "errors": {
+    "requestFailed": "Yêu cầu thất bại ({{status}}). Vui lòng thử lại.",
+    "timedOut": "Hết thời gian chờ phản hồi. Vui lòng thử lại.",
+    "imageTooBig": "Ảnh phải nhỏ hơn 4MB.",
+    "uploadFailed": "Không tải ảnh lên được.",
+    "generic": "Đã có lỗi xảy ra.",
+    "chart": "Không tải được biểu đồ.",
+    "connections": "Không tải được thông tin kết nối.",
+    "orders": "Không tải được đơn hàng.",
+    "dashboard": "Không tải được số liệu tổng quan.",
+    "workspaceRefresh": "Không làm mới được không gian làm việc.",
+    "workspaceLoad": "Không tải được không gian làm việc.",
+    "workspaceLoading": "Đang tải không gian làm việc…",
+    "askOwnerDatabase": "Chủ quán cần kết nối cơ sở dữ liệu của cửa hàng trước khi có thể dùng ứng dụng."
+  },
+  "range": {
+    "today": "Hôm nay",
+    "week": "7 ngày qua",
+    "month": "Tháng này",
+    "year": "Năm nay",
+    "all": "Toàn bộ",
+    "custom": "Tùy chọn",
+    "allCaption": "Toàn bộ, {{from}} – {{to}}",
+    "start": "Bắt đầu",
+    "todayWord": "Hôm nay"
+  },
+  "admin": {
+    "dashboard": {
+      "heading": {
+        "today": "Doanh thu hôm nay",
+        "week": "Doanh thu 7 ngày qua",
+        "month": "Doanh thu tháng này",
+        "year": "Doanh thu năm nay",
+        "all": "Doanh thu từ ngày mở cửa",
+        "custom": "Doanh thu trong khoảng đã chọn"
+      },
+      "chart": {
+        "hour": "Doanh thu theo giờ",
+        "day": "Doanh thu theo ngày",
+        "month": "Doanh thu theo tháng",
+        "year": "Doanh thu theo năm"
+      },
+      "orders_one": "{{n}} đơn hàng",
+      "orders_other": "{{n}} đơn hàng",
+      "average": "trung bình {{amount}} mỗi đơn",
+      "bookings_one": "{{n}} lượt đặt bàn",
+      "bookings_other": "{{n}} lượt đặt bàn",
+      "guests_one": "{{n}} khách",
+      "guests_other": "{{n}} khách",
+      "items_one": "{{n}} món",
+      "items_other": "{{n}} món",
+      "fromDate": "Từ ngày",
+      "toDate": "Đến ngày",
+      "to": "đến",
+      "noOrders": "Không có đơn hàng nào trong khoảng này.",
+      "latest": "Đơn hàng mới nhất",
+      "bestSellers": "Món bán chạy",
+      "nothingSold": "Chưa bán được món nào trong khoảng này.",
+      "sold": "đã bán {{n}}",
+      "columns": {
+        "items": "Số món",
+        "amount": "Thành tiền",
+        "checkout": "Giờ thanh toán"
+      },
+      "takings": "Doanh thu",
+      "tooltipTakings": "Doanh thu {{amount}}",
+      "tooltipOrders": "Đơn hàng {{n}}",
+      "tableCaption": "Doanh thu theo từng khoảng thời gian",
+      "period": "Khoảng thời gian",
+      "ordersHeader": "Đơn hàng"
+    },
+    "tables": {
+      "noZone": "Chưa có khu vực",
+      "tables": "Bàn",
+      "count_one": "{{n}} bàn",
+      "count_other": "{{n}} bàn",
+      "seats_one": "{{n}} chỗ",
+      "seats_other": "{{n}} chỗ",
+      "empty": "Chưa có bàn nào. Hãy thêm các bàn khách ngồi; mỗi bàn có mã QR riêng.",
+      "add": "Thêm bàn",
+      "edit": "Sửa bàn",
+      "new": "Bàn mới",
+      "name": "Tên",
+      "seatsLabel": "Số chỗ",
+      "zone": "Khu vực (không bắt buộc)",
+      "newZone": "+ Khu vực mới…",
+      "newZoneName": "Tên khu vực mới",
+      "newZonePlaceholder": "ví dụ: Sân vườn (để trống nếu không có khu vực)",
+      "deleteFailed": "Không xóa được bàn.",
+      "delete": "Xóa",
+      "cancel": "Hủy",
+      "save": "Lưu bàn",
+      "create": "Tạo bàn",
+      "ordersAt": "Đơn hàng tại {{name}}",
+      "noOrders": "Bàn này chưa có đơn hàng nào.",
+      "orderCount": "{{n}} đơn hàng",
+      "orders": "Đơn hàng",
+      "editShort": "Sửa",
+      "editName": "Sửa {{name}}"
+    },
+    "categories": {
+      "reorderFailed": "Không lưu được thứ tự mới.",
+      "deleteFailed": "Không xóa được danh mục.",
+      "edit": "Sửa danh mục",
+      "new": "Danh mục mới",
+      "name": "Tên",
+      "namePlaceholder": "ví dụ: Đồ uống",
+      "show": "Hiện trên thực đơn",
+      "delete": "Xóa",
+      "cancel": "Hủy",
+      "save": "Lưu danh mục",
+      "create": "Tạo danh mục",
+      "listLabel": "Danh mục, theo thứ tự trên thực đơn",
+      "empty": "Chưa có danh mục nào.",
+      "dishes_one": "{{n}} món",
+      "dishes_other": "{{n}} món",
+      "onMenu": "Đang hiện trên thực đơn",
+      "hidden": "Đang ẩn",
+      "drag": "Kéo để sắp xếp lại {{name}}",
+      "moveUp": "Đưa {{name}} lên",
+      "moveDown": "Đưa {{name}} xuống",
+      "editName": "Sửa danh mục {{name}}",
+      "deleteName": "Xóa danh mục {{name}}"
+    },
+    "menu": {
+      "status": {
+        "valid": "Còn món",
+        "sold_out": "Hết món",
+        "hidden": "Đang ẩn"
+      },
+      "hiddenWithCategory": "Ẩn theo danh mục",
+      "inclTax": "Đã gồm {{name}}",
+      "exclTax": "Chưa gồm thuế {{pct}}%",
+      "commonTax": "Thuế chung",
+      "search": "Tìm món",
+      "allCategories": "Tất cả danh mục",
+      "filterCategory": "Lọc theo danh mục",
+      "importCsv": "Nhập CSV",
+      "exportCsv": "Xuất CSV",
+      "sampleFile": "Tệp mẫu",
+      "csvFile": "Tệp CSV thực đơn",
+      "hidden": "Đang ẩn",
+      "dishes_one": "{{n}} món",
+      "dishes_other": "{{n}} món",
+      "noDishes": "Danh mục này chưa có món nào.",
+      "editName": "Sửa {{name}}",
+      "deleteName": "Xóa {{name}}",
+      "deleteFailed": "Không xóa được món.",
+      "edit": "Sửa món",
+      "new": "Món mới",
+      "name": "Tên",
+      "namePlaceholder": "Tên món",
+      "price": "Giá ({{currency}})",
+      "tax": "Thuế",
+      "taxNone": "Không có",
+      "taxInclude": "Đã gồm thuế",
+      "taxExclude": "Chưa gồm thuế",
+      "taxIncluded": "Loại thuế đã gồm trong giá",
+      "commonTaxRate": "Thuế chung ({{pct}}%)",
+      "specialTaxRate": "{{name}} ({{pct}}%)",
+      "taxAdded": "Thuế cộng thêm khi thanh toán (%)",
+      "estimate": "Giá cuối ước tính: {{final}}, {{price}} + {{pct}}% thuế",
+      "category": "Danh mục",
+      "pickCategory": "Chọn danh mục",
+      "addCategoryFirst": "Hãy thêm danh mục trước",
+      "description": "Mô tả",
+      "descriptionPlaceholder": "Nguyên liệu, cách chế biến…",
+      "vegan": "Món chay",
+      "statusLegend": "Trạng thái",
+      "delete": "Xóa",
+      "cancel": "Hủy",
+      "save": "Lưu món",
+      "create": "Tạo món"
+    },
+    "csv": {
+      "empty": "Tệp trống.",
+      "missing_one": "Thiếu cột: {{cols}}.",
+      "missing_other": "Thiếu các cột: {{cols}}.",
+      "categoryRequired": "Cần có danh mục.",
+      "nameRequired": "Cần có tên món.",
+      "price": "Giá phải là số, từ 0 trở lên.",
+      "tax": "Thuế phải là 0 (không có), 1 (đã gồm trong giá) hoặc 2 (cộng thêm khi thanh toán).",
+      "taxName": "Giá trị thuế phải là \"{{common}}\" hoặc một trong các loại thuế riêng của bạn ({{taxes}}).",
+      "noneYet": "chưa có",
+      "taxPct": "Giá trị thuế phải là phần trăm từ 0 đến {{max}}.",
+      "photo": "Ảnh phải là đường dẫn https:// (Vercel Blob hoặc S3).",
+      "vegan": "is_vegan phải là 1 hoặc 0.",
+      "status": "Trạng thái phải là 0 (ẩn), 1 (hết món) hoặc 2 (còn món).",
+      "duplicate": "\"{{name}}\" xuất hiện hai lần trong {{category}}.",
+      "noDishes": "Tệp không có món nào.",
+      "notUtf8": "Tệp này không được lưu ở dạng UTF-8, nên chữ có dấu (ví dụ tiếng Việt) sẽ bị lỗi. Trong Excel, chọn Tệp > Lưu thành > \"CSV UTF-8 (Phân tách bằng dấu phẩy)\"; trong Google Trang tính, chọn Tệp > Tải xuống > CSV. Sau đó nhập lại.",
+      "title": "Nhập thực đơn",
+      "problems_one": "Có {{n}} lỗi cần sửa trước khi nhập. Chưa có gì được lưu.",
+      "problems_other": "Có {{n}} lỗi cần sửa trước khi nhập. Chưa có gì được lưu.",
+      "line": "Dòng {{n}}:",
+      "add_one": "<b>{{n}} món</b> sẽ được thêm",
+      "add_other": "<b>{{n}} món</b> sẽ được thêm",
+      "update_one": "<b>{{n}} món</b> sẽ được cập nhật (khớp theo danh mục và tên)",
+      "update_other": "<b>{{n}} món</b> sẽ được cập nhật (khớp theo danh mục và tên)",
+      "newCategories_one": "<b>{{n}} danh mục mới</b>: {{names}}",
+      "newCategories_other": "<b>{{n}} danh mục mới</b>: {{names}}",
+      "unchanged": "Những món không có trong tệp sẽ giữ nguyên.",
+      "cancel": "Hủy",
+      "import": "Nhập",
+      "importing": "Đang nhập {{done}}/{{total}}…",
+      "stopped_one": "Đã dừng nhập sau {{n}} thay đổi: {{reason}} Hãy sửa lỗi và nhập lại tệp.",
+      "stopped_other": "Đã dừng nhập sau {{n}} thay đổi: {{reason}} Hãy sửa lỗi và nhập lại tệp.",
+      "refused": "Máy chủ không chấp nhận một thay đổi."
+    },
+    "orders": {
+      "columns": {
+        "session": "Lượt phục vụ",
+        "table": "Bàn",
+        "items": "Món",
+        "amount": "Thành tiền",
+        "checkout": "Giờ thanh toán",
+        "status": "Trạng thái"
+      },
+      "notCheckedOut": "Chưa thanh toán",
+      "multiple": "{{n}} đơn hàng",
+      "search": "Tìm theo mã đơn hoặc bàn",
+      "rows": "Số dòng",
+      "rowsPerPage": "Số dòng mỗi trang",
+      "export": "Xuất trang này (CSV)",
+      "noMatch": "Không có đơn hàng phù hợp.",
+      "none": "Chưa có đơn hàng nào.",
+      "new": "Đơn hàng mới",
+      "table": "Bàn",
+      "dish": "Món",
+      "quantity": "Số lượng",
+      "cancel": "Hủy",
+      "open": "Mở đơn",
+      "failed": "Không tạo được đơn hàng."
+    },
+    "staff": {
+      "maxReached": "Đã đạt tối đa {{limit}} tài khoản nhân viên. Hãy xóa một tài khoản để thêm người mới.",
+      "columns": {
+        "name": "Tên",
+        "email": "Email",
+        "phone": "Số điện thoại",
+        "added": "Ngày thêm",
+        "status": "Trạng thái"
+      },
+      "active": "Đang hoạt động",
+      "disabled": "Đã khóa",
+      "editName": "Sửa tài khoản nhân viên {{name}}",
+      "updateFailed": "Không cập nhật được tài khoản nhân viên.",
+      "disable": "Khóa",
+      "enable": "Mở khóa",
+      "saveFailed": "Không lưu được tài khoản nhân viên.",
+      "empty": "Chưa có tài khoản nhân viên nào.",
+      "loadFailed": "Không tải được danh sách nhân viên.",
+      "edit": "Sửa tài khoản nhân viên",
+      "new": "Tài khoản nhân viên mới",
+      "fullName": "Họ tên",
+      "fullNamePlaceholder": "ví dụ: Trần Minh Anh",
+      "email": "Email",
+      "emailPlaceholder": "ví dụ: minhanh@example.com",
+      "phone": "Số điện thoại",
+      "phonePlaceholder": "ví dụ: +84 90 123 4567",
+      "newPassword": "Mật khẩu mới (để trống để giữ mật khẩu hiện tại)",
+      "password": "Mật khẩu",
+      "passwordPlaceholder": "Ít nhất 8 ký tự",
+      "cancel": "Hủy",
+      "saving": "Đang lưu…",
+      "saveChanges": "Lưu thay đổi",
+      "create": "Tạo tài khoản",
+      "seats": "Đã dùng <b>{{used}}/{{limit}}</b> tài khoản nhân viên",
+      "full": "Đã dùng hết {{limit}} tài khoản. Hãy xóa một tài khoản để thêm người mới."
+    },
+    "qr": {
+      "address": "Địa chỉ mà điện thoại trong mạng này truy cập được",
+      "noDetect": "Không tự phát hiện được địa chỉ mạng này. Hãy nhập một địa chỉ điện thoại của bạn truy cập được.",
+      "detected": "Tự phát hiện từ máy chủ này. Hãy sửa nếu điện thoại không truy cập được địa chỉ này.",
+      "loading": "Đang tải mã QR…",
+      "loadFailed": "Không tải được mã QR của các bàn.",
+      "noTables": "Chưa có bàn nào. Hãy thêm bàn ở mục Bàn trước.",
+      "needAddress": "Nhập địa chỉ ở trên để tạo mã cho bàn này.",
+      "seats": "{{n}} chỗ",
+      "downloadCard": "Tải thẻ bàn của {{name}}",
+      "card": "Thẻ bàn",
+      "downloadCode": "Tải mã QR của {{name}}",
+      "codeOnly": "Chỉ mã QR",
+      "cardLabel": "Thẻ bàn của {{table}}: quét để xem thực đơn và gọi món",
+      "welcome": "Xin chào",
+      "codeFor": "Mã QR của {{table}}",
+      "scan": "Quét để xem thực đơn và gọi món",
+      "noApp": "Không cần ứng dụng hay đăng nhập"
+    },
+    "settings": {
+      "currencies": {
+        "eur": "Euro (€)",
+        "usd": "Đô la Mỹ ($)",
+        "gbp": "Bảng Anh (£)",
+        "vnd": "Việt Nam đồng (₫)"
+      },
+      "saveFailed": "Không lưu được cài đặt.",
+      "restaurant": "Nhà hàng",
+      "logo": "Logo",
+      "logoPlaceholder": "Kéo thả logo vào đây, hoặc nhấn để chọn",
+      "name": "Tên",
+      "phone": "Số điện thoại",
+      "address": "Địa chỉ",
+      "billing": "Thanh toán",
+      "commonTax": "Thuế chung",
+      "currency": "Tiền tệ",
+      "specialTaxes": "Thuế riêng",
+      "specialHelp": "Không bắt buộc. Tạo ở đây, rồi áp dụng cho từng món trong mục Thực đơn.",
+      "noSpecial": "Chưa có thuế riêng nào.",
+      "remove": "Xóa {{name}}",
+      "taxName": "Tên thuế",
+      "newTaxName": "Tên thuế mới",
+      "newTaxPct": "Phần trăm thuế mới",
+      "taxNameRequired": "Vui lòng nhập tên thuế.",
+      "taxPctRequired": "Vui lòng nhập phần trăm thuế.",
+      "add": "Thêm",
+      "saving": "Đang lưu…",
+      "save": "Lưu",
+      "connections": "Kết nối",
+      "connectionsHelp": "Cơ sở dữ liệu, dịch vụ cập nhật trực tiếp và kho ảnh của riêng bạn. Chỉ bạn, chủ quán, mới xem hoặc thay đổi được.",
+      "receipt": {
+        "label": "Hóa đơn mẫu",
+        "yourRestaurant": "Nhà hàng của bạn",
+        "tax": "Thuế ({{pct}}%)",
+        "caption": "Hóa đơn sẽ trông như thế này với các cài đặt trên: thuế chung đã gồm trong giá từng món, nên hóa đơn {{total}} có {{tax}} tiền thuế."
+      }
+    }
+  },
+  "bookings": {
+    "weekdays": {
+      "mon": "T2",
+      "tue": "T3",
+      "wed": "T4",
+      "thu": "T5",
+      "fri": "T6",
+      "sat": "T7",
+      "sun": "CN"
+    },
+    "status": {
+      "Confirmed": "Đã xác nhận",
+      "Arrived": "Đã đến"
+    },
+    "today": "Hôm nay",
+    "previousMonth": "Tháng trước",
+    "nextMonth": "Tháng sau",
+    "dayLabel_one": "{{date}}, {{n}} lượt đặt bàn",
+    "dayLabel_other": "{{date}}, {{n}} lượt đặt bàn",
+    "dayLabelNone": "{{date}}, không có lượt đặt bàn",
+    "legend": "Ngày được tô màu là ngày có đặt bàn; con số cho biết có bao nhiêu lượt.",
+    "summary": "{{bookings}}, {{guests}}",
+    "count_one": "{{n}} lượt đặt bàn",
+    "count_other": "{{n}} lượt đặt bàn",
+    "guests_one": "{{n}} khách",
+    "guests_other": "{{n}} khách",
+    "none": "Không có lượt đặt bàn",
+    "noneToday": "Ngày này không có lượt đặt bàn nào.",
+    "changeTable": "Đổi bàn",
+    "assignTable": "Xếp bàn",
+    "undoArrival": "Hủy đánh dấu đã đến",
+    "markArrived": "Đánh dấu đã đến",
+    "deleteLabel": "Xóa lượt đặt bàn của {{name}} lúc {{time}}",
+    "updateFailed": "Không cập nhật được lượt đặt bàn.",
+    "deleteFailed": "Không xóa được lượt đặt bàn.",
+    "past": "Các lượt đặt bàn đã qua",
+    "pastCount_one": "{{n}} lượt, mới nhất lên trước",
+    "pastCount_other": "{{n}} lượt, mới nhất lên trước",
+    "noPast": "Chưa có lượt đặt bàn nào đã qua.",
+    "atTable": "{{guests}} tại {{table}}",
+    "noTable": "{{guests}}, chưa xếp bàn",
+    "new": "Đặt bàn mới",
+    "guestName": "Tên khách",
+    "guestNamePlaceholder": "Tên người đặt bàn",
+    "date": "Ngày",
+    "time": "Giờ",
+    "noTimes": "Không còn giờ trống",
+    "party": "Số khách",
+    "table": "Bàn",
+    "cancel": "Hủy",
+    "add": "Thêm lượt đặt bàn",
+    "saveFailed": "Không lưu được lượt đặt bàn.",
+    "assignTitle": "{{name}}, {{time}}",
+    "noFreeTables": "Hiện không có bàn trống.",
+    "seats": "{{n}} chỗ",
+    "assignFailed": "Không xếp được bàn.",
+    "releaseFailed": "Không trả được bàn.",
+    "release": "Trả bàn"
+  },
+  "bill": {
+    "commonTax": "Thuế chung ({{rates}})",
+    "multiTitle": "{{n}} đơn hàng, {{table}}",
+    "net": "Tiền trước thuế",
+    "tax": "Thuế ({{rates}})",
+    "total": "Tổng cộng",
+    "combinedTotal": "Tổng cộng các đơn",
+    "totalDue": "Tổng thanh toán",
+    "printBill": "In hóa đơn",
+    "back": "Quay lại",
+    "billTitle": "Hóa đơn, {{table}}",
+    "paperWidth": "Khổ giấy in hóa đơn",
+    "mm": "{{n}} mm",
+    "print": "In",
+    "receipt": "Hóa đơn"
+  },
+  "staff": {
+    "tableState": {
+      "All": "Tất cả",
+      "Free": "Trống",
+      "Booked": "Đã đặt",
+      "Seated": "Có khách",
+      "Finished": "Đã xong"
+    },
+    "orders": {
+      "search": "Tìm mã đơn",
+      "new": "Đơn hàng mới",
+      "ticketLabel": "{{table}}, {{code}}, {{status}}",
+      "opened": "Mở lúc {{time}}",
+      "total": "Tổng cộng",
+      "modify": "Sửa",
+      "updateFailed": "Không cập nhật được đơn hàng.",
+      "deleteFailed": "Không xóa được đơn hàng.",
+      "deleteName": "Xóa {{code}}",
+      "modifyTitle": "Sửa {{code}} tại {{table}}",
+      "decrease": "Giảm {{name}}",
+      "increase": "Tăng {{name}}",
+      "addItem": "Thêm món",
+      "deleteOrder": "Xóa đơn hàng",
+      "done": "Xong",
+      "confirmTitle": "Xác nhận {{code}}, {{table}}",
+      "checkOff": "Đánh dấu từng món khi món rời bếp.",
+      "cancel": "Hủy",
+      "table": "Bàn",
+      "dish": "Món",
+      "quantity": "Số lượng",
+      "open": "Mở đơn",
+      "none": "Không có đơn đang mở.",
+      "addDish": "Thêm một món",
+      "orderTotal": "Tổng đơn hàng"
+    },
+    "tables": {
+      "seated": "Khách đang ngồi",
+      "finished": "Chờ dọn bàn",
+      "bookedBy": "{{name}} lúc {{time}}",
+      "reserved": "Đã đặt trước",
+      "ready": "Sẵn sàng đón khách",
+      "noTables": "Chưa có bàn nào. Chủ quán thêm bàn ở mục Bàn trong trang quản trị.",
+      "noneInState": "Hiện không có bàn nào ở trạng thái {{state}}.",
+      "nothingOrdered": "Chưa gọi món nào.",
+      "orderNow": "Gọi món ngay",
+      "preCheckout": "Tạm tính",
+      "seatFailed": "Không xếp khách vào bàn được.",
+      "seat": "Xếp khách vào bàn",
+      "checkOut": "Thanh toán",
+      "freeFailed": "Không trả bàn được.",
+      "markFree": "Đánh dấu trống",
+      "history": "Lịch sử",
+      "close": "Đóng",
+      "billTitle": "Hóa đơn, {{table}}",
+      "back": "Quay lại",
+      "checkoutFailed": "Không thanh toán bàn được.",
+      "confirmCheckout": "Xác nhận thanh toán",
+      "historyTitle": "Lịch sử gọi món, {{table}}",
+      "noOrders": "Bàn này chưa có đơn hàng nào.",
+      "multiple": "{{n}} đơn hàng",
+      "filter": "Lọc bàn theo trạng thái"
+    },
+    "menu": {
+      "statusFailed": "Không cập nhật được trạng thái món.",
+      "search": "Tìm món",
+      "cart": "Giỏ món",
+      "cartCount": "Giỏ món, {{n}}",
+      "statusOf": "Trạng thái của {{name}}",
+      "offMenu": "Không có trên thực đơn",
+      "noteFor": "Ghi chú cho bếp: {{name}}",
+      "notePlaceholder": "Ghi chú cho bếp",
+      "clear": "Xóa",
+      "done": "Xong",
+      "noteButton": "Ghi chú cho {{name}}",
+      "add": "Thêm",
+      "decrease": "Giảm {{name}}",
+      "increase": "Tăng {{name}}",
+      "remove": "Bỏ {{name}}",
+      "newOrder": "Đơn hàng mới",
+      "table": "Bàn",
+      "pickTable": "Chọn bàn",
+      "clearCart": "Xóa giỏ món",
+      "cancel": "Hủy",
+      "placing": "Đang gửi…",
+      "place": "Gửi đơn",
+      "placeFailed": "Không gửi được đơn hàng.",
+      "noMatch": "Không có món phù hợp.",
+      "empty": "Giỏ món đang trống.",
+      "total": "Tổng cộng"
+    },
+    "history": {
+      "search": "Tìm lượt phục vụ hoặc mã đơn",
+      "noMatch": "Không có đơn hàng phù hợp.",
+      "none": "Hôm nay và hôm qua chưa có lượt thanh toán nào.",
+      "multiple": "{{n}} đơn hàng"
+    }
+  },
+  "client": {
+    "loadFailed": "Không tải được thực đơn.",
+    "loading": "Đang tải thực đơn…",
+    "opening": "Đang mở bàn của bạn…",
+    "invalidQr": "Mã QR này không hợp lệ. Vui lòng nhờ nhân viên hỗ trợ.",
+    "noteFor": "Ghi chú cho bếp: {{name}}",
+    "notePlaceholder": "Thêm ghi chú cho bếp, ví dụ: không hành",
+    "clear": "Xóa",
+    "done": "Xong",
+    "editNote": "Sửa ghi chú cho {{name}}",
+    "addNote": "Thêm ghi chú cho {{name}}",
+    "remove": "Bỏ {{name}}",
+    "removeOne": "Bớt một {{name}}",
+    "add": "Thêm",
+    "addName": "Thêm {{name}}",
+    "addOne": "Thêm một {{name}}",
+    "inThisMenu": "Trong thực đơn",
+    "sectionPage": "{{name}}, trang {{n}}",
+    "swipe": "Vuốt để mở thực đơn",
+    "placeFailed": "Không gửi được đơn hàng của bạn.",
+    "thanks": "Cảm ơn bạn đã gọi món",
+    "preparing": "Chúng tôi đang chuẩn bị món cho bạn.",
+    "enjoy": "Chúc bạn ngon miệng!",
+    "net": "Tạm tính",
+    "tax": "Thuế ({{pct}}%)",
+    "total": "Tổng cộng",
+    "orderMore": "Gọi thêm món khác",
+    "backToMenu": "Quay lại thực đơn",
+    "yourOrder": "Đơn của bạn",
+    "empty": "Giỏ món đang trống.",
+    "each": "{{price}} mỗi phần",
+    "askStaff": "Hiện tại vui lòng nhờ nhân viên gửi đơn giúp bạn.",
+    "edit": "Sửa",
+    "placing": "Đang gửi đơn…",
+    "confirm": "Xác nhận đơn",
+    "staffNotified": "Đã báo nhân viên",
+    "staffComing": "Nhân viên sẽ đến ngay.",
+    "billRequested": "Đã yêu cầu thanh toán",
+    "billComing": "Nhân viên sẽ mang hóa đơn đến ngay.",
+    "callStaff": "Gọi phục vụ",
+    "checkout": "Thanh toán",
+    "historyLabel": "Lịch sử gọi món",
+    "historyCount_one": "Lịch sử gọi món, {{n}} đơn",
+    "historyCount_other": "Lịch sử gọi món, {{n}} đơn",
+    "history": "Lịch sử",
+    "sections": "Các mục thực đơn",
+    "contents": "Mục lục",
+    "pagerLabel": "Thực đơn, vuốt sang trái hoặc phải để lật trang",
+    "pageLabel": "Trang {{n}} trên {{total}}: {{title}}",
+    "previous": "Trang trước",
+    "next": "Trang sau",
+    "pageOf": "Trang {{n}} / {{total}}",
+    "order": "Gọi món",
+    "orderItems_one": "Gọi món, {{n}} món",
+    "orderItems_other": "Gọi món, {{n}} món",
+    "cartItems_one": "Xem giỏ món, {{n}} món",
+    "cartItems_other": "Xem giỏ món, {{n}} món",
+    "gotIt": "Đã hiểu",
+    "totalAcross_one": "Tổng của {{n}} đơn",
+    "totalAcross_other": "Tổng của {{n}} đơn",
+    "noOrders": "Bàn này chưa có đơn nào.",
+    "close": "Đóng"
+  }
+}

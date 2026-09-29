@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import { getServerT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Admin" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerT();
+  return { title: t("meta.admin") };
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return children;

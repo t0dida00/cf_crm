@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+import { isLocale } from "@/lib/i18n/config";
 import { useMemo, useState } from "react";
 import {
   createColumnHelper,
@@ -14,7 +16,7 @@ import { SessionDetailDialog } from "@/components/orders/SessionDetailDialog";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { toSession, type OrderSession } from "@/lib/orderMath";
 import { RANGES, rangeBounds, rangeCaption, formatStamp, type RangeState } from "@/lib/range";
-import type { Order, RangeId } from "@/lib/types";
+import type { Order } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@/lib/format";
 import { useOrderStats } from "@/hooks/useOrderStats";
@@ -30,17 +32,8 @@ interface DashOrder {
 }
 const dashHelper = createColumnHelper<DashOrder>();
 
-/** Heads the takings figure, so the number says which period it covers. */
-export const TAKINGS_HEADING: Record<RangeId, string> = {
-  today: "Takings today",
-  week: "Takings in the last 7 days",
-  month: "Takings this month",
-  year: "Takings this year",
-  all: "Takings since you opened",
-  custom: "Takings in the chosen dates",
-};
-
 export function DashboardPanel() {
+  const { t, i18n } = useTranslation();
   const { workspace, fmt, currency } = useWorkspace();
   const [range, setRange] = useState<RangeState>({ id: "month", from: "", to: "" });
   const [detail, setDetail] = useState<OrderSession | null>(null);
@@ -61,9 +54,9 @@ export function DashboardPanel() {
   // Recomputed per render, but only changes when the range (or the day, or the
   // oldest order for "All time") does.
   const plan = useMemo(
-    () => chartPlan(range.id, new Date(), orderStats.oldestTs),
+    () => chartPlan(range.id, new Date(), orderStats.oldestTs, isLocale(i18n.language) ? i18n.language : "en"),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [range.id, lo, orderStats.oldestTs],
+    [range.id, lo, orderStats.oldestTs, i18n.language],
   );
   const {
     series,
@@ -72,9 +65,7 @@ export function DashboardPanel() {
     retry: retrySeries,
   } = useOrderSeries(plan);
   const chartTitle = plan
-    ? { hour: "Takings by hour", day: "Takings by day", month: "Takings by month", year: "Takings by year" }[
-        plan.bucket
-      ]
+    ? t(`admin.dashboard.chart.${plan.bucket}`)
     : "";
   const chartEmpty = seriesStatus === "success" && series.length === 0;
 
@@ -102,25 +93,25 @@ export function DashboardPanel() {
           size: 110,
         }),
         dashHelper.accessor("items", {
-          header: "Items",
-          cell: (c) => `${c.getValue()} ${c.getValue() === 1 ? "item" : "items"}`,
+          header: t("admin.dashboard.columns.items"),
+          cell: (c) => t("admin.dashboard.items", { count: c.getValue(), n: formatNumber(c.getValue()) }),
         }),
         dashHelper.accessor((r) => r.order.total, {
           id: "total",
-          header: "Amount",
+          header: t("admin.dashboard.columns.amount"),
           cell: (c) => <span className="font-semibold">{fmt(c.getValue())}</span>,
           size: 110,
         }),
         dashHelper.accessor((r) => r.order.ts, {
           id: "ts",
-          header: "Checkout time",
+          header: t("admin.dashboard.columns.checkout"),
           cell: (c) => (
             <span className="text-muted-foreground">{formatStamp(c.getValue())}</span>
           ),
           size: 160,
         }),
       ],
-      [fmt],
+      [fmt, t],
     ),
     getCoreRowModel: getCoreRowModel(),
   });
@@ -128,9 +119,12 @@ export function DashboardPanel() {
   const guests = bookingsInRange.reduce((a, b) => a + b.party, 0);
   // One line under the takings figure: what it's made of, plus the bookings.
   const figures = [
-    `${figure(formatNumber(orderCount))} ${orderCount === 1 ? "order" : "orders"}`,
-    `${figure(orderCount ? fmt(takings / orderCount) : fmt(0))} average order`,
-    `${formatNumber(bookingsInRange.length)} ${bookingsInRange.length === 1 ? "booking" : "bookings"}, ${formatNumber(guests)} ${guests === 1 ? "guest" : "guests"}`,
+    t("admin.dashboard.orders", { count: orderCount, n: figure(formatNumber(orderCount)) }),
+    t("admin.dashboard.average", { amount: figure(orderCount ? fmt(takings / orderCount) : fmt(0)) }),
+    `${t("admin.dashboard.bookings", { count: bookingsInRange.length, n: formatNumber(bookingsInRange.length) })}, ${t(
+      "admin.dashboard.guests",
+      { count: guests, n: formatNumber(guests) },
+    )}`,
   ];
 
   return (
@@ -150,7 +144,7 @@ export function DashboardPanel() {
                   : "bg-card font-medium text-muted-foreground hover:bg-secondary",
               )}
             >
-              {r.label}
+              {t(`range.${r.id}`)}
             </button>
           ))}
         </div>
@@ -158,15 +152,15 @@ export function DashboardPanel() {
           <span className="inline-flex items-center gap-2">
             <Input
               type="date"
-              aria-label="From date"
+              aria-label={t("admin.dashboard.fromDate")}
               value={range.from}
               onChange={(e) => setRange((s) => ({ ...s, from: e.target.value }))}
               className="h-8.5 w-auto text-[13px]"
             />
-            <span className="text-[13px] text-muted-foreground">to</span>
+            <span className="text-[13px] text-muted-foreground">{t("admin.dashboard.to")}</span>
             <Input
               type="date"
-              aria-label="To date"
+              aria-label={t("admin.dashboard.toDate")}
               value={range.to}
               onChange={(e) => setRange((s) => ({ ...s, to: e.target.value }))}
               className="h-8.5 w-auto text-[13px]"
@@ -175,7 +169,7 @@ export function DashboardPanel() {
         )}
         <p className="flex items-center gap-2 text-[13px] text-muted-foreground lg:ml-auto">
           <CalendarBlank size={14} weight="bold" aria-hidden />
-          {rangeCaption(range, oldest)}
+          {rangeCaption(t, range, oldest)}
         </p>
       </div>
 
@@ -183,7 +177,7 @@ export function DashboardPanel() {
       <Card className="gap-0 py-0">
         <section aria-labelledby="takings-title" className="px-6 pt-6 pb-5 sm:px-8 sm:pt-7">
           <h2 id="takings-title" className="font-semibold text-muted-foreground">
-            {TAKINGS_HEADING[range.id]}
+            {t(`admin.dashboard.heading.${range.id}`)}
           </h2>
           {statsStatus === "error" ? (
             <ErrorState message={statsError ?? undefined} onRetry={retryStats} className="items-start py-4 text-left" />
@@ -213,7 +207,7 @@ export function DashboardPanel() {
                 <LoadingState className="h-64 py-0" />
               ) : chartEmpty ? (
                 <p className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-                  No orders in this range.
+                  {t("admin.dashboard.noOrders")}
                 </p>
               ) : (
                 <TakingsChart slots={plan.slots} series={series} currency={currency} fmt={fmt} />
@@ -227,14 +221,14 @@ export function DashboardPanel() {
         <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle>
-              <h2>Latest orders</h2>
+              <h2>{t("admin.dashboard.latest")}</h2>
             </CardTitle>
           </CardHeader>
           <CardContent className="px-0">
             <DataTable
               table={dashTable}
               minWidth={480}
-              emptyMessage="No orders in this range."
+              emptyMessage={t("admin.dashboard.noOrders")}
               status={statsStatus}
               error={statsError}
               onRetry={retryStats}
@@ -246,7 +240,7 @@ export function DashboardPanel() {
         <Card>
           <CardHeader>
             <CardTitle>
-              <h2>Best sellers</h2>
+              <h2>{t("admin.dashboard.bestSellers")}</h2>
             </CardTitle>
           </CardHeader>
           <CardContent>

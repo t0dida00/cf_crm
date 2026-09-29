@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BellRinging,
@@ -30,21 +31,14 @@ const PENDING_REQUESTS_KEY = ["table-requests", "pending"] as const;
 
 type StaffTab = "menu" | "orders" | "bookings" | "tables" | "history";
 
-const NAV: NavItem<StaffTab>[] = [
-  { id: "orders", label: "Orders", Icon: Receipt },
-  { id: "tables", label: "Tables", Icon: SquaresFour },
-  { id: "bookings", label: "Bookings", Icon: CalendarCheck },
-  { id: "menu", label: "Menu", Icon: ForkKnife },
-  { id: "history", label: "History", Icon: ClockCounterClockwise },
+/* Tab names are under shell.tabs in the translations. */
+const NAV: Omit<NavItem<StaffTab>, "label">[] = [
+  { id: "orders", Icon: Receipt },
+  { id: "tables", Icon: SquaresFour },
+  { id: "bookings", Icon: CalendarCheck },
+  { id: "menu", Icon: ForkKnife },
+  { id: "history", Icon: ClockCounterClockwise },
 ];
-
-const TITLES: Record<StaffTab, string> = {
-  menu: "Menu",
-  orders: "Orders",
-  bookings: "Bookings",
-  tables: "Tables",
-  history: "History",
-};
 
 const TAB_IDS = NAV.map((n) => n.id);
 
@@ -69,7 +63,13 @@ const mapRequest = (r: ApiTableRequest): TableRequest => ({
 /** The staff floor app: the shared AppShell with the staff tabs, plus table requests. */
 export function StaffShell() {
   const { workspace, fmt } = useWorkspace();
-  const { tab, setTab } = useShellTab({ basePath: "/staff", ids: TAB_IDS, fallback: "orders", titles: TITLES, area: "Staff" });
+  const { t } = useTranslation();
+  const titles = useMemo(
+    () => Object.fromEntries(TAB_IDS.map((id) => [id, t(`shell.tabs.${id}`)])) as Record<StaffTab, string>,
+    [t],
+  );
+  const nav = useMemo(() => NAV.map((n) => ({ ...n, label: titles[n.id] })), [titles]);
+  const { tab, setTab } = useShellTab({ basePath: "/staff", ids: TAB_IDS, fallback: "orders", titles, area: t("shell.area.staff") });
   const [requestsModalOpen, setRequestsModalOpen] = useState(false);
   const [createSignal, setCreateSignal] = useState(0);
 
@@ -120,23 +120,23 @@ export function StaffShell() {
 
   return (
     <AppShell
-      section="STAFF"
+      section={t("shell.area.staff").toUpperCase()}
       logoFallback={ForkKnife}
-      nav={NAV}
+      nav={nav}
       tab={tab}
       onTabChange={setTab}
       counts={counts}
-      title={TITLES[tab]}
+      title={titles[tab]}
       actions={
         <>
           {tab === "bookings" && (
-            <HeaderActionButton label="New booking" onClick={() => setCreateSignal((n) => n + 1)} />
+            <HeaderActionButton label={t("shell.actions.bookings")} onClick={() => setCreateSignal((n) => n + 1)} />
           )}
           <button
             type="button"
             onClick={() => setRequestsModalOpen(true)}
             className="relative flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            aria-label={pendingRequests.length ? `Table requests, ${pendingRequests.length} waiting` : "Table requests"}
+            aria-label={pendingRequests.length ? t("shell.requests.buttonWaiting", { count: pendingRequests.length }) : t("shell.requests.button")}
           >
             <BellRinging size={18} weight="bold" aria-hidden />
             {pendingRequests.length > 0 && (
@@ -156,7 +156,7 @@ export function StaffShell() {
           onOpenChange={setRequestsModalOpen}
           requests={pendingRequests}
           status={requestsQuery.isFetching ? "loading" : toRequestStatus(requestsQuery)}
-          error={requestsQuery.isError ? errorMessage(requestsQuery.error, "Couldn't load table requests.") : null}
+          error={requestsQuery.isError ? errorMessage(requestsQuery.error, t("shell.requests.loadFailed")) : null}
           onRetry={refreshRequests}
           onResolve={handleResolveRequest}
         />

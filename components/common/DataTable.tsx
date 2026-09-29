@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { flexRender, type Table as TanstackTable } from "@tanstack/react-table";
 import {
   Table,
@@ -30,12 +31,13 @@ interface DataTableProps<T> {
 export function DataTable<T>({
   table,
   onRowClick,
-  emptyMessage = "Nothing to show.",
+  emptyMessage,
   minWidth,
   status = "success",
   error,
   onRetry,
 }: DataTableProps<T>) {
+  const { t } = useTranslation();
   const rows = table.getRowModel().rows;
   const colSpan = table.getAllColumns().length;
   const refetching = status === "loading" && rows.length > 0;
@@ -78,7 +80,7 @@ export function DataTable<T>({
                 colSpan={colSpan}
                 className="py-12 text-center text-sm text-muted-foreground"
               >
-                {emptyMessage}
+                {emptyMessage ?? t("common.nothing")}
               </TableCell>
             </TableRow>
           ) : (

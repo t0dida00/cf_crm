@@ -27,7 +27,10 @@ vi.mock("@/hooks/useOrderSeries", () => ({
 vi.mock("./TakingsChart", () => ({ TakingsChart: () => null }));
 vi.mock("@/components/orders/SessionDetailDialog", () => ({ SessionDetailDialog: () => null }));
 
-import { DashboardPanel, TAKINGS_HEADING } from "./DashboardPanel";
+import { t } from "@/lib/i18n";
+import { DashboardPanel } from "./DashboardPanel";
+
+const TAKINGS_HEADING = { month: t("admin.dashboard.heading.month"), today: t("admin.dashboard.heading.today") };
 
 const STATS: OrderStats = {
   orderCount: 4,

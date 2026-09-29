@@ -1,6 +1,8 @@
 "use client";
 
 import { useActionState, useState, type FocusEvent, type FormEvent } from "react";
+import { Trans, useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Hourglass } from "@phosphor-icons/react";
@@ -18,28 +20,28 @@ export const MIN_PASSWORD_LENGTH = 8;
 /** What the signup action answers: the account waiting for review, or null (it redirected). */
 export type SignupState = { pending: { fullName: string; email: string } } | null;
 
-export function signupErrorMessage(error?: string, message?: string): string | null {
+export function signupErrorMessage(t: TFunction, error?: string, message?: string): string | null {
   if (!error) return null;
-  if (error === "exists") return "An account with this email already exists. Sign in instead.";
-  if (error === "invalid") return message || "Check your details and try again.";
-  return "Something went wrong creating your account. Please try again.";
+  if (error === "exists") return t("auth.signup.exists");
+  if (error === "invalid") return message || t("auth.signup.invalid");
+  return t("auth.signup.failed");
 }
 
 /** Shown instead of the form once an account is waiting for review; OK goes to sign in. */
 function PendingReview({ fullName, email }: { fullName: string; email: string }) {
+  const { t } = useTranslation();
   const router = useRouter();
   return (
     <div>
       <span className="mb-5 flex size-11 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-600">
         <Hourglass size={22} weight="bold" aria-hidden />
       </span>
-      <h1 className={`${DISPLAY} text-5xl text-balance`}>Dear {fullName},</h1>
+      <h1 className={`${DISPLAY} text-5xl text-balance`}>{t("auth.signup.pendingTitle", { name: fullName })}</h1>
       <p role="status" className="mt-3 text-muted-foreground text-pretty">
-        Your request is being reviewed. We&apos;ll notify you at <strong className="text-foreground">{email}</strong>{" "}
-        once your account is approved. Then you can sign in and set up your business.
+        <Trans i18nKey="auth.signup.pendingBody" values={{ email }} components={{ b: <strong className="text-foreground" /> }} />
       </p>
       <Button className="mt-8 h-11 w-full text-base" size="lg" onClick={() => router.push("/login")}>
-        OK
+        {t("auth.signup.ok")}
       </Button>
     </div>
   );
@@ -60,7 +62,8 @@ export function SignupCard({
   message?: string;
 }) {
   const [state, formAction] = useActionState(signUp, null);
-  const errorText = signupErrorMessage(error, message);
+  const { t } = useTranslation();
+  const errorText = signupErrorMessage(t, error, message);
   const [errors, setErrors] = useState<FieldErrors<"fullName" | "email" | "password">>({});
 
   const validateForm = (form: HTMLFormElement) => {
@@ -95,9 +98,9 @@ export function SignupCard({
 
   return (
     <div>
-      <h1 className={`${DISPLAY} text-5xl text-balance sm:text-6xl`}>Create your owner account</h1>
+      <h1 className={`${DISPLAY} text-5xl text-balance sm:text-6xl`}>{t("auth.signup.title")}</h1>
       <p className="mt-3 mb-7 text-muted-foreground text-pretty">
-        For whoever runs the restaurant or café. Your staff get their own sign-ins from you later.
+        {t("auth.signup.body")}
       </p>
 
       {errorText && (
@@ -111,20 +114,20 @@ export function SignupCard({
 
       <form action={formAction} onSubmit={check} noValidate className="space-y-4">
         <div className="space-y-1.5">
-          <RequiredLabel htmlFor="fullName">Full name</RequiredLabel>
+          <RequiredLabel htmlFor="fullName">{t("auth.signup.fullName")}</RequiredLabel>
           <Input
             id="fullName"
             name="fullName"
             autoComplete="name"
             required
-            placeholder="Ana Ruiz"
+            placeholder={t("auth.signup.fullNamePlaceholder")}
             {...fieldErrorProps("fullName", errors.fullName)}
             onBlur={blur("fullName")}
           />
           <FieldError id="fullName" message={errors.fullName} />
         </div>
         <div className="space-y-1.5">
-          <RequiredLabel htmlFor="email">Email</RequiredLabel>
+          <RequiredLabel htmlFor="email">{t("auth.email")}</RequiredLabel>
           <Input
             id="email"
             name="email"
@@ -138,7 +141,7 @@ export function SignupCard({
           <FieldError id="email" message={errors.email} />
         </div>
         <div className="space-y-1.5">
-          <RequiredLabel htmlFor="password">Password</RequiredLabel>
+          <RequiredLabel htmlFor="password">{t("auth.password")}</RequiredLabel>
           <Input
             id="password"
             name="password"
@@ -152,16 +155,16 @@ export function SignupCard({
           />
           <FieldError id="password" message={errors.password} />
           <p id="password-hint" className="text-xs text-muted-foreground">
-            At least {MIN_PASSWORD_LENGTH} characters.
+            {t("auth.signup.passwordHint", { n: MIN_PASSWORD_LENGTH })}
           </p>
         </div>
-        <LoginSubmitButton label="Create account" pendingLabel="Creating account…" />
+        <LoginSubmitButton label={t("auth.signup.submit")} pendingLabel={t("auth.signup.submitting")} />
       </form>
 
       <p className="mt-6 text-sm text-muted-foreground">
-        Already have an account?{" "}
+        {t("auth.signup.haveAccount")}{" "}
         <Link href="/login" className="rounded-sm font-semibold text-primary underline underline-offset-4">
-          Sign in
+          {t("auth.signIn")}
         </Link>
       </p>
     </div>

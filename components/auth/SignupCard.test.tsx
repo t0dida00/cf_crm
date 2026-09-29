@@ -3,26 +3,27 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 
 const push = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace: vi.fn(), refresh: vi.fn() }) }));
+import { t } from "@/lib/i18n";
 import { MIN_PASSWORD_LENGTH, SignupCard, signupErrorMessage } from "./SignupCard";
 
 afterEach(cleanup);
 
 describe("signupErrorMessage", () => {
   test("no error, no message", () => {
-    expect(signupErrorMessage()).toBeNull();
+    expect(signupErrorMessage(t)).toBeNull();
   });
 
   test("explains a duplicate email", () => {
-    expect(signupErrorMessage("exists")).toMatch(/already exists/);
+    expect(signupErrorMessage(t, "exists")).toMatch(/already exists/);
   });
 
   test("shows the backend's validation message, with a fallback", () => {
-    expect(signupErrorMessage("invalid", "A valid email is required")).toBe("A valid email is required");
-    expect(signupErrorMessage("invalid")).toBe("Check your details and try again.");
+    expect(signupErrorMessage(t, "invalid", "A valid email is required")).toBe("A valid email is required");
+    expect(signupErrorMessage(t, "invalid")).toBe("Check your details and try again.");
   });
 
   test("falls back to a generic message", () => {
-    expect(signupErrorMessage("default")).toMatch(/Something went wrong/);
+    expect(signupErrorMessage(t, "default")).toMatch(/Something went wrong/);
   });
 });
 

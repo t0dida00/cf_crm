@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { useEffect, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -104,6 +106,7 @@ function SidebarBody<T extends string>({
   counts,
   onToggle,
 }: SidebarProps<T>) {
+  const { t } = useTranslation();
   const { workspace } = useWorkspace();
   const databaseName = workspace.databaseName ?? null;
   const databaseLabel = databaseName ? `Database: ${databaseName}` : "Using the shared database";
@@ -129,8 +132,8 @@ function SidebarBody<T extends string>({
         <button
           type="button"
           onClick={onToggle}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? t("shell.expand") : t("shell.collapse")}
+          aria-label={collapsed ? t("shell.expand") : t("shell.collapse")}
           aria-expanded={!collapsed}
           className="flex size-6 shrink-0 items-center justify-center rounded-md text-white/55 transition-colors hover:text-white"
         >
@@ -154,7 +157,7 @@ function SidebarBody<T extends string>({
               <span className="sr-only">{databaseLabel}</span>
             ) : (
               <span className="min-w-0 flex-1 [overflow-wrap:anywhere] text-white">
-                {databaseName ?? "Shared database"}
+                {databaseName ?? t("shell.sharedDatabase")}
               </span>
             )}
           </div>
@@ -200,15 +203,15 @@ function SidebarBody<T extends string>({
       <form action={signOutAction}>
         <button
           type="submit"
-          title={collapsed ? "Sign out" : undefined}
-          aria-label={collapsed ? "Sign out" : undefined}
+          title={collapsed ? t("shell.signOut") : undefined}
+          aria-label={collapsed ? t("shell.signOut") : undefined}
           className={cn(
             "flex w-full items-center gap-2.5 rounded-lg py-2.5 text-sm font-medium text-white/55 transition-colors hover:text-white",
             rowPadding,
           )}
         >
           <SignOut size={15} weight="bold" />
-          {!collapsed && "Sign out"}
+          {!collapsed && t("shell.signOut")}
         </button>
       </form>
     </>
@@ -248,6 +251,7 @@ export function AppShell<T extends string>({
   overlays?: ReactNode;
   children: ReactNode;
 }) {
+  const { t } = useTranslation();
   const { collapsed, isNarrow, mobileOpen, closeMobile, toggle } = useSidebarCollapse();
   const sidebar = { section, logoFallback, showDatabase, nav, tab, counts };
 
@@ -277,7 +281,7 @@ export function AppShell<T extends string>({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-card px-4 md:gap-4 md:px-6">
-          <Link href="/" aria-label="Tably home" className="flex shrink-0 items-center gap-2">
+          <Link href="/" aria-label={t("shell.home")} className="flex shrink-0 items-center gap-2">
             <span className="relative flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-md">
               <Image src="/icons/bell_master.png" alt="" fill sizes="24px" className="object-cover" />
             </span>
@@ -295,10 +299,13 @@ export function AppShell<T extends string>({
 
         <footer className="border-t bg-card px-4 py-4 text-xs text-muted-foreground md:px-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span>© {new Date().getFullYear()} Tably. All rights reserved.</span>
-            <Link href="/instruction" className="hover:text-foreground hover:underline">
-              How Tably works
-            </Link>
+            <span>{t("shell.rights", { year: new Date().getFullYear() })}</span>
+            <span className="flex items-center gap-4">
+              <LanguageSwitcher />
+              <Link href="/instruction" className="hover:text-foreground hover:underline">
+                {t("shell.howItWorks")}
+              </Link>
+            </span>
           </div>
         </footer>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useMemo } from "react";
 import {
   BarElement,
@@ -36,6 +37,7 @@ export function TakingsChart({
   currency: string;
   fmt: (value: number) => string;
 }) {
+  const { t } = useTranslation();
   const points = useMemo(() => fillSlots(slots, series), [slots, series]);
 
   const fontFamily = useMemo(() => {
@@ -49,7 +51,7 @@ export function TakingsChart({
       labels: points.map((p) => p.label),
       datasets: [
         {
-          label: "Takings",
+          label: t("admin.dashboard.takings"),
           data: points.map((p) => p.takings),
           backgroundColor: BAR,
           hoverBackgroundColor: BAR_HOVER,
@@ -61,7 +63,7 @@ export function TakingsChart({
         },
       ],
     }),
-    [points],
+    [points, t],
   );
 
   const options = useMemo<ChartOptions<"bar">>(
@@ -84,7 +86,7 @@ export function TakingsChart({
             title: (items) => points[items[0].dataIndex]?.title ?? "",
             label: (item) => {
               const p = points[item.dataIndex];
-              return [`Takings ${fmt(p.takings)}`, `Orders ${formatNumber(p.orders)}`];
+              return [t("admin.dashboard.tooltipTakings", { amount: fmt(p.takings) }), t("admin.dashboard.tooltipOrders", { n: formatNumber(p.orders) })];
             },
           },
         },
@@ -108,7 +110,7 @@ export function TakingsChart({
         },
       },
     }),
-    [points, fmt, currency, fontFamily],
+    [points, fmt, currency, fontFamily, t],
   );
 
   return (
@@ -120,12 +122,12 @@ export function TakingsChart({
           to fit its rows, so on the table itself it would stretch the page. */}
       <div className="sr-only">
         <table>
-          <caption>Takings per period</caption>
+          <caption>{t("admin.dashboard.tableCaption")}</caption>
           <thead>
             <tr>
-              <th scope="col">Period</th>
-              <th scope="col">Takings</th>
-              <th scope="col">Orders</th>
+              <th scope="col">{t("admin.dashboard.period")}</th>
+              <th scope="col">{t("admin.dashboard.takings")}</th>
+              <th scope="col">{t("admin.dashboard.ordersHeader")}</th>
             </tr>
           </thead>
           <tbody>

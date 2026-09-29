@@ -28,6 +28,6 @@ describe("uploadImage", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(JSON.stringify({ error: "Nope" }), { status: 409 }));
     await expect(uploadImage(png())).rejects.toThrow("Nope");
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response("oops", { status: 500 }));
-    await expect(uploadImage(png())).rejects.toThrow("Failed to upload image.");
+    await expect(uploadImage(png())).rejects.toThrow("Couldn't upload the image.");
   });
 });

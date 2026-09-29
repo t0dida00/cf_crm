@@ -1,10 +1,12 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { CircleNotch, WarningCircle } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
-export function LoadingState({ label = "Loading…", className }: { label?: string; className?: string }) {
+export function LoadingState({ label, className }: { label?: string; className?: string }) {
+  const { t } = useTranslation();
   return (
     <div
       role="status"
@@ -14,13 +16,13 @@ export function LoadingState({ label = "Loading…", className }: { label?: stri
       )}
     >
       <CircleNotch size={16} weight="bold" className="animate-spin" />
-      {label}
+      {label ?? t("common.loading")}
     </div>
   );
 }
 
 export function ErrorState({
-  message = "Couldn't load this data.",
+  message,
   onRetry,
   className,
 }: {
@@ -28,6 +30,7 @@ export function ErrorState({
   onRetry?: () => void;
   className?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       role="alert"
@@ -35,11 +38,11 @@ export function ErrorState({
     >
       <p className="flex items-center gap-2 text-sm text-destructive">
         <WarningCircle size={16} weight="bold" />
-        {message}
+        {message ?? t("common.loadFailed")}
       </p>
       {onRetry && (
         <Button variant="outline" size="sm" onClick={onRetry}>
-          Try again
+          {t("common.tryAgain")}
         </Button>
       )}
     </div>

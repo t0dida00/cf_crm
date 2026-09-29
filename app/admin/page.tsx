@@ -8,12 +8,14 @@ import { useWorkspace } from "@/components/providers/WorkspaceProvider";
 import { ErrorState, LoadingState } from "@/components/common/RequestState";
 import { ConnectionsStep } from "@/components/onboarding/ConnectionsStep";
 import { DATABASE_NOT_CONNECTED } from "@/lib/requestStatus";
+import { useTranslation } from "react-i18next";
 
 const BUILDING_SEEN_KEY = "tably:building-seen";
 
 export default function AdminPage() {
   const router = useRouter();
   const { workspace, status, error, reload } = useWorkspace();
+  const { t } = useTranslation();
   const [showBuilding, setShowBuilding] = useState(
     () => typeof window !== "undefined" && !sessionStorage.getItem(BUILDING_SEEN_KEY),
   );
@@ -31,12 +33,12 @@ export default function AdminPage() {
   if (status === "error") {
     return (
       <div className="flex min-h-screen items-center justify-center px-6">
-        <ErrorState message={error ?? "Couldn't load your workspace."} onRetry={reload} />
+        <ErrorState message={error ?? t("errors.workspaceLoad")} onRetry={reload} />
       </div>
     );
   }
   if (status !== "success" || !workspace.name) {
-    return <LoadingState label="Loading workspace…" className="min-h-screen" />;
+    return <LoadingState label={t("errors.workspaceLoading")} className="min-h-screen" />;
   }
 
   if (showBuilding) {

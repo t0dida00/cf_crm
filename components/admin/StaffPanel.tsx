@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -25,7 +26,7 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { RequiredLabel } from "@/components/common/RequiredLabel";
 import { DataTable } from "@/components/common/DataTable";
-import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/useAsyncAction";
+import { savedMessage, useAsyncAction } from "@/hooks/useAsyncAction";
 import { apiFetch } from "@/lib/api";
 import { formatStamp } from "@/lib/range";
 import { errorMessage, toRequestStatus } from "@/lib/requestStatus";
@@ -66,6 +67,7 @@ interface StaffList {
 }
 
 export function StaffPanel({ createSignal }: { createSignal: number }) {
+  const { t } = useTranslation();
   const { run, isPending } = useAsyncAction();
   const queryClient = useQueryClient();
   const staffQuery = useQuery({
@@ -99,7 +101,7 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
   useEffect(() => {
     if (createSignal > 0) {
       if (atCapacity) {
-        toast.error(`Maximum of ${limit} staff accounts reached. Remove an existing account to add a new one.`);
+        toast.error(t("admin.staff.maxReached", { limit }));
         return;
       }
       setEditing(null);
@@ -137,7 +139,7 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
     columns: useMemo(
       () => [
         helper.accessor("fullName", {
-          header: "Name",
+          header: t("admin.staff.columns.name"),
           // A disabled account's row reads dimmer: it can't sign in.
           cell: (c) => (
             <span className={cn("font-semibold", !c.row.original.isActive && "text-muted-foreground")}>
@@ -146,28 +148,28 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
           ),
         }),
         helper.accessor("email", {
-          header: "Email",
+          header: t("admin.staff.columns.email"),
           cell: (c) => <span className="text-muted-foreground">{c.getValue()}</span>,
         }),
         helper.accessor("phone", {
-          header: "Phone",
+          header: t("admin.staff.columns.phone"),
           cell: (c) => <span className="text-muted-foreground">{c.getValue() || "—"}</span>,
           size: 140,
         }),
         helper.accessor("createdAt", {
-          header: "Added",
+          header: t("admin.staff.columns.added"),
           cell: (c) => <span className="text-muted-foreground">{formatStamp(c.getValue())}</span>,
           size: 160,
         }),
         helper.accessor("isActive", {
-          header: "Status",
+          header: t("admin.staff.columns.status"),
           cell: (c) =>
             c.getValue() ? (
-              <span className="text-sm text-muted-foreground">Active</span>
+              <span className="text-sm text-muted-foreground">{t("admin.staff.active")}</span>
             ) : (
               <Badge className="gap-1 bg-secondary text-muted-foreground">
                 <Prohibit size={12} weight="bold" aria-hidden />
-                Disabled
+                {t("admin.staff.disabled")}
               </Badge>
             ),
           size: 110,
@@ -182,7 +184,7 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
                 type="button"
                 onClick={() => startEdit(row.original)}
                 className="text-muted-foreground transition-colors hover:text-foreground"
-                aria-label={`Edit staff account ${row.original.fullName}`}
+                aria-label={t("admin.staff.editName", { name: row.original.fullName })}
               >
                 <PencilSimple size={15} weight="bold" />
               </button>
@@ -190,11 +192,11 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
                 type="button"
                 disabled={isPending(`toggle-${row.original.id}`)}
                 onClick={() =>
-                  run(`toggle-${row.original.id}`, () => toggleActive(row.original), "Failed to update staff account.")
+                  run(`toggle-${row.original.id}`, () => toggleActive(row.original), t("admin.staff.updateFailed"))
                 }
                 className="text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
               >
-                {row.original.isActive ? "Disable" : "Enable"}
+                {row.original.isActive ? t("admin.staff.disable") : t("admin.staff.enable")}
               </button>
             </span>
           ),
@@ -237,10 +239,10 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
         });
         setStaff((prev) => [...prev, mapStaff(created.staff)]);
       }
-      toast.success(SAVED_MESSAGE);
+      toast.success(savedMessage());
       setOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save staff account");
+      setError(err instanceof Error ? err.message : t("admin.staff.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -255,10 +257,10 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
         <CardContent className="px-0">
           <DataTable
             table={table}
-            emptyMessage="No staff accounts yet."
+            emptyMessage={t("admin.staff.empty")}
             status={staffStatus}
             error={
-              staffQuery.isError ? errorMessage(staffQuery.error, "Couldn't load staff accounts.") : null
+              staffQuery.isError ? errorMessage(staffQuery.error, t("admin.staff.loadFailed")) : null
             }
             onRetry={() => void staffQuery.refetch()}
           />
@@ -268,16 +270,16 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit staff account" : "New staff account"}</DialogTitle>
+            <DialogTitle>{editing ? t("admin.staff.edit") : t("admin.staff.new")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="staff-name">Full name</RequiredLabel>
+              <RequiredLabel htmlFor="staff-name">{t("admin.staff.fullName")}</RequiredLabel>
               <Input
                 id="staff-name"
                 required
                 value={form.fullName}
-                placeholder="e.g. Jamie Rivera"
+                placeholder={t("admin.staff.fullNamePlaceholder")}
                 onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
                 {...fieldErrorProps("staff-name", errors.fullName)}
                 onBlur={() => setErrors((e) => withFieldError(e, "fullName", validateStaff(form, { editing: !!editing }).fullName))}
@@ -285,13 +287,13 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
               <FieldError id="staff-name" message={errors.fullName} />
             </div>
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="staff-email">Email</RequiredLabel>
+              <RequiredLabel htmlFor="staff-email">{t("admin.staff.email")}</RequiredLabel>
               <Input
                 id="staff-email"
                 type="email"
                 required
                 value={form.email}
-                placeholder="e.g. jamie@example.com"
+                placeholder={t("admin.staff.emailPlaceholder")}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                 {...fieldErrorProps("staff-email", errors.email)}
                 onBlur={() => setErrors((e) => withFieldError(e, "email", validateStaff(form, { editing: !!editing }).email))}
@@ -299,14 +301,14 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
               <FieldError id="staff-email" message={errors.email} />
             </div>
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="staff-phone">Phone</RequiredLabel>
+              <RequiredLabel htmlFor="staff-phone">{t("admin.staff.phone")}</RequiredLabel>
               <Input
                 id="staff-phone"
                 type="tel"
                 inputMode="tel"
                 required
                 value={form.phone}
-                placeholder="e.g. +34 600 000 000"
+                placeholder={t("admin.staff.phonePlaceholder")}
                 onChange={(e) => setForm((f) => ({ ...f, phone: sanitizePhone(e.target.value) }))}
                 {...fieldErrorProps("staff-phone", errors.phone)}
                 onBlur={() => setErrors((e) => withFieldError(e, "phone", validateStaff(form, { editing: !!editing }).phone))}
@@ -315,16 +317,16 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
             </div>
             <div className="space-y-1.5">
               {editing ? (
-                <Label htmlFor="staff-password">New password (leave blank to keep current)</Label>
+                <Label htmlFor="staff-password">{t("admin.staff.newPassword")}</Label>
               ) : (
-                <RequiredLabel htmlFor="staff-password">Password</RequiredLabel>
+                <RequiredLabel htmlFor="staff-password">{t("admin.staff.password")}</RequiredLabel>
               )}
               <Input
                 id="staff-password"
                 type="password"
                 required={!editing}
                 value={form.password}
-                placeholder="At least 8 characters"
+                placeholder={t("admin.staff.passwordPlaceholder")}
                 onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                 {...fieldErrorProps("staff-password", errors.password)}
                 onBlur={() => setErrors((e) => withFieldError(e, "password", validateStaff(form, { editing: !!editing }).password))}
@@ -341,10 +343,10 @@ export function StaffPanel({ createSignal }: { createSignal: number }) {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("admin.staff.cancel")}
             </Button>
             <Button onClick={submit} loading={saving}>
-              {saving ? "Saving…" : editing ? "Save changes" : "Create account"}
+              {saving ? t("admin.staff.saving") : editing ? t("admin.staff.saveChanges") : t("admin.staff.create")}
             </Button>
           </DialogFooter>
         </DialogContent>

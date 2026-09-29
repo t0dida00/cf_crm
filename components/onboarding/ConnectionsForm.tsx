@@ -1,5 +1,8 @@
 "use client";
 
+import { Trans, useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { intlLocale } from "@/lib/i18n";
 import { useState, type FormEvent } from "react";
 import { CheckCircle, Database, ImageSquare, Lightning } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/Button";
@@ -17,7 +20,7 @@ import {
   type StorageProvider,
 } from "@/hooks/useConnections";
 import { toast } from "sonner";
-import { SAVED_MESSAGE } from "@/hooks/useAsyncAction";
+import { savedMessage } from "@/hooks/useAsyncAction";
 import { parsePusherSnippet, type PusherFields } from "@/lib/pusherSnippet";
 
 const EMPTY = {
@@ -88,14 +91,17 @@ const SECRET_FIELD_PROPS = {
   "data-lpignore": "true",
 } as const;
 
-const FIELD_NAMES: Record<keyof PusherFields, string> = { appId: "app ID", key: "key", secret: "secret", cluster: "cluster" };
+/** "app ID, key and secret" ("app ID, key và secret"), in the language in use. */
+const listNames = (names: string[], and: string) =>
+  names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} ${and} ${names[names.length - 1]}`;
 
-/** "app ID, key and secret" */
-const listNames = (names: string[]) =>
-  names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
-
-const checkedOn = (at: string | null) =>
-  at ? ` · checked ${new Date(at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : "";
+/** ", checked 3 Oct 2026" after a connection's name, dated in the language in use. */
+const checkedOn = (t: TFunction, at: string | null) =>
+  at
+    ? `, ${t("onboarding.form.checked", {
+        date: new Date(at).toLocaleDateString(intlLocale(), { day: "numeric", month: "short", year: "numeric" }),
+      })}`
+    : "";
 
 /** True once the business's database, Pusher and storage are all its own. */
 export const connectedAll = (c: Connections | null) => !!c?.database && !!c.pusher && !!c.storage;
@@ -104,6 +110,7 @@ export const connectedAll = (c: Connections | null) => !!c?.database && !!c.push
 export const connectionsReady = (c: Connections | null) => !!c && (c.sharedInfraAllowed || connectedAll(c));
 
 function Status({ icon, title, connected }: { icon: React.ReactNode; title: string; connected: string | null }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-1">
       <p className="flex items-center gap-2 font-semibold">
@@ -116,7 +123,7 @@ function Status({ icon, title, connected }: { icon: React.ReactNode; title: stri
           {connected}
         </p>
       ) : (
-        <p className="text-sm text-muted-foreground">Not connected: using the shared service.</p>
+        <p className="text-sm text-muted-foreground">{t("onboarding.form.notConnected")}</p>
       )}
     </div>
   );
@@ -143,6 +150,7 @@ export function ConnectionsForm({
   initial?: ConnectionsInput | null;
   inSettings?: boolean;
 }) {
+  const { t } = useTranslation();
   const { connections, status, error, retry, saveConnections, checkConnections } = useConnections();
   const [form, setForm] = useState(() => (initial ? fromInput(initial) : EMPTY));
   const submitting = onChecked ? checkConnections : saveConnections;
@@ -161,12 +169,14 @@ export function ConnectionsForm({
   const pasteSnippet = (text: string) => {
     if (!text.trim()) return;
     const found = parsePusherSnippet(text);
-    const names = (Object.keys(found) as (keyof PusherFields)[]).map((f) => FIELD_NAMES[f]);
+    const names = (Object.keys(found) as (keyof PusherFields)[]).map((f) => t(`onboarding.form.pusherNames.${f}`));
     setForm((f) => ({ ...f, ...found }));
     setPasteNote(
       names.length
-        ? `Filled the Pusher ${listNames(names)}.${names.length < 4 ? " Fill in the rest below." : ""}`
-        : "Couldn't find Pusher credentials in that text. Copy them from your app's App Keys page.",
+        ? `${t("onboarding.form.pasteFilled", { names: listNames(names, t("onboarding.form.and")) })}${
+            names.length < 4 ? ` ${t("onboarding.form.pasteRest")}` : ""
+          }`
+        : t("onboarding.form.pasteNone"),
     );
   };
 
@@ -183,7 +193,7 @@ export function ConnectionsForm({
     }
     saveConnections.mutate(input, {
       onSuccess: () => {
-        toast.success(SAVED_MESSAGE);
+        toast.success(savedMessage());
         setForm(EMPTY);
         setPasteNote(null);
         setEditing(false);
@@ -196,36 +206,36 @@ export function ConnectionsForm({
     <div className="space-y-5">
       {!connections.canStoreCredentials && (
         <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
-          The server can&apos;t store credentials yet (CREDENTIALS_KEY isn&apos;t set). Ask whoever runs this app to add it.
+          {t("onboarding.form.noKey")}
         </p>
       )}
 
       <div className="space-y-3">
         <Status
           icon={<Database size={18} weight="bold" className="text-brand-700" />}
-          title="Database (PostgreSQL)"
-          connected={connections.database ? `${connections.database.label}${checkedOn(connections.database.verifiedAt)}` : null}
+          title={t("onboarding.form.database")}
+          connected={connections.database ? `${connections.database.label}${checkedOn(t, connections.database.verifiedAt)}` : null}
         />
         <Status
           icon={<Lightning size={18} weight="bold" className="text-brand-700" />}
-          title="Live updates (Pusher)"
+          title={t("onboarding.form.pusher")}
           connected={
             connections.pusher
-              ? `App ${connections.pusher.appId} · ${connections.pusher.cluster}${checkedOn(connections.pusher.verifiedAt)}`
+              ? `${t("onboarding.form.pusherApp", { id: connections.pusher.appId })}, ${connections.pusher.cluster}${checkedOn(t, connections.pusher.verifiedAt)}`
               : null
           }
         />
         <Status
           icon={<ImageSquare size={18} weight="bold" className="text-brand-700" />}
-          title="Images (storage)"
-          connected={connections.storage ? `${connections.storage.label}${checkedOn(connections.storage.verifiedAt)}` : null}
+          title={t("onboarding.form.storage")}
+          connected={connections.storage ? `${connections.storage.label}${checkedOn(t, connections.storage.verifiedAt)}` : null}
         />
       </div>
 
       {showForm ? (
         <form onSubmit={submit} className="space-y-5 border-t pt-5">
           <div className="space-y-1.5">
-            <RequiredLabel htmlFor="database-url">Database connection URL</RequiredLabel>
+            <RequiredLabel htmlFor="database-url">{t("onboarding.form.databaseUrl")}</RequiredLabel>
             <Input
               id="database-url"
               type="text"
@@ -239,15 +249,14 @@ export function ConnectionsForm({
               aria-describedby="database-help"
             />
             <p id="database-help" className="text-xs text-muted-foreground">
-              Use an <strong>empty</strong> database; we create the tables. A pooled URL works best (Neon, Supabase and
-              Prisma Postgres all offer one).
-              {inSettings && connections.database && " Switching databases doesn't move your existing menu, orders or bookings."}
+              <Trans i18nKey="onboarding.form.databaseHelp" components={{ b: <strong /> }} />
+              {inSettings && connections.database && ` ${t("onboarding.form.databaseSwitch")}`}
             </p>
           </div>
 
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="pusher-paste">Paste from Pusher</Label>
+              <Label htmlFor="pusher-paste">{t("onboarding.form.paste")}</Label>
               <Textarea
                 id="pusher-paste"
                 rows={3}
@@ -259,8 +268,7 @@ export function ConnectionsForm({
                 className="font-mono text-xs"
               />
               <p id="pusher-paste-help" className="text-xs text-muted-foreground">
-                In your Pusher Channels app, open <strong>App Keys</strong>, click <strong>Copy</strong> and paste here to fill
-                the fields below. Or type them in yourself.
+                <Trans i18nKey="onboarding.form.pasteHelp" components={{ b: <strong /> }} />
               </p>
               <p id="pusher-paste-note" aria-live="polite" className="text-xs font-medium text-brand-700">
                 {pasteNote}
@@ -269,10 +277,10 @@ export function ConnectionsForm({
             <div className="grid gap-3 sm:grid-cols-2">
               {(
                 [
-                  ["appId", "Pusher app ID", "1234567"],
-                  ["cluster", "Pusher cluster", "eu"],
-                  ["key", "Pusher key", ""],
-                  ["secret", "Pusher secret", ""],
+                  ["appId", t("onboarding.form.pusherAppId"), "1234567"],
+                  ["cluster", t("onboarding.form.pusherCluster"), "eu"],
+                  ["key", t("onboarding.form.pusherKey"), ""],
+                  ["secret", t("onboarding.form.pusherSecret"), ""],
                 ] as const
               ).map(([field, label, placeholder]) => (
                 <div key={field} className="space-y-1.5">
@@ -293,7 +301,7 @@ export function ConnectionsForm({
 
           <div className="space-y-3">
             <fieldset className="space-y-1.5">
-              <legend className="mb-1.5 text-sm font-medium">Image storage</legend>
+              <legend className="mb-1.5 text-sm font-medium">{t("onboarding.form.imageStorage")}</legend>
               <div className="flex gap-2">
                 {STORAGE_PROVIDERS.map(([provider, label]) => (
                   <label
@@ -314,20 +322,19 @@ export function ConnectionsForm({
                       onChange={() => setForm((f) => ({ ...f, storageProvider: provider }))}
                       className="sr-only"
                     />
-                    {label}
+                    {provider === "s3" ? t("onboarding.form.s3") : label}
                   </label>
                 ))}
               </div>
               <p className="text-xs text-muted-foreground">
-                Where dish photos and your logo are stored. It must allow public reads, since guests&apos; browsers load
-                the images.
-                {inSettings && connections.storage && " Switching storage doesn't move images already uploaded."}
+                {t("onboarding.form.storageHelp")}
+                {inSettings && connections.storage && ` ${t("onboarding.form.storageSwitch")}`}
               </p>
             </fieldset>
 
             {form.storageProvider === "vercel_blob" ? (
               <div className="space-y-1.5">
-                <RequiredLabel htmlFor="blob-token">Vercel Blob read-write token</RequiredLabel>
+                <RequiredLabel htmlFor="blob-token">{t("onboarding.form.blobToken")}</RequiredLabel>
                 <Input
                   id="blob-token"
                   type="text"
@@ -339,20 +346,19 @@ export function ConnectionsForm({
                   aria-describedby="blob-token-help"
                 />
                 <p id="blob-token-help" className="text-xs text-muted-foreground">
-                  In Vercel, open <strong>Storage</strong>, pick your public Blob store and copy{" "}
-                  <strong>BLOB_READ_WRITE_TOKEN</strong> from its <strong>.env.local</strong> tab.
+                  <Trans i18nKey="onboarding.form.blobHelp" components={{ b: <strong /> }} />
                 </p>
               </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {(
                   [
-                    ["s3Endpoint", "Endpoint", "https://<account>.r2.cloudflarestorage.com", true],
-                    ["s3Region", "Region", "auto", false],
-                    ["s3Bucket", "Bucket", "menu-photos", true],
-                    ["s3PublicUrl", "Public URL", "https://pub-….r2.dev", true],
-                    ["s3AccessKeyId", "Access key ID", "", true],
-                    ["s3SecretAccessKey", "Secret access key", "", true],
+                    ["s3Endpoint", t("onboarding.form.endpoint"), "https://<account>.r2.cloudflarestorage.com", true],
+                    ["s3Region", t("onboarding.form.region"), "auto", false],
+                    ["s3Bucket", t("onboarding.form.bucket"), "menu-photos", true],
+                    ["s3PublicUrl", t("onboarding.form.publicUrl"), "https://pub-….r2.dev", true],
+                    ["s3AccessKeyId", t("onboarding.form.accessKeyId"), "", true],
+                    ["s3SecretAccessKey", t("onboarding.form.secretAccessKey"), "", true],
                   ] as const
                 ).map(([field, label, placeholder, required]) => (
                   <div key={field} className="space-y-1.5">
@@ -373,9 +379,7 @@ export function ConnectionsForm({
                   </div>
                 ))}
                 <p className="text-xs text-muted-foreground sm:col-span-2">
-                  Works with AWS S3, Cloudflare R2, Backblaze B2, DigitalOcean Spaces, Supabase Storage and MinIO. On AWS,
-                  the endpoint is <code>https://s3.&lt;region&gt;.amazonaws.com</code> and the region is required. The
-                  public URL is the address the bucket&apos;s files are served from.
+                  <Trans i18nKey="onboarding.form.s3Help" components={{ code: <code /> }} />
                 </p>
               </div>
             )}
@@ -388,24 +392,25 @@ export function ConnectionsForm({
           )}
           <div className="flex gap-2">
             <Button type="submit" loading={submitting.isPending} disabled={!connections.canStoreCredentials}>
-              {submitting.isPending ? "Checking…" : onChecked ? "Test & continue" : "Test & save"}
+              {submitting.isPending
+                ? t("onboarding.form.checking")
+                : onChecked
+                  ? t("onboarding.form.testContinue")
+                  : t("onboarding.form.testSave")}
             </Button>
             {editing && (
               <Button type="button" variant="outline" onClick={() => setEditing(false)}>
-                Cancel
+                {t("onboarding.form.cancel")}
               </Button>
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            {onChecked
-              ? "All three are checked now (storage with a small test file, deleted again) and saved once your business is created in the next step. "
-              : "All three are checked before anything is saved (storage with a small test file, deleted again). "}
-            Passwords and secrets are stored encrypted and never shown again.
+            {onChecked ? t("onboarding.form.checkNote") : t("onboarding.form.saveNote")} {t("onboarding.form.secretsNote")}
           </p>
         </form>
       ) : (
         <Button variant="outline" onClick={() => setEditing(true)}>
-          Replace connections
+          {t("onboarding.form.replace")}
         </Button>
       )}
     </div>

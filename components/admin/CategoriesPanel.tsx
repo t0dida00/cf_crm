@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -17,11 +18,12 @@ import { FieldError, fieldErrorProps } from "@/components/common/FieldError";
 import { RequiredLabel } from "@/components/common/RequiredLabel";
 import { validateCategory, type FieldErrors, withFieldError } from "@/lib/validation";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
-import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/useAsyncAction";
+import { savedMessage, useAsyncAction } from "@/hooks/useAsyncAction";
 import type { Category } from "@/lib/types";
 import { CategoryList } from "./CategoryList";
 
 export function CategoriesPanel({ createSignal }: { createSignal: number }) {
+  const { t } = useTranslation();
   const { workspace, saveCategory, deleteCategory, reorderCategories } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const [open, setOpen] = useState(false);
@@ -52,7 +54,7 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
     setErrors(found);
     if (Object.keys(found).length) return;
     const ok = await run("save-category", () =>
-      saveCategory({ id: editing?.id, name: form.name.trim(), valid: form.valid }), undefined, SAVED_MESSAGE
+      saveCategory({ id: editing?.id, name: form.name.trim(), valid: form.valid }), undefined, savedMessage()
     );
     if (ok) setOpen(false);
   };
@@ -63,10 +65,10 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
         <CategoryList
           categories={workspace.categories}
           dishCount={dishCount}
-          onReorder={(ids) => run("reorder-categories", () => reorderCategories(ids), "Couldn't save the new order.", SAVED_MESSAGE)}
+          onReorder={(ids) => run("reorder-categories", () => reorderCategories(ids), t("admin.categories.reorderFailed"), savedMessage())}
           onEdit={startEdit}
           onDelete={(category) =>
-            run(`delete-${category.id}`, () => deleteCategory(category.id), "Failed to delete category.")
+            run(`delete-${category.id}`, () => deleteCategory(category.id), t("admin.categories.deleteFailed"))
           }
           isDeleting={(id) => isPending(`delete-${id}`)}
         />
@@ -75,16 +77,16 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit category" : "New category"}</DialogTitle>
+            <DialogTitle>{editing ? t("admin.categories.edit") : t("admin.categories.new")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="category-name">Name</RequiredLabel>
+              <RequiredLabel htmlFor="category-name">{t("admin.categories.name")}</RequiredLabel>
               <Input
                 id="category-name"
                 required
                 value={form.name}
-                placeholder="e.g. Drinks"
+                placeholder={t("admin.categories.namePlaceholder")}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 {...fieldErrorProps("category-name", errors.name)}
                 onBlur={() => setErrors((e) => withFieldError(e, "name", validateCategory(form).name))}
@@ -96,7 +98,7 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
                 checked={form.valid}
                 onCheckedChange={(valid) => setForm((f) => ({ ...f, valid: valid === true }))}
               />
-              Show on the menu
+              {t("admin.categories.show")}
             </Label>
           </div>
           <DialogFooter>
@@ -109,19 +111,19 @@ export function CategoriesPanel({ createSignal }: { createSignal: number }) {
                   const ok = await run(
                     `delete-${editing.id}`,
                     () => deleteCategory(editing.id),
-                    "Failed to delete category.",
+                    t("admin.categories.deleteFailed"),
                   );
                   if (ok) setOpen(false);
                 }}
               >
-                Delete
+                {t("admin.categories.delete")}
               </Button>
             )}
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("admin.categories.cancel")}
             </Button>
             <Button loading={isPending("save-category")} onClick={submit}>
-              {editing ? "Save category" : "Create category"}
+              {editing ? t("admin.categories.save") : t("admin.categories.create")}
             </Button>
           </DialogFooter>
         </DialogContent>

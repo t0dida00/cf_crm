@@ -1,6 +1,7 @@
 import type { Category, Dish, DishStatus, TaxMode } from "./types";
 import { MAX_SPECIAL_TAX } from "./validation";
 import { parseCsv, toCsv } from "./csv";
+import { t } from "./i18n";
 
 /** The menu file's columns, in order. Import matches them by name, in any order. */
 export const MENU_CSV_COLUMNS = [
@@ -16,6 +17,8 @@ export const MENU_CSV_COLUMNS = [
 ] as const;
 
 export const COMMON_TAX = "Common tax";
+/** Other names accepted for the common tax in the file ("Thuế chung"). */
+const COMMON_TAX_ALIASES = ["Thuế chung"];
 
 /** tax: 0 none, 1 included in the price (tax_value names the tax), 2 added at checkout (tax_value is the %). */
 const TAX_CODES: Record<string, TaxMode> = { "0": "none", "1": "include", "2": "exclude" };
@@ -99,14 +102,14 @@ export function parseMenuCsv(
   // One form for accented letters (NFC): a file saved with decomposed accents
   // (as macOS can) still matches the same names already on the menu.
   const table = parseCsv(text.normalize("NFC"));
-  if (!table.length) return { rows: [], errors: [{ line: 1, message: "The file is empty." }] };
+  if (!table.length) return { rows: [], errors: [{ line: 1, message: t("admin.csv.empty") }] };
 
   const header = table[0].map(key);
   const missing = MENU_CSV_COLUMNS.filter((c) => !header.includes(c));
   if (missing.length) {
     return {
       rows: [],
-      errors: [{ line: 1, message: `Missing column${missing.length > 1 ? "s" : ""}: ${missing.join(", ")}.` }],
+      errors: [{ line: 1, message: t("admin.csv.missing", { count: missing.length, cols: missing.join(", ") }) }],
     };
   }
   const col = Object.fromEntries(MENU_CSV_COLUMNS.map((c) => [c, header.indexOf(c)])) as Record<
@@ -114,6 +117,8 @@ export function parseMenuCsv(
     number
   >;
   const taxNames = new Map([COMMON_TAX, ...specialTaxNames].map((n) => [key(n), n]));
+  // The common tax in any language we speak (it's stored as "Common tax").
+  for (const alias of COMMON_TAX_ALIASES) taxNames.set(key(alias), COMMON_TAX);
 
   const rows: MenuRow[] = [];
   const errors: MenuRowError[] = [];
@@ -127,42 +132,42 @@ export function parseMenuCsv(
 
     const category = get("category");
     const name = get("name");
-    if (!category) fail("Category is required.");
-    if (!name) fail("Dish name is required.");
+    if (!category) fail(t("admin.csv.categoryRequired"));
+    if (!name) fail(t("admin.csv.nameRequired"));
 
     const priceText = get("price");
     const price = Number(priceText);
-    if (!priceText || !Number.isFinite(price) || price < 0) fail("Price must be a number, 0 or more.");
+    if (!priceText || !Number.isFinite(price) || price < 0) fail(t("admin.csv.price"));
 
     const taxMode = TAX_CODES[get("tax") || "0"];
     let taxName: string | undefined;
     let taxPct: number | undefined;
-    if (!taxMode) fail("Tax must be 0 (none), 1 (included) or 2 (added at checkout).");
+    if (!taxMode) fail(t("admin.csv.tax"));
     else if (taxMode === "include") {
       taxName = taxNames.get(key(get("tax_value") || COMMON_TAX));
       if (!taxName) {
-        fail(`Tax value must be "${COMMON_TAX}" or one of your special taxes (${specialTaxNames.join(", ") || "none yet"}).`);
+        fail(t("admin.csv.taxName", { common: COMMON_TAX, taxes: specialTaxNames.join(", ") || t("admin.csv.noneYet") }));
       }
     } else if (taxMode === "exclude") {
       const v = get("tax_value");
       taxPct = Number(v);
       if (!v || !Number.isFinite(taxPct) || taxPct < 0 || taxPct > MAX_SPECIAL_TAX) {
-        fail(`Tax value must be a percentage from 0 to ${MAX_SPECIAL_TAX}.`);
+        fail(t("admin.csv.taxPct", { max: MAX_SPECIAL_TAX }));
       }
     }
 
     const photo = get("photo");
-    if (photo && !/^https:\/\/\S+$/i.test(photo)) fail("Photo must be an https:// link (Vercel Blob or S3).");
+    if (photo && !/^https:\/\/\S+$/i.test(photo)) fail(t("admin.csv.photo"));
 
     const vegan = key(get("is_vegan"));
-    if (!YES.has(vegan) && !NO.has(vegan)) fail("is_vegan must be 1 or 0.");
+    if (!YES.has(vegan) && !NO.has(vegan)) fail(t("admin.csv.vegan"));
 
     const status = STATUS_CODES[get("status") || "2"];
-    if (!status) fail("Status must be 0 (hidden), 1 (sold out) or 2 (available).");
+    if (!status) fail(t("admin.csv.status"));
 
     const dup = `${key(category)}\u0000${key(name)}`;
     if (category && name) {
-      if (seen.has(dup)) fail(`"${name}" appears twice in ${category}.`);
+      if (seen.has(dup)) fail(t("admin.csv.duplicate", { name, category }));
       seen.add(dup);
     }
 
@@ -183,7 +188,7 @@ export function parseMenuCsv(
     }
   });
 
-  if (table.length === 1) errors.push({ line: 2, message: "The file has no dishes." });
+  if (table.length === 1) errors.push({ line: 2, message: t("admin.csv.noDishes") });
   return { rows, errors };
 }
 

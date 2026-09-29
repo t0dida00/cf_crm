@@ -1,33 +1,29 @@
+"use client";
+
+import { useTranslation } from "react-i18next";
 import { DISPLAY } from "@/components/marketing/typeScale";
 
 /** What an owner does from signup to a first service, in order (WorkspaceSetupFlow, then admin). */
-export const SIGNUP_STEPS = [
-  { title: "Create your account", description: "Your name, email and a password." },
-  {
-    title: "Connect your services",
-    description: "Where your orders, live updates and dish photos are kept: your own, or the shared ones to start.",
-  },
-  { title: "Describe your business", description: "Its name, logo, and whether it's a restaurant or a café." },
-  { title: "Add your menu and tables", description: "Then print each table's QR code and add your staff." },
-];
+export const SIGNUP_STEPS = ["account", "connections", "business", "menu"] as const;
 
 /**
  * The setup order beside the signup form. The first step is the one on screen,
  * tagged like a new ticket on the rail.
  */
 export function SignupSteps() {
+  const { t } = useTranslation();
   return (
     <section aria-labelledby="signup-steps-title">
       <h2 id="signup-steps-title" className="text-xl font-bold">
-        From signup to your first service
+        {t("auth.steps.title")}
       </h2>
       <ol className="mt-6">
-        {SIGNUP_STEPS.map(({ title, description }, i) => {
+        {SIGNUP_STEPS.map((step, i) => {
           const current = i === 0;
           const last = i === SIGNUP_STEPS.length - 1;
           return (
             <li
-              key={title}
+              key={step}
               aria-current={current ? "step" : undefined}
               className="relative grid grid-cols-[2.5rem_1fr] gap-x-3 pb-7 last:pb-0"
             >
@@ -45,14 +41,14 @@ export function SignupSteps() {
               </span>
               <div className="pt-1.5">
                 <h3 className="flex flex-wrap items-center gap-2 font-bold">
-                  {title}
+                  {t(`auth.steps.${step}.title`)}
                   {current && (
                     <span className="rounded-md bg-(--landing-saffron) px-2 py-0.5 text-xs font-bold text-(--landing-ink)">
-                      You&apos;re here
+                      {t("auth.steps.here")}
                     </span>
                   )}
                 </h3>
-                <p className="mt-1 max-w-sm text-sm text-pretty text-(--landing-muted)">{description}</p>
+                <p className="mt-1 max-w-sm text-sm text-pretty text-(--landing-muted)">{t(`auth.steps.${step}.body`)}</p>
               </div>
             </li>
           );

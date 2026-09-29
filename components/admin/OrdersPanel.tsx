@@ -1,5 +1,8 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { statusLabel } from "@/lib/i18n/labels";
 import { useEffect, useMemo, useState } from "react";
 import { createColumnHelper, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { DownloadSimple, MagnifyingGlass } from "@phosphor-icons/react";
@@ -29,7 +32,7 @@ import { DataTable } from "@/components/common/DataTable";
 import { PaginationBar } from "@/components/common/PaginationBar";
 import { SessionDetailDialog } from "@/components/orders/SessionDetailDialog";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
-import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/useAsyncAction";
+import { savedMessage, useAsyncAction } from "@/hooks/useAsyncAction";
 import { summariseLines, type OrderSession } from "@/lib/orderMath";
 import { orderTone } from "@/lib/tone";
 import { formatStamp } from "@/lib/range";
@@ -45,10 +48,11 @@ const summarise = (session: OrderSession) =>
     .map((l) => `${l.qty}× ${l.name}`)
     .join(", ");
 
-const sessionRef = (session: OrderSession) =>
-  session.orders.length > 1 ? `${session.orders.length} orders` : session.orders[0].code;
+const sessionRef = (t: TFunction, session: OrderSession) =>
+  session.orders.length > 1 ? t("admin.orders.multiple", { n: session.orders.length }) : session.orders[0].code;
 
 export function OrdersPanel({ createSignal }: { createSignal: number }) {
+  const { t } = useTranslation();
   const { workspace, flow, fmt, addOrder } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
@@ -91,18 +95,18 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
       helper.display({
         id: "ref",
         header: "#",
-        cell: ({ row }) => <span className="font-bold">{sessionRef(row.original)}</span>,
+        cell: ({ row }) => <span className="font-bold">{sessionRef(t, row.original)}</span>,
         size: 110,
       }),
       helper.display({
         id: "table",
-        header: "Table",
+        header: t("admin.orders.columns.table"),
         cell: ({ row }) => row.original.orders[0].tableName,
         size: 120,
       }),
       helper.display({
         id: "items",
-        header: "Items",
+        header: t("admin.orders.columns.items"),
         cell: ({ row }) => (
           <span className="block max-w-[360px] text-wrap text-muted-foreground">
             {summarise(row.original)}
@@ -110,32 +114,32 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
         ),
       }),
       helper.accessor("total", {
-        header: "Amount",
+        header: t("admin.orders.columns.amount"),
         cell: (c) => <span className="font-semibold">{fmt(c.getValue())}</span>,
         size: 110,
       }),
       helper.display({
         id: "checkoutTime",
-        header: "Checkout time",
+        header: t("admin.orders.columns.checkout"),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
-            {row.original.closedTs ? formatStamp(row.original.closedTs) : "Not checked out"}
+            {row.original.closedTs ? formatStamp(row.original.closedTs) : t("admin.orders.notCheckedOut")}
           </span>
         ),
         size: 160,
       }),
       helper.display({
         id: "status",
-        header: "Status",
+        header: t("admin.orders.columns.status"),
         cell: ({ row }) => (
           <Badge className={orderTone(row.original.orders[0].status, flow)}>
-            {row.original.orders[0].status}
+            {statusLabel(t, row.original.orders[0].status)}
           </Badge>
         ),
         size: 120,
       }),
     ],
-    [flow, fmt],
+    [flow, fmt, t],
   );
 
   const table = useReactTable({
@@ -146,14 +150,14 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
 
   const exportCsv = () => {
     const rows = [
-      ["Session", "Table", "Items", "Amount", "Checkout time", "Status"],
+      (["session", "table", "items", "amount", "checkout", "status"] as const).map((c) => t(`admin.orders.columns.${c}`)),
       ...data.map((s) => [
-        sessionRef(s),
+        sessionRef(t, s),
         s.orders[0].tableName,
         summarise(s),
         s.total.toFixed(2),
         s.closedTs ? formatStamp(s.closedTs) : "",
-        s.orders[0].status,
+        statusLabel(t, s.orders[0].status),
       ]),
     ];
     // UTF-8 with a byte-order mark (downloadFile), so Excel keeps accented names.
@@ -175,13 +179,13 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by ref or table"
-            aria-label="Search by ref or table"
+            placeholder={t("admin.orders.search")}
+            aria-label={t("admin.orders.search")}
             className="pl-9"
           />
         </div>
         <div className="flex-1" />
-        <span className="text-[13px] text-muted-foreground">Rows</span>
+        <span className="text-[13px] text-muted-foreground">{t("admin.orders.rows")}</span>
         <Select
           value={String(pageSize)}
           onValueChange={(v) => {
@@ -189,7 +193,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-20" aria-label="Rows per page">
+          <SelectTrigger className="w-20" aria-label={t("admin.orders.rowsPerPage")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -202,7 +206,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
         </Select>
         <Button variant="outline" onClick={exportCsv}>
           <DownloadSimple size={15} weight="bold" />
-          Export page (CSV)
+          {t("admin.orders.export")}
         </Button>
       </div>
 
@@ -211,7 +215,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
           <DataTable
             table={table}
             minWidth={1040}
-            emptyMessage={debouncedQuery ? "No orders match." : "No orders yet."}
+            emptyMessage={debouncedQuery ? t("admin.orders.noMatch") : t("admin.orders.none")}
             status={status}
             error={error}
             onRetry={retry}
@@ -226,11 +230,11 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>New order</DialogTitle>
+            <DialogTitle>{t("admin.orders.new")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="orders-panel-table">Table</Label>
+              <Label htmlFor="orders-panel-table">{t("admin.orders.table")}</Label>
               <Select
                 value={form.tableName}
                 onValueChange={(tableName) => setForm((f) => ({ ...f, tableName }))}
@@ -248,7 +252,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="orders-panel-dish">Dish</Label>
+              <Label htmlFor="orders-panel-dish">{t("admin.orders.dish")}</Label>
               <Select
                 value={form.itemId}
                 onValueChange={(itemId) => setForm((f) => ({ ...f, itemId }))}
@@ -266,7 +270,7 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="order-qty">Quantity</RequiredLabel>
+              <RequiredLabel htmlFor="order-qty">{t("admin.orders.quantity")}</RequiredLabel>
               <Input
                 id="order-qty"
                 type="number"
@@ -277,19 +281,19 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
                 onKeyDown={blockInvalidNumberKeys({ whole: true })}
                 onChange={(e) => setForm((f) => ({ ...f, qty: e.target.value }))}
                 {...fieldErrorProps("order-qty", qtyError)}
-                onBlur={() => setQtyError(countError(form.qty, "Quantity"))}
+                onBlur={() => setQtyError(countError(form.qty, "quantity"))}
               />
               <FieldError id="order-qty" message={qtyError} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("admin.orders.cancel")}
             </Button>
             <Button
               loading={isPending("create-order")}
               onClick={async () => {
-                const qtyProblem = countError(form.qty, "Quantity");
+                const qtyProblem = countError(form.qty, "quantity");
                 setQtyError(qtyProblem);
                 if (qtyProblem) return;
                 const ok = await run("create-order", () =>
@@ -297,12 +301,12 @@ export function OrdersPanel({ createSignal }: { createSignal: number }) {
                     tableName: form.tableName,
                     itemId: form.itemId,
                     qty: Number(form.qty),
-                  }), undefined, SAVED_MESSAGE
+                  }), undefined, savedMessage()
                 );
                 if (ok) setOpen(false);
               }}
             >
-              Open order
+              {t("admin.orders.open")}
             </Button>
           </DialogFooter>
         </DialogContent>

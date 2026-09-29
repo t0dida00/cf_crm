@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { getServerT } from "@/lib/i18n/server";
 import { ArrowLeft } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -9,13 +11,17 @@ import { PassRail, TicketClip } from "@/components/marketing/TicketRail";
 import { notifyNewAccount } from "@/lib/notify";
 import { registerAccount } from "@/lib/register";
 
-export const metadata = { title: "Create account" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerT();
+  return { title: t("meta.signUp") };
+}
 
 export default async function SignupPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string; message?: string }>;
 }) {
+  const { t } = await getServerT();
   const { error, message } = await searchParams;
 
   async function signUp(_prev: SignupState, formData: FormData): Promise<SignupState> {
@@ -47,7 +53,7 @@ export default async function SignupPage({
           className="flex items-center gap-1.5 rounded-sm text-sm font-medium text-(--landing-muted) hover:text-(--landing-ink)"
         >
           <ArrowLeft size={15} weight="bold" aria-hidden />
-          Back to home
+          {t("common.backToHome")}
         </Link>
       </MarketingHeader>
 

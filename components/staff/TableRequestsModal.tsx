@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { HandWaving, Receipt } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/Badge";
@@ -17,10 +18,6 @@ import type { TableRequest, TableRequestType } from "@/lib/types";
 import { ErrorState, LoadingState } from "@/components/common/RequestState";
 import type { RequestStatus } from "@/lib/requestStatus";
 
-const TYPE_LABELS: Record<TableRequestType, string> = {
-  call_staff: "Called staff",
-  checkout: "Requested checkout",
-};
 
 export function TableRequestsModal({
   open,
@@ -39,6 +36,7 @@ export function TableRequestsModal({
   error?: string | null;
   onRetry?: () => void;
 }) {
+  const { t } = useTranslation();
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
   const handleResolve = async (id: string) => {
@@ -54,9 +52,9 @@ export function TableRequestsModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Table requests</DialogTitle>
+          <DialogTitle>{t("shell.requests.title")}</DialogTitle>
           <DialogDescription>
-            Oldest first — first come, first served.
+            {t("shell.requests.order")}
           </DialogDescription>
         </DialogHeader>
 
@@ -65,7 +63,7 @@ export function TableRequestsModal({
         ) : requests.length === 0 && (status === "loading" || status === "idle") ? (
           <LoadingState className="py-8" />
         ) : requests.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">No pending requests.</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">{t("shell.requests.empty")}</p>
         ) : (
           <div className="max-h-[60vh] space-y-2.5 overflow-y-auto">
             {requests.map((request) => (
@@ -81,10 +79,10 @@ export function TableRequestsModal({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-bold">{request.tableName}</span>
-                    <Badge className={TONE_CLASSES.amber}>{TYPE_LABELS[request.type]}</Badge>
+                    <Badge className={TONE_CLASSES.amber}>{t(`shell.requests.type.${request.type}`)}</Badge>
                   </div>
                   <p className="mt-0.5 text-[13px] text-muted-foreground">
-                    Since {hhmm(request.ts)}
+                    {t("shell.requests.since", { time: hhmm(request.ts) })}
                   </p>
                 </div>
                 <Button
@@ -92,7 +90,7 @@ export function TableRequestsModal({
                   disabled={resolvingId === request.id}
                   onClick={() => handleResolve(request.id)}
                 >
-                  {resolvingId === request.id ? "Resolving…" : "Resolve"}
+                  {resolvingId === request.id ? t("shell.requests.resolving") : t("shell.requests.resolve")}
                 </Button>
               </div>
             ))}

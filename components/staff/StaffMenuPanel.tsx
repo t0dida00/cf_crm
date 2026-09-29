@@ -46,6 +46,7 @@ import { cn } from "@/lib/utils";
 import type { Dish, DishStatus } from "@/lib/types";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { DishImage } from "@/components/common/DishImage";
+import { useTranslation } from "react-i18next";
 
 const CATEGORY_ICONS: Record<string, PhosphorIcon> = {
   Starters: BowlFood,
@@ -57,11 +58,7 @@ const CATEGORY_ICONS: Record<string, PhosphorIcon> = {
   Brunch: BowlFood,
 };
 
-const STATUS_LABEL: Record<DishStatus, string> = {
-  valid: "Available",
-  sold_out: "Sold out",
-  hidden: "Hidden",
-};
+const STATUSES: DishStatus[] = ["valid", "sold_out", "hidden"];
 
 const STATUS_TONE: Record<DishStatus, keyof typeof TONE_CLASSES> = {
   valid: "green",
@@ -72,6 +69,7 @@ const STATUS_TONE: Record<DishStatus, keyof typeof TONE_CLASSES> = {
 export function StaffMenuPanel() {
   const { workspace, fmt, placeOrder, saveDish } = useWorkspace();
   const { categories, dishes } = workspace;
+  const { t } = useTranslation();
   const { run, isPending } = useAsyncAction();
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 300);
@@ -83,7 +81,7 @@ export function StaffMenuPanel() {
   const [placing, setPlacing] = useState(false);
 
   const changeStatus = (dish: Dish, status: DishStatus) =>
-    run(`dish-status-${dish.id}`, () => saveDish({ ...dish, status }), "Failed to update dish status.");
+    run(`dish-status-${dish.id}`, () => saveDish({ ...dish, status }), t("staff.menu.statusFailed"));
 
   const bestSellers = useMemo(() => bestSellerIds(dishes, categories), [dishes, categories]);
 
@@ -143,20 +141,20 @@ export function StaffMenuPanel() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search dishes"
-            aria-label="Search dishes"
+            placeholder={t("staff.menu.search")}
+            aria-label={t("staff.menu.search")}
             className="pl-9"
           />
         </div>
         <div className="flex-1" />
         <Button size="sm" onClick={() => setCartOpen(true)} disabled={!cartCount}>
           <ShoppingCart size={14} weight="bold" />
-          Cart{cartCount > 0 ? ` · ${cartCount}` : ""}
+          {cartCount > 0 ? t("staff.menu.cartCount", { n: cartCount }) : t("staff.menu.cart")}
         </Button>
       </div>
 
       {groups.length === 0 ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">No dishes match.</p>
+        <p className="py-12 text-center text-sm text-muted-foreground">{t("staff.menu.noMatch")}</p>
       ) : (
         <Accordion
           type="multiple"
@@ -174,7 +172,7 @@ export function StaffMenuPanel() {
                   <span className="text-lg font-semibold">{category.name}</span>
                   <span className="flex-1" />
                   <span className="text-[13px] font-normal text-muted-foreground">
-                    {items.length} {items.length === 1 ? "dish" : "dishes"}
+                    {t("admin.menu.dishes", { count: items.length, n: items.length })}
                   </span>
                 </span>
               </AccordionTrigger>
@@ -214,27 +212,29 @@ export function StaffMenuPanel() {
                             >
                               <SelectTrigger
                                 size="sm"
-                                aria-label={`Status of ${dish.name}`}
+                                aria-label={t("staff.menu.statusOf", { name: dish.name })}
                                 className={cn(
                                   "h-6 w-auto gap-1 rounded-full border-0 px-2.5 text-xs font-semibold",
                                   TONE_CLASSES[STATUS_TONE[effectiveStatus]],
                                 )}
                               >
                                 <SelectValue>
-                                  {category.valid ? STATUS_LABEL[dish.status] : "Off menu"}
+                                  {category.valid ? t(`admin.menu.status.${dish.status}`) : t("staff.menu.offMenu")}
                                 </SelectValue>
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="valid">Valid</SelectItem>
-                                <SelectItem value="sold_out">Sold out</SelectItem>
-                                <SelectItem value="hidden">Hidden</SelectItem>
+                                {STATUSES.map((status) => (
+                                  <SelectItem key={status} value={status}>
+                                    {t(`admin.menu.status.${status}`)}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             {dish.isVegan && (
-                              <Badge className={TONE_CLASSES.green}>Vegan</Badge>
+                              <Badge className={TONE_CLASSES.green}>{t("common.tags.vegan")}</Badge>
                             )}
                             {bestSellers.has(dish.id) && (
-                              <Badge className={TONE_CLASSES.brand}>Best seller</Badge>
+                              <Badge className={TONE_CLASSES.brand}>{t("common.tags.bestSeller")}</Badge>
                             )}
                           </div>
                           {/* Name, then its tags, then the description: the same order in every app. */}
@@ -247,12 +247,12 @@ export function StaffMenuPanel() {
                           {noteOpen ? (
                             <div className="mt-2">
                               <textarea
-                                aria-label={`Note for the kitchen: ${dish.name}`}
+                                aria-label={t("staff.menu.noteFor", { name: dish.name })}
                                 value={noteText}
                                 onChange={(e) =>
                                   setNotes((n) => ({ ...n, [dish.id]: e.target.value }))
                                 }
-                                placeholder="Note for the kitchen"
+                                placeholder={t("staff.menu.notePlaceholder")}
                                 rows={2}
                                 className="w-full resize-none rounded-lg border border-input-border bg-background p-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring"
                               />
@@ -269,14 +269,14 @@ export function StaffMenuPanel() {
                                   }}
                                   className="text-[12px] font-semibold text-muted-foreground"
                                 >
-                                  Clear
+                                  {t("staff.menu.clear")}
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setNoteOpenId(null)}
                                   className="text-[12px] font-bold text-brand-700"
                                 >
-                                  Done
+                                  {t("staff.menu.done")}
                                 </button>
                               </div>
                             </div>
@@ -301,7 +301,7 @@ export function StaffMenuPanel() {
                                   ? "border-brand-500 bg-brand-50 text-brand-700"
                                   : "border-border text-muted-foreground",
                               )}
-                              aria-label={`Note for ${dish.name}`}
+                              aria-label={t("staff.menu.noteButton", { name: dish.name })}
                               aria-expanded={noteOpen}
                             >
                               <NotePencil size={14} weight="bold" />
@@ -314,7 +314,7 @@ export function StaffMenuPanel() {
                                 className="flex h-8 items-center gap-1.5 rounded-full bg-brand-700 px-3 text-[13px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
                               >
                                 <Plus size={13} weight="bold" />
-                                Add
+                                {t("staff.menu.add")}
                               </button>
                             ) : (
                               <span className="flex items-center gap-1 rounded-full bg-brand-50 p-[3px]">
@@ -322,7 +322,7 @@ export function StaffMenuPanel() {
                                   type="button"
                                   onClick={() => setQty(dish.id, qty - 1)}
                                   className="flex size-6.5 items-center justify-center rounded-full border bg-background text-brand-700"
-                                  aria-label={`Decrease ${dish.name}`}
+                                  aria-label={t("staff.menu.decrease", { name: dish.name })}
                                 >
                                   <Minus size={12} weight="bold" />
                                 </button>
@@ -333,7 +333,7 @@ export function StaffMenuPanel() {
                                   type="button"
                                   onClick={() => setQty(dish.id, qty + 1)}
                                   className="flex size-6.5 items-center justify-center rounded-full bg-brand-700 text-white"
-                                  aria-label={`Increase ${dish.name}`}
+                                  aria-label={t("staff.menu.increase", { name: dish.name })}
                                 >
                                   <Plus size={12} weight="bold" />
                                 </button>
@@ -358,7 +358,7 @@ export function StaffMenuPanel() {
           className="fixed right-6 bottom-6 flex h-13 items-center gap-3 rounded-2xl bg-brand-700 px-5 text-white shadow-lg"
         >
           <ShoppingCart size={18} weight="bold" />
-          <span className="font-bold">{cartCount} {cartCount === 1 ? "item" : "items"}</span>
+          <span className="font-bold">{t("admin.dashboard.items", { count: cartCount, n: cartCount })}</span>
           <span className="font-bold">{fmt(cartTotal)}</span>
         </button>
       )}
@@ -366,11 +366,11 @@ export function StaffMenuPanel() {
       <Dialog open={cartOpen} onOpenChange={setCartOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>New order</DialogTitle>
+            <DialogTitle>{t("staff.menu.newOrder")}</DialogTitle>
           </DialogHeader>
 
           {cartLines.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Your cart is empty.</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">{t("staff.menu.empty")}</p>
           ) : (
             <div className="space-y-1">
               {cartLines.map((line) => (
@@ -386,7 +386,7 @@ export function StaffMenuPanel() {
                       type="button"
                       onClick={() => setQty(line.itemId, line.qty - 1)}
                       className="flex size-6.5 items-center justify-center rounded-full border bg-white text-foreground"
-                      aria-label={`Decrease ${line.name}`}
+                      aria-label={t("staff.menu.decrease", { name: line.name })}
                     >
                       <Minus size={12} weight="bold" />
                     </button>
@@ -395,7 +395,7 @@ export function StaffMenuPanel() {
                       type="button"
                       onClick={() => setQty(line.itemId, line.qty + 1)}
                       className="flex size-6.5 items-center justify-center rounded-full bg-brand-700 text-white"
-                      aria-label={`Increase ${line.name}`}
+                      aria-label={t("staff.menu.increase", { name: line.name })}
                     >
                       <Plus size={12} weight="bold" />
                     </button>
@@ -407,7 +407,7 @@ export function StaffMenuPanel() {
                     type="button"
                     onClick={() => setQty(line.itemId, 0)}
                     className="text-muted-foreground transition-colors hover:text-destructive"
-                    aria-label={`Remove ${line.name}`}
+                    aria-label={t("staff.menu.remove", { name: line.name })}
                   >
                     <Trash size={14} weight="bold" />
                   </button>
@@ -415,15 +415,15 @@ export function StaffMenuPanel() {
               ))}
 
               <div className="space-y-1.5 border-t pt-3.5">
-                <Label htmlFor="staff-menu-table">Table</Label>
+                <Label htmlFor="staff-menu-table">{t("staff.menu.table")}</Label>
                 <Select value={tableName} onValueChange={setTableName}>
                   <SelectTrigger id="staff-menu-table" className="w-full">
-                    <SelectValue placeholder="Pick a table" />
+                    <SelectValue placeholder={t("staff.menu.pickTable")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {workspace.tables.map((t) => (
-                      <SelectItem key={t.id} value={t.name}>
-                        {t.name}
+                    {workspace.tables.map((table) => (
+                      <SelectItem key={table.id} value={table.name}>
+                        {table.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -431,7 +431,7 @@ export function StaffMenuPanel() {
               </div>
 
               <div className="flex items-center justify-between border-t pt-3.5">
-                <span className="text-sm font-semibold">Total</span>
+                <span className="text-sm font-semibold">{t("staff.menu.total")}</span>
                 <span className="text-lg font-bold">{fmt(cartTotal)}</span>
               </div>
             </div>
@@ -440,17 +440,17 @@ export function StaffMenuPanel() {
           <DialogFooter>
             {cartLines.length > 0 && (
               <Button variant="ghost" className="mr-auto" onClick={resetCart}>
-                Clear cart
+                {t("staff.menu.clearCart")}
               </Button>
             )}
             <Button variant="outline" onClick={() => setCartOpen(false)}>
-              Cancel
+              {t("staff.menu.cancel")}
             </Button>
             <Button
               onClick={handlePlaceOrder}
               disabled={!tableName || !cartCount || placing}
             >
-              {placing ? "Placing…" : "Place order"}
+              {placing ? t("staff.menu.placing") : t("staff.menu.place")}
             </Button>
           </DialogFooter>
         </DialogContent>

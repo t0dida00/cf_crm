@@ -153,7 +153,7 @@ describe("ConnectionsForm", () => {
     state.connections = connected;
     render(<ConnectionsForm />);
     expect(screen.getByText(/db\.example\.com\/shop/)).toBeTruthy();
-    expect(screen.getByText(/App 42 · eu/)).toBeTruthy();
+    expect(screen.getByText(/App 42, eu/)).toBeTruthy();
     expect(screen.getByText(/menu-photos · pub-1\.r2\.dev/)).toBeTruthy();
     expect(screen.queryByLabelText(/^Database connection URL/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Replace connections" }));

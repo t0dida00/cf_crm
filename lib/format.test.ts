@@ -48,3 +48,11 @@ describe("formatBadgeCount", () => {
     expect(formatBadgeCount(500)).toBe("100+");
   });
 });
+
+describe("Vietnamese đồng", () => {
+  test("is written without decimals, dots between thousands, the symbol after", () => {
+    expect(money(120000, "₫")).toBe("120.000 ₫");
+    expect(money(9.5, "₫")).toBe("10 ₫");
+    expect(moneyCompact(240000, "₫")).toBe("240K ₫");
+  });
+});

@@ -153,3 +153,11 @@ describe("Vietnamese and other accented text", () => {
     expect(parseMenuCsv(SAMPLE_MENU_CSV, []).rows.map((r) => r.name)).toContain("Phở bò");
   });
 });
+
+describe("the common tax by its Vietnamese name", () => {
+  test("\"Thuế chung\" in tax_value means the common tax, stored as Common tax", () => {
+    const { rows, errors } = parseMenuCsv(file("Món chính,Phở bò,9.5,1,Thuế chung,,,0,2"), []);
+    expect(errors).toEqual([]);
+    expect(rows[0].taxName).toBe("Common tax");
+  });
+});

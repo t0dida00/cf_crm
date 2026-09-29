@@ -1,20 +1,47 @@
+import { t } from "./i18n";
+import type { Messages } from "./i18n/messages";
+
 /**
  * Form rules shared by every form that asks for these fields. The backend
  * (CRM_backend/src/lib/validation.ts) enforces the same rules; change both together.
  */
 
+/** A field's name inside a message: a key under validation.fields. */
+export type FieldName = keyof Messages["validation"]["fields"];
+
+const field = (name: FieldName) => t(`validation.fields.${name}`);
+
+/**
+ * Messages in the language in use, built when a form is checked (so a
+ * language switch applies to the next check). English starts sentences with
+ * the field ("Phone is required."); Vietnamese words it its own way.
+ */
 export const MESSAGES = {
-  phone: "Enter a phone number using digits, with an optional + at the start.",
-  email: "Enter a valid email, like name@example.com.",
-  fullName: "Enter a first and last name.",
-  password: "Password must be at least 8 characters.",
-  required: (field: string) => `${field} is required.`,
-  price: "Enter a price of 0 or more.",
-  seats: "Seats must be a whole number from 1.",
-  count: (field: string) => `${field} must be a whole number from 1.`,
-  percent: (field: string) => `${field} must be 0 or more.`,
-  percentMax: (field: string, max: number) => `${field} can't be more than ${max}%.`,
-} as const;
+  get phone() {
+    return t("validation.phone");
+  },
+  get email() {
+    return t("validation.email");
+  },
+  get fullName() {
+    return t("validation.fullName");
+  },
+  get password() {
+    return t("validation.password");
+  },
+  required: (name: FieldName) => t("validation.required", { field: field(name) }),
+  /** For a field picked from a list, not typed ("Vui lòng chọn…"). */
+  requiredChoice: (name: FieldName) => t("validation.requiredChoice", { field: field(name) }),
+  get price() {
+    return t("validation.price");
+  },
+  get seats() {
+    return t("validation.seats");
+  },
+  count: (name: FieldName) => t("validation.count", { field: field(name) }),
+  percent: (name: FieldName) => t("validation.percent", { field: field(name) }),
+  percentMax: (name: FieldName, max: number) => t("validation.percentMax", { field: field(name), max }),
+};
 
 /** Digits, with an optional leading +; spaces between groups are allowed ("+34 600 000 000"). 6–15 digits. */
 export function isValidPhone(value: string): boolean {
@@ -32,11 +59,11 @@ export const isFullName = (value: string) => value.trim().split(/\s+/).filter(Bo
 export type FieldErrors<K extends string> = Partial<Record<K, string>>;
 
 const phoneError = (phone: string) =>
-  !phone.trim() ? MESSAGES.required("Phone") : isValidPhone(phone) ? undefined : MESSAGES.phone;
+  !phone.trim() ? MESSAGES.required("phone") : isValidPhone(phone) ? undefined : MESSAGES.phone;
 const emailError = (email: string) =>
-  !email.trim() ? MESSAGES.required("Email") : isValidEmail(email) ? undefined : MESSAGES.email;
+  !email.trim() ? MESSAGES.required("email") : isValidEmail(email) ? undefined : MESSAGES.email;
 const fullNameError = (name: string) =>
-  !name.trim() ? MESSAGES.required("Full name") : isFullName(name) ? undefined : MESSAGES.fullName;
+  !name.trim() ? MESSAGES.required("fullName") : isFullName(name) ? undefined : MESSAGES.fullName;
 
 /** Drops fields without an error, so `Object.keys(errors).length === 0` means valid. */
 const compact = <K extends string>(errors: Record<K, string | undefined>): FieldErrors<K> =>
@@ -67,19 +94,19 @@ export function validateStaff(
 /** Business details: workspace setup and Settings. */
 export function validateBusiness(f: { name: string; phone: string; address: string }) {
   return compact({
-    name: f.name.trim() ? undefined : MESSAGES.required("Business name"),
+    name: f.name.trim() ? undefined : MESSAGES.required("businessName"),
     phone: phoneError(f.phone),
-    address: f.address.trim() ? undefined : MESSAGES.required("Address"),
+    address: f.address.trim() ? undefined : MESSAGES.required("address"),
   });
 }
 
 export function validateDish(f: { name: string; price: string; catId: string; taxPct?: string }) {
   const price = f.price.trim();
   return compact({
-    taxPct: percentError(f.taxPct ?? "", "Tax", MAX_SPECIAL_TAX),
-    name: f.name.trim() ? undefined : MESSAGES.required("Name"),
-    price: !price ? MESSAGES.required("Price") : Number.isFinite(Number(price)) && Number(price) >= 0 ? undefined : MESSAGES.price,
-    catId: f.catId ? undefined : MESSAGES.required("Category"),
+    taxPct: percentError(f.taxPct ?? "", "tax", MAX_SPECIAL_TAX),
+    name: f.name.trim() ? undefined : MESSAGES.required("name"),
+    price: !price ? MESSAGES.required("price") : Number.isFinite(Number(price)) && Number(price) >= 0 ? undefined : MESSAGES.price,
+    catId: f.catId ? undefined : MESSAGES.requiredChoice("category"),
   });
 }
 
@@ -88,39 +115,39 @@ export const isWholeFromOne = (value: string) => /^\d+$/.test(value.trim()) && N
 export const isValidSeats = isWholeFromOne;
 
 /** A count field's error: required, then a whole number from 1. */
-export const countError = (value: string, field: string) =>
-  !value.trim() ? MESSAGES.required(field) : isWholeFromOne(value) ? undefined : MESSAGES.count(field);
+export const countError = (value: string, name: FieldName) =>
+  !value.trim() ? MESSAGES.required(name) : isWholeFromOne(value) ? undefined : MESSAGES.count(name);
 
 /** Highest allowed rates: the common tax and special (per-dish) taxes. */
 export const MAX_COMMON_TAX = 100;
 export const MAX_SPECIAL_TAX = 200;
 
 /** A percentage or amount that can be 0 but never negative (and at most `max`). Blank is treated as 0. */
-export const percentError = (value: string, field: string, max?: number) => {
+export const percentError = (value: string, name: FieldName, max?: number) => {
   const v = value.trim();
   if (!v) return undefined;
   const n = Number(v);
-  if (!Number.isFinite(n) || n < 0) return MESSAGES.percent(field);
-  return max !== undefined && n > max ? MESSAGES.percentMax(field, max) : undefined;
+  if (!Number.isFinite(n) || n < 0) return MESSAGES.percent(name);
+  return max !== undefined && n > max ? MESSAGES.percentMax(name, max) : undefined;
 };
 
 /** Table form: name and seats are required; the zone is optional. */
 export function validateTable(f: { name: string; seats: string }) {
   return compact({
-    name: f.name.trim() ? undefined : MESSAGES.required("Table name"),
-    seats: !f.seats.trim() ? MESSAGES.required("Seats") : isValidSeats(f.seats) ? undefined : MESSAGES.seats,
+    name: f.name.trim() ? undefined : MESSAGES.required("tableName"),
+    seats: !f.seats.trim() ? MESSAGES.required("seats") : isValidSeats(f.seats) ? undefined : MESSAGES.seats,
   });
 }
 
 export function validateCategory(f: { name: string }) {
-  return compact({ name: f.name.trim() ? undefined : MESSAGES.required("Category name") });
+  return compact({ name: f.name.trim() ? undefined : MESSAGES.required("categoryName") });
 }
 
 /** Booking form: guest name and party size (a whole number from 1). */
 export function validateBooking(f: { name: string; party: string }) {
   return compact({
-    name: f.name.trim() ? undefined : MESSAGES.required("Guest name"),
-    party: countError(f.party, "Party size"),
+    name: f.name.trim() ? undefined : MESSAGES.required("guestName"),
+    party: countError(f.party, "partySize"),
   });
 }
 

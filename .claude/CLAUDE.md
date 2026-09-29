@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Next.js 15 (App Router) frontend for a restaurant/cafe ordering platform: an owner admin app (`/admin`), a staff floor app (`/staff`) and a guest ordering app reached by scanning a table QR code (`/client`). It talks to the `CRM_backend` Express API (sibling directory, `localhost:3000` in dev). `README.md` is the project brief (routing, env, API access, real-time, deployment); read it before larger changes, though its Structure section predates some files below.
+Next.js 15 (App Router) frontend for a restaurant/cafe ordering platform: an owner admin app (`/admin`), a staff floor app (`/staff`) and a guest ordering app reached by scanning a table QR code (`/client`), in English and Vietnamese (react-i18next). It talks to the `CRM_backend` Express API (sibling directory, `localhost:3000` in dev). `README.md` is the project brief (routing, env, API access, real-time, deployment); read it before larger changes, though its Structure section predates some files below.
 
 ## Commands
 
@@ -33,6 +33,7 @@ Detailed guidance lives in `.claude/rules/` and is loaded automatically:
 | `orders-and-menu.md` | Sessions, tax snapshots, sold count and best sellers, order-line keys |
 | `onboarding-and-connections.md` | Signup, workspace setup, the business's own database and Pusher |
 | `ui-and-forms.md` | Admin tabs, formatting, images, button borders, form validation, save toasts |
+| `i18n.md` | English and Vietnamese: locale files, keys, the language choice, what isn't translated |
 | `testing.md` | Vitest setup and test patterns |
 | `bookings.md` | Bookings (loaded when working on booking files) |
 | `dashboard.md` | Dashboard chart (loaded when working on dashboard files) |

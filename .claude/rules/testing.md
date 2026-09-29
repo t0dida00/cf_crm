@@ -1,6 +1,7 @@
 # Testing
 
-- Vitest + jsdom + React Testing Library; config in `vitest.config.ts` (`@/` alias, automatic JSX).
+- Vitest + jsdom + React Testing Library; config in `vitest.config.ts` (`@/` alias, automatic JSX). `test/setup.ts` loads the i18n instance in English, so tests find real text, and mocks `next/navigation` (a test's own `vi.mock` of it wins).
+- To test Vietnamese, `await i18n.changeLanguage("vi")` (from `@/lib/i18n`) before rendering and switch back to `"en"` in `afterEach` (see `ClientShell.test.tsx`).
 - Tests sit next to the code as `*.test.ts(x)` (e.g. `lib/format.test.ts`, `hooks/useDebouncedValue.test.ts`). Import `describe`/`test`/`expect`/`vi` from `vitest` explicitly; there are no globals.
 - Pure helpers in `lib/` get plain unit tests; hooks use `renderHook` (with `vi.useFakeTimers()` for timing).
 - Components that read `useWorkspace()` are tested by mocking `@/components/workspace-provider` with `vi.mock` and a fixed workspace (see `components/bookings/BookingsPanel.test.tsx`).

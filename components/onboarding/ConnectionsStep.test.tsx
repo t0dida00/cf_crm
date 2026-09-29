@@ -23,7 +23,7 @@ beforeEach(() => {
 describe("ConnectionsStep", () => {
   test("is step 1 of onboarding, with sign-out", () => {
     render(<ConnectionsStep onContinue={vi.fn()} onChecked={vi.fn()} />);
-    expect(screen.getByText(/STEP 1 OF 2/)).toBeTruthy();
+    expect(screen.getByText(/step 1 of 2/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: /Sign out/ })).toBeTruthy();
     expect(screen.getByText("form in check mode")).toBeTruthy();
   });

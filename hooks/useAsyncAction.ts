@@ -1,5 +1,6 @@
 "use client";
 
+import { t } from "@/lib/i18n";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -14,10 +15,11 @@ import { toast } from "sonner";
  * visible pending/error state instead of a silent, unguarded promise.
  * Resolves to `true` on success / `false` on a caught error, so a caller that
  * needs a follow-up only on success (e.g. closing a dialog) can `await` it.
- * Pass `successMessage` (usually SAVED_MESSAGE) for save buttons to confirm with a toast.
+ * Pass `successMessage` (usually savedMessage()) for save buttons to confirm with a toast.
  */
 /** The toast shown after any save succeeds. */
-export const SAVED_MESSAGE = "Saved successfully";
+/** The toast every successful save shows, in the language in use. */
+export const savedMessage = () => t("common.saved");
 
 export function useAsyncAction() {
   const [pendingKeys, setPendingKeys] = useState<ReadonlySet<string>>(new Set());
@@ -39,7 +41,7 @@ export function useAsyncAction() {
       if (successMessage) toast.success(successMessage);
       return true;
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : errorMessage || "Something went wrong.");
+      toast.error(err instanceof Error ? err.message : errorMessage || t("errors.generic"));
       return false;
     } finally {
       setPending(key, -1);

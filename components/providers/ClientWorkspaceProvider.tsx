@@ -14,6 +14,7 @@ import { publicApiFetch } from "@/lib/publicApi";
 import { isAbortError } from "@/lib/http";
 import { errorMessage, toRequestStatus, type RequestStatus } from "@/lib/requestStatus";
 import { money } from "@/lib/range";
+import { useTranslation } from "react-i18next";
 import type { Category, Dish, Order, OrderLine, PusherConfig, TableRec, TableRequestType } from "@/lib/types";
 
 interface ClientWorkspace {
@@ -164,6 +165,7 @@ export function ClientWorkspaceProvider({
   platformId: string;
   children: ReactNode;
 }) {
+  const { t } = useTranslation();
   const [tableOrders, setTableOrders] = useState<Order[]>([]);
   // Latest-wins: each table-orders refresh aborts the one still in flight.
   const ordersRefresh = useRef<AbortController | null>(null);
@@ -205,7 +207,7 @@ export function ClientWorkspaceProvider({
   const hydrated = !workspaceQuery.isPending;
   const status = toRequestStatus(workspaceQuery);
   const error = workspaceQuery.isError
-    ? errorMessage(workspaceQuery.error, "Couldn't load the menu.")
+    ? errorMessage(workspaceQuery.error, t("client.loadFailed"))
     : null;
   const reload = workspaceQuery.refetch;
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { MotionConfig, Reorder, useDragControls } from "motion/react";
 import { ArrowDown, ArrowUp, DotsSixVertical, EyeSlash, PencilSimple, Trash } from "@phosphor-icons/react";
@@ -31,6 +32,7 @@ export function CategoryList({
   onDelete: (category: Category) => void;
   isDeleting: (id: string) => boolean;
 }) {
+  const { t } = useTranslation();
   // The order on screen while dragging; the workspace's order the rest of the time.
   const [items, setItems] = useState(categories);
   const dragging = useRef(false);
@@ -53,12 +55,12 @@ export function CategoryList({
   };
 
   if (!categories.length) {
-    return <p className="py-12 text-center text-sm text-muted-foreground">No categories yet.</p>;
+    return <p className="py-12 text-center text-sm text-muted-foreground">{t("admin.categories.empty")}</p>;
   }
 
   return (
     <MotionConfig reducedMotion="user">
-      <Reorder.Group axis="y" values={items} onReorder={setItems} className="divide-y" aria-label="Categories, in menu order">
+      <Reorder.Group axis="y" values={items} onReorder={setItems} className="divide-y" aria-label={t("admin.categories.listLabel")}>
         {items.map((category, index) => (
           <CategoryRow
             key={category.id}
@@ -105,6 +107,7 @@ function CategoryRow({
   onDelete: () => void;
   deleting: boolean;
 }) {
+  const { t } = useTranslation();
   // Only the handle starts a drag, so the row's buttons still click normally.
   const controls = useDragControls();
   const { name } = category;
@@ -123,7 +126,7 @@ function CategoryRow({
         type="button"
         onPointerDown={(e) => controls.start(e)}
         className={cn(ICON_BUTTON, "cursor-grab touch-none active:cursor-grabbing")}
-        aria-label={`Drag to reorder ${name}`}
+        aria-label={t("admin.categories.drag", { name })}
       >
         <DotsSixVertical size={18} weight="bold" aria-hidden />
       </button>
@@ -132,26 +135,26 @@ function CategoryRow({
       </span>
       <span className="min-w-0 flex-1 truncate font-semibold">{name}</span>
       <span className="hidden w-24 text-sm text-muted-foreground sm:block">
-        {dishes} {dishes === 1 ? "dish" : "dishes"}
+        {t("admin.categories.dishes", { count: dishes, n: dishes })}
       </span>
       <span className="hidden w-28 sm:block">
         {category.valid ? (
-          <span className="text-sm text-muted-foreground">On the menu</span>
+          <span className="text-sm text-muted-foreground">{t("admin.categories.onMenu")}</span>
         ) : (
           <Badge className="gap-1 bg-secondary text-muted-foreground">
             <EyeSlash size={12} weight="bold" aria-hidden />
-            Hidden
+            {t("admin.categories.hidden")}
           </Badge>
         )}
       </span>
       <span className="flex items-center">
-        <button type="button" onClick={() => onMove(-1)} disabled={position === 1} className={ICON_BUTTON} aria-label={`Move ${name} up`}>
+        <button type="button" onClick={() => onMove(-1)} disabled={position === 1} className={ICON_BUTTON} aria-label={t("admin.categories.moveUp", { name })}>
           <ArrowUp size={15} weight="bold" aria-hidden />
         </button>
-        <button type="button" onClick={() => onMove(1)} disabled={position === count} className={ICON_BUTTON} aria-label={`Move ${name} down`}>
+        <button type="button" onClick={() => onMove(1)} disabled={position === count} className={ICON_BUTTON} aria-label={t("admin.categories.moveDown", { name })}>
           <ArrowDown size={15} weight="bold" aria-hidden />
         </button>
-        <button type="button" onClick={onEdit} className={ICON_BUTTON} aria-label={`Edit category ${name}`}>
+        <button type="button" onClick={onEdit} className={ICON_BUTTON} aria-label={t("admin.categories.editName", { name })}>
           <PencilSimple size={15} weight="bold" aria-hidden />
         </button>
         <button
@@ -159,7 +162,7 @@ function CategoryRow({
           onClick={onDelete}
           disabled={deleting}
           className={cn(ICON_BUTTON, "hover:text-destructive")}
-          aria-label={`Delete category ${name}`}
+          aria-label={t("admin.categories.deleteName", { name })}
         >
           <Trash size={15} weight="bold" aria-hidden />
         </button>

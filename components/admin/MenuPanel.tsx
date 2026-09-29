@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DownloadSimple, EyeSlash, FileCsv, ImageSquare, MagnifyingGlass, PencilSimple, Trash, UploadSimple } from "@phosphor-icons/react";
 import { ImageDropzone } from "@/components/common/ImageDropzone";
@@ -31,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { useWorkspace } from "@/components/providers/WorkspaceProvider";
-import { SAVED_MESSAGE, useAsyncAction } from "@/hooks/useAsyncAction";
+import { savedMessage, useAsyncAction } from "@/hooks/useAsyncAction";
 import type { Dish, DishStatus, TaxMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -48,12 +49,7 @@ import { MenuImportDialog, type MenuFile } from "./MenuImportDialog";
 const fileSlug = (name: string) => name.trim().replace(/\s+/g, "-").toLowerCase() || "tably";
 
 
-// The same words as the staff menu.
-const STATUS_LABEL: Record<DishStatus, string> = {
-  valid: "Available",
-  sold_out: "Sold out",
-  hidden: "Hidden",
-};
+const STATUSES: DishStatus[] = ["valid", "sold_out", "hidden"];
 
 /* Only what needs attention gets a tag: available dishes show none. Hidden is
  * a choice, not a fault, so it's grey rather than red. */
@@ -88,6 +84,9 @@ interface DishForm {
 }
 
 export function MenuPanel({ createSignal }: { createSignal: number }) {
+  const { t } = useTranslation();
+  // "Common tax" is stored on dishes as data; it shows in the language in use.
+  const taxDisplayName = (name?: string) => (!name || name === COMMON_TAX ? t("admin.menu.commonTax") : name);
   const { workspace, fmt, saveDish, deleteDish } = useWorkspace();
   const { run, isPending } = useAsyncAction();
   const { categories, dishes, settings } = workspace;
@@ -171,9 +170,9 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
 
   const taxBadge = (dish: Dish) =>
     dish.taxMode === "include"
-      ? `Incl. ${dish.taxName || "tax"}`
+      ? t("admin.menu.inclTax", { name: taxDisplayName(dish.taxName) })
       : dish.taxMode === "exclude"
-        ? `Excl. tax ${dish.taxPct ?? 0}%`
+        ? t("admin.menu.exclTax", { pct: dish.taxPct ?? 0 })
         : null;
 
   const submit = async () => {
@@ -194,7 +193,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
         description: form.description.trim() || undefined,
         imageUrl: form.imageUrl.trim() || undefined,
         isVegan: form.isVegan,
-      }), undefined, SAVED_MESSAGE
+      }), undefined, savedMessage()
     );
     if (ok) setOpen(false);
   };
@@ -214,17 +213,17 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search dishes"
-            aria-label="Search dishes"
+            placeholder={t("admin.menu.search")}
+            aria-label={t("admin.menu.search")}
             className="pl-9"
           />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-52" aria-label="Filter by category">
+          <SelectTrigger className="w-52" aria-label={t("admin.menu.filterCategory")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All categories</SelectItem>
+            <SelectItem value="all">{t("admin.menu.allCategories")}</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 {c.name}
@@ -236,7 +235,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
         <div className="flex flex-wrap gap-2 sm:ml-auto">
           <Button variant="outline" size="sm" onClick={() => fileInput.current?.click()}>
             <UploadSimple size={14} weight="bold" aria-hidden />
-            Import CSV
+            {t("admin.menu.importCsv")}
           </Button>
           <Button
             variant="outline"
@@ -245,18 +244,18 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
             onClick={() => downloadFile(menuToCsv(categories, dishes), `${fileSlug(workspace.name)}-menu.csv`)}
           >
             <DownloadSimple size={14} weight="bold" aria-hidden />
-            Export CSV
+            {t("admin.menu.exportCsv")}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => downloadFile(SAMPLE_MENU_CSV, "menu-sample.csv")}>
             <FileCsv size={14} weight="bold" aria-hidden />
-            Sample file
+            {t("admin.menu.sampleFile")}
           </Button>
           <input
             ref={fileInput}
             type="file"
             accept=".csv,text/csv"
             className="hidden"
-            aria-label="Menu CSV file"
+            aria-label={t("admin.menu.csvFile")}
             onChange={async (e) => {
               const picked = e.target.files?.[0];
               e.target.value = ""; // picking the same file again still opens the preview
@@ -291,19 +290,19 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                 {!category.valid && (
                   <Badge className="gap-1 bg-secondary text-muted-foreground">
                     <EyeSlash size={12} weight="bold" aria-hidden />
-                    Hidden
+                    {t("admin.menu.hidden")}
                   </Badge>
                 )}
                 <span className="flex-1" />
                 <span className="text-[13px] font-normal text-muted-foreground">
-                  {items.length} {items.length === 1 ? "dish" : "dishes"}
+                  {t("admin.menu.dishes", { count: items.length, n: items.length })}
                 </span>
               </span>
             </AccordionTrigger>
             <AccordionContent className="border-t pb-0">
               {items.length === 0 ? (
                 <p className="p-5 text-sm text-muted-foreground">
-                  No dishes in this category.
+                  {t("admin.menu.noDishes")}
                 </p>
               ) : (
                 items.map((dish) => (
@@ -330,7 +329,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                         {(dish.isVegan || taxBadge(dish)) && (
                           <span className="flex flex-wrap gap-1.5">
                             {dish.isVegan && (
-                              <Badge className="rounded-md bg-green-50 text-green-700">Vegan</Badge>
+                              <Badge className="rounded-md bg-green-50 text-green-700">{t("common.tags.vegan")}</Badge>
                             )}
                             {taxBadge(dish) && (
                               <Badge className="rounded-md border border-input-border bg-transparent text-muted-foreground">
@@ -356,12 +355,12 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                       {!category.valid ? (
                         <Badge className={cn("gap-1", STATUS_TONE.hidden)}>
                           <EyeSlash size={12} weight="bold" aria-hidden />
-                          Hidden with category
+                          {t("admin.menu.hiddenWithCategory")}
                         </Badge>
                       ) : dish.status !== "valid" ? (
                         <Badge className={cn("gap-1", STATUS_TONE[dish.status])}>
                           {dish.status === "hidden" && <EyeSlash size={12} weight="bold" aria-hidden />}
-                          {STATUS_LABEL[dish.status]}
+                          {t(`admin.menu.status.${dish.status}`)}
                         </Badge>
                       ) : null}
                     </span>
@@ -370,7 +369,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                         type="button"
                         onClick={() => startEdit(dish)}
                         className="text-muted-foreground transition-colors hover:text-foreground"
-                        aria-label={`Edit ${dish.name}`}
+                        aria-label={t("admin.menu.editName", { name: dish.name })}
                       >
                         <PencilSimple size={15} weight="bold" />
                       </button>
@@ -378,10 +377,10 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                         type="button"
                         disabled={isPending(`delete-${dish.id}`)}
                         onClick={() =>
-                          run(`delete-${dish.id}`, () => deleteDish(dish.id), "Failed to delete dish.")
+                          run(`delete-${dish.id}`, () => deleteDish(dish.id), t("admin.menu.deleteFailed"))
                         }
                         className="text-muted-foreground transition-colors hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
-                        aria-label={`Delete ${dish.name}`}
+                        aria-label={t("admin.menu.deleteName", { name: dish.name })}
                       >
                         <Trash size={15} weight="bold" />
                       </button>
@@ -398,12 +397,12 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit dish" : "New dish"}</DialogTitle>
+            <DialogTitle>{editing ? t("admin.menu.edit") : t("admin.menu.new")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex justify-center">
               <ImageDropzone
-                label="dish photo"
+                label={t("common.image.dishPhoto")}
                 key={editing?.id ?? "new"}
                 value={form.imageUrl}
                 onChange={(imageUrl) => setForm((f) => ({ ...f, imageUrl }))}
@@ -414,12 +413,12 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
             </div>
 
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="dish-name">Name</RequiredLabel>
+              <RequiredLabel htmlFor="dish-name">{t("admin.menu.name")}</RequiredLabel>
               <Input
                 id="dish-name"
                 required
                 value={form.name}
-                placeholder="Dish name"
+                placeholder={t("admin.menu.namePlaceholder")}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 {...fieldErrorProps("dish-name", errors.name)}
                 onBlur={() => setErrors((e) => withFieldError(e, "name", validateDish({ ...form, taxPct: form.taxMode === "exclude" ? form.taxPct : "" }).name))}
@@ -427,7 +426,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
               <FieldError id="dish-name" message={errors.name} />
             </div>
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="dish-price">Price ({settings.currency})</RequiredLabel>
+              <RequiredLabel htmlFor="dish-price">{t("admin.menu.price", { currency: settings.currency })}</RequiredLabel>
               <Input
                 id="dish-price"
                 type="number"
@@ -444,7 +443,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
               <FieldError id="dish-price" message={errors.price} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="menu-panel-tax">Tax</Label>
+              <Label htmlFor="menu-panel-tax">{t("admin.menu.tax")}</Label>
               <Select
                 value={form.taxMode}
                 onValueChange={(taxMode: TaxMode) => setForm((f) => ({ ...f, taxMode }))}
@@ -453,16 +452,16 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="include">Include tax</SelectItem>
-                  <SelectItem value="exclude">Exclude tax</SelectItem>
+                  <SelectItem value="none">{t("admin.menu.taxNone")}</SelectItem>
+                  <SelectItem value="include">{t("admin.menu.taxInclude")}</SelectItem>
+                  <SelectItem value="exclude">{t("admin.menu.taxExclude")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {form.taxMode === "include" && (
               <div className="space-y-1.5">
-                <Label htmlFor="menu-panel-tax-included-in-the-price">Tax included in the price</Label>
+                <Label htmlFor="menu-panel-tax-included-in-the-price">{t("admin.menu.taxIncluded")}</Label>
                 <Select
                   value={form.taxName}
                   onValueChange={(taxName) => setForm((f) => ({ ...f, taxName }))}
@@ -472,11 +471,11 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={COMMON_TAX}>
-                      Common tax ({settings.taxRate}%)
+                      {t("admin.menu.commonTaxRate", { pct: settings.taxRate })}
                     </SelectItem>
-                    {settings.specialTaxes.map((t) => (
-                      <SelectItem key={t.name} value={t.name}>
-                        {t.name} ({t.pct}%)
+                    {settings.specialTaxes.map((tax) => (
+                      <SelectItem key={tax.name} value={tax.name}>
+                        {t("admin.menu.specialTaxRate", { name: tax.name, pct: tax.pct })}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -487,7 +486,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
             {form.taxMode === "exclude" && (
               <>
                 <div className="space-y-1.5">
-                  <Label htmlFor="dish-tax-pct">Tax added at checkout (%)</Label>
+                  <Label htmlFor="dish-tax-pct">{t("admin.menu.taxAdded")}</Label>
                   <Input
                     id="dish-tax-pct"
                     type="number"
@@ -507,20 +506,23 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                   <FieldError id="dish-tax-pct" message={errors.taxPct} />
                 </div>
                 <p className="rounded-lg border bg-secondary px-3 py-2.5 text-[13px] text-muted-foreground">
-                  Estimated final price: {fmt(estimated)} · {fmt(Number(form.price) || 0)}{" "}
-                  + {Number(form.taxPct) || 0}% tax
+                  {t("admin.menu.estimate", {
+                    final: fmt(estimated),
+                    price: fmt(Number(form.price) || 0),
+                    pct: Number(form.taxPct) || 0,
+                  })}
                 </p>
               </>
             )}
 
             <div className="space-y-1.5">
-              <RequiredLabel htmlFor="dish-category">Category</RequiredLabel>
+              <RequiredLabel htmlFor="dish-category">{t("admin.menu.category")}</RequiredLabel>
               <Select
                 value={form.catId}
                 onValueChange={(catId) => setForm((f) => ({ ...f, catId }))}
               >
                 <SelectTrigger id="dish-category" className="w-full" {...fieldErrorProps("dish-category", errors.catId)}>
-                  <SelectValue placeholder={categories.length ? "Pick a category" : "Add a category first"} />
+                  <SelectValue placeholder={categories.length ? t("admin.menu.pickCategory") : t("admin.menu.addCategoryFirst")} />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((c) => (
@@ -534,11 +536,11 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="dish-description">Description</Label>
+              <Label htmlFor="dish-description">{t("admin.menu.description")}</Label>
               <Textarea
                 id="dish-description"
                 value={form.description}
-                placeholder="Ingredients, prep notes…"
+                placeholder={t("admin.menu.descriptionPlaceholder")}
                 rows={3}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               />
@@ -549,13 +551,13 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                 checked={form.isVegan}
                 onCheckedChange={(isVegan) => setForm((f) => ({ ...f, isVegan: isVegan === true }))}
               />
-              Vegan
+              {t("admin.menu.vegan")}
             </Label>
 
             <fieldset className="space-y-1.5">
-              <legend className="mb-1.5 text-sm font-medium">Status</legend>
+              <legend className="mb-1.5 text-sm font-medium">{t("admin.menu.statusLegend")}</legend>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                {(Object.keys(STATUS_LABEL) as DishStatus[]).map((status) => (
+                {STATUSES.map((status) => (
                   <label
                     key={status}
                     className={cn(
@@ -573,7 +575,7 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                       className="sr-only"
                     />
                     <span className={cn("size-2 shrink-0 rounded-full", STATUS_DOT_TONE[status])} />
-                    {STATUS_LABEL[status]}
+                    {t(`admin.menu.status.${status}`)}
                   </label>
                 ))}
               </div>
@@ -586,18 +588,18 @@ export function MenuPanel({ createSignal }: { createSignal: number }) {
                 className="mr-auto"
                 loading={isPending(`delete-${editing.id}`)}
                 onClick={async () => {
-                  const ok = await run(`delete-${editing.id}`, () => deleteDish(editing.id), "Failed to delete dish.");
+                  const ok = await run(`delete-${editing.id}`, () => deleteDish(editing.id), t("admin.menu.deleteFailed"));
                   if (ok) setOpen(false);
                 }}
               >
-                Delete
+                {t("admin.menu.delete")}
               </Button>
             )}
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("admin.menu.cancel")}
             </Button>
             <Button loading={isPending("save-dish")} onClick={submit}>
-              {editing ? "Save dish" : "Create dish"}
+              {editing ? t("admin.menu.save") : t("admin.menu.create")}
             </Button>
           </DialogFooter>
         </DialogContent>

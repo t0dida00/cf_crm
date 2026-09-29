@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DownloadSimple, QrCode } from "@phosphor-icons/react";
@@ -33,6 +34,7 @@ interface TableQrToken {
 }
 
 export function QrPanel() {
+  const { t } = useTranslation();
   const { workspace, hydrated } = useWorkspace();
   const [origin, setOrigin] = useState("");
 
@@ -56,7 +58,7 @@ export function QrPanel() {
     queryKey: ["tables", "qr-tokens", tableIds],
     queryFn: async ({ signal }) => {
       const res = await apiFetch<{ tokens: TableQrToken[] }>("/tables/qr-tokens", { signal });
-      return Object.fromEntries(res.tokens.map((t) => [t.tableId, t.token])) as Record<string, string>;
+      return Object.fromEntries(res.tokens.map((tok) => [tok.tableId, tok.token])) as Record<string, string>;
     },
     enabled: hydrated,
   });
@@ -79,7 +81,7 @@ export function QrPanel() {
       <Card>
         <CardContent>
           <div className="max-w-md space-y-1.5">
-            <Label htmlFor="qr-origin">Address phones on this network can reach</Label>
+            <Label htmlFor="qr-origin">{t("admin.qr.address")}</Label>
             <Input
               id="qr-origin"
               value={origin}
@@ -88,8 +90,8 @@ export function QrPanel() {
             />
             <p className="text-xs text-muted-foreground">
               {detected === false
-                ? "Couldn't detect this network's address. Enter one your phone can reach."
-                : "Auto-detected from this server. Edit if your phone can't reach this address."}
+                ? t("admin.qr.noDetect")
+                : t("admin.qr.detected")}
             </p>
           </div>
         </CardContent>
@@ -98,14 +100,14 @@ export function QrPanel() {
       {!hydrated || tokensStatus === "loading" || tokensStatus === "idle" ? (
         <Card>
           <CardContent className="p-0">
-            <LoadingState label="Loading QR codes…" />
+            <LoadingState label={t("admin.qr.loading")} />
           </CardContent>
         </Card>
       ) : tokensStatus === "error" ? (
         <Card>
           <CardContent className="p-0">
             <ErrorState
-              message={errorMessage(tokensQuery.error, "Couldn't load table QR codes.")}
+              message={errorMessage(tokensQuery.error, t("admin.qr.loadFailed"))}
               onRetry={() => void tokensQuery.refetch()}
             />
           </CardContent>
@@ -113,7 +115,7 @@ export function QrPanel() {
       ) : workspace.tables.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            No tables yet. Add tables from the Tables tab first.
+            {t("admin.qr.noTables")}
           </CardContent>
         </Card>
       ) : (
@@ -130,11 +132,11 @@ export function QrPanel() {
                   <div
                     className="flex aspect-[3/4] w-full max-w-[240px] items-center justify-center rounded-[14px] border bg-white p-4 text-center text-sm text-muted-foreground"
                   >
-                    Enter an address above to make this table&apos;s code.
+                    {t("admin.qr.needAddress")}
                   </div>
                 )}
                 <p className="text-sm text-muted-foreground">
-                  {table.seats} seats{zone ? `, ${zone}` : ""}
+                  {t("admin.qr.seats", { n: table.seats })}{zone ? `, ${zone}` : ""}
                 </p>
                 <div className="flex w-full max-w-[240px] gap-2">
                   <Button
@@ -142,10 +144,10 @@ export function QrPanel() {
                     className="flex-1"
                     disabled={!url}
                     onClick={() => downloadSvg(`tent-${table.id}`, `${fileBase(table.name)}-card.svg`)}
-                    aria-label={`Download the table card for ${table.name}`}
+                    aria-label={t("admin.qr.downloadCard", { name: table.name })}
                   >
                     <DownloadSimple size={14} weight="bold" aria-hidden />
-                    Card
+                    {t("admin.qr.card")}
                   </Button>
                   <Button
                     variant="outline"
@@ -153,10 +155,10 @@ export function QrPanel() {
                     className="flex-1"
                     disabled={!url}
                     onClick={() => downloadSvg(`qr-${table.id}`, `${fileBase(table.name)}-qr.svg`)}
-                    aria-label={`Download the QR code for ${table.name}`}
+                    aria-label={t("admin.qr.downloadCode", { name: table.name })}
                   >
                     <QrCode size={14} weight="bold" aria-hidden />
-                    Code only
+                    {t("admin.qr.codeOnly")}
                   </Button>
                 </div>
               </li>

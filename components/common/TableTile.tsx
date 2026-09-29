@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 import type { TableRec, TableState } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -80,13 +83,14 @@ export function TableTile({
   footer: ReactNode;
   onOpen?: () => void;
 }) {
+  const { t } = useTranslation();
   const body = (
     <>
       <span className="flex items-start justify-between gap-2">
         <span className="min-w-0">
           <span className="block font-bold">{table.name}</span>
           <span className="block text-sm text-muted-foreground">
-            {table.seats} {table.seats === 1 ? "seat" : "seats"}
+            {t("admin.tables.seats", { count: table.seats, n: table.seats })}
           </span>
         </span>
         {aside}

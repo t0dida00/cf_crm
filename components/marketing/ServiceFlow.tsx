@@ -1,4 +1,7 @@
+"use client";
+
 import type { CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 
 export type Lane = "Guest" | "Staff" | "Owner";
 
@@ -11,17 +14,20 @@ const LANE_COLOUR: Record<Lane, string> = {
   Owner: "var(--landing-ink)",
 };
 
+/** A step's text: a key under marketing.flow. */
+type FlowStep = "scan" | "order" | "ticket" | "cook" | "bill" | "checkout" | "takings";
+
 /** One table's evening, in order: every step is something Tably does. */
-export const SERVICE_FLOW: { lane: Lane; time: string; text: string }[] = [
-  { lane: "Guest", time: "20:02", text: "Sits down and scans Table 4's QR code" },
+export const SERVICE_FLOW: { lane: Lane; time: string; text: FlowStep }[] = [
+  { lane: "Guest", time: "20:02", text: "scan" },
   // Placing the order seats the table: no one has to seat the guests.
-  { lane: "Guest", time: "20:04", text: "Orders from their phone; the table shows as seated" },
-  { lane: "Staff", time: "20:04", text: "The ticket lands on every screen" },
-  { lane: "Staff", time: "20:25", text: "Kitchen cooks, the floor serves" },
-  { lane: "Guest", time: "21:05", text: "Asks for the bill from their phone" },
-  { lane: "Staff", time: "21:08", text: "Checks out and prints the receipt" },
-  { lane: "Owner", time: "21:08", text: "Takings and best sellers update" },
-]
+  { lane: "Guest", time: "20:04", text: "order" },
+  { lane: "Staff", time: "20:04", text: "ticket" },
+  { lane: "Staff", time: "20:25", text: "cook" },
+  { lane: "Guest", time: "21:05", text: "bill" },
+  { lane: "Staff", time: "21:08", text: "checkout" },
+  { lane: "Owner", time: "21:08", text: "takings" },
+];
 
 const COLS = SERVICE_FLOW.length;
 
@@ -45,16 +51,17 @@ export function flowPath(lanes: Lane[] = SERVICE_FLOW.map((s) => s.lane)): strin
  * evening. On narrow screens the same list reads as a vertical timeline.
  */
 export function ServiceFlow() {
+  const { t } = useTranslation();
   return (
     <figure className="w-full">
-      <figcaption className="sr-only">One table&apos;s evening with Tably, step by step</figcaption>
+      <figcaption className="sr-only">{t("marketing.flow.caption")}</figcaption>
       <div className="relative xl:grid xl:grid-cols-[5.5rem_minmax(0,1fr)]">
         {/* Lane names and bands (wide screens). */}
         <div aria-hidden className="hidden xl:grid xl:grid-rows-[repeat(3,7rem)]">
           {LANES.map((lane) => (
             <span key={lane} className="flex items-center gap-2 text-sm font-bold">
               <span className="size-2.5 rounded-full" style={{ background: LANE_COLOUR[lane] }} />
-              {lane}
+              {t(`marketing.flow.lanes.${lane}`)}
             </span>
           ))}
         </div>
@@ -103,10 +110,10 @@ export function ServiceFlow() {
                 >
                   <p className="flex items-baseline justify-between gap-2 text-xs text-(--landing-muted)">
                     {/* Wide screens show the lane instead; screen readers always hear who. */}
-                    <span className="font-bold text-(--landing-ink) xl:sr-only">{lane}</span>
+                    <span className="font-bold text-(--landing-ink) xl:sr-only">{t(`marketing.flow.lanes.${lane}`)}</span>
                     <time className="tabular-nums">{time}</time>
                   </p>
-                  <p className="mt-0.5 text-sm leading-snug font-semibold text-pretty">{text}</p>
+                  <p className="mt-0.5 text-sm leading-snug font-semibold text-pretty">{t(`marketing.flow.${text}`)}</p>
                 </div>
               </li>
             ))}

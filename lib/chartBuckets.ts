@@ -1,3 +1,4 @@
+import { INTL_LOCALE, type Locale } from "./i18n/config";
 import type { RangeId } from "./types";
 
 export type ChartBucket = "hour" | "day" | "month" | "year";
@@ -25,7 +26,8 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 const pad = (n: number) => String(n).padStart(2, "0");
 const keyOf = (d: Date) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}`;
-const fmt = (d: Date, options: Intl.DateTimeFormatOptions) => d.toLocaleDateString("en-GB", options);
+/** A short month for the axis: fixed English abbreviations, "T9" in Vietnamese. */
+const shortMonth = (locale: Locale, i: number) => (locale === "vi" ? `T${i + 1}` : MONTHS[i]);
 
 /**
  * How the dashboard chart buckets a range, in the viewer's local time:
@@ -38,7 +40,10 @@ export function chartPlan(
   rangeId: RangeId,
   now: Date = new Date(),
   oldestTs: number | null = null,
+  locale: Locale = "en",
 ): ChartPlan | null {
+  /** Dates in the viewer's language (en-GB or vi-VN). */
+  const fmt = (at: Date, options: Intl.DateTimeFormatOptions) => at.toLocaleDateString(INTL_LOCALE[locale], options);
   const y = now.getFullYear();
   const m = now.getMonth();
   const d = now.getDate();
@@ -79,7 +84,7 @@ export function chartPlan(
         const at = new Date(y, i, 1);
         return {
           key: keyOf(at),
-          label: MONTHS[i],
+          label: shortMonth(locale, i),
           title: fmt(at, { month: "long", year: "numeric" }),
         };
       });

@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { dayKey } from "@/lib/bookingSlots";
+import { t } from "@/lib/i18n";
 import { BookingsPanel, partyLine } from "./BookingsPanel";
 
 const assignBooking = vi.fn(async () => {});
@@ -64,7 +65,7 @@ describe("arrived bookings", () => {
 
 describe("partyLine", () => {
   test("says where the party sits, or that it has no table yet", () => {
-    expect(partyLine({ party: 4, tableName: "T2" })).toBe("4 guests at T2");
-    expect(partyLine({ party: 1, tableName: null })).toBe("1 guest, no table yet");
+    expect(partyLine(t, { party: 4, tableName: "T2" })).toBe("4 guests at T2");
+    expect(partyLine(t, { party: 1, tableName: null })).toBe("1 guest, no table yet");
   });
 });

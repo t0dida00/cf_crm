@@ -1,5 +1,6 @@
 "use client";
 
+import { t } from "@/lib/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { errorMessage, toRequestStatus } from "@/lib/requestStatus";
@@ -74,7 +75,7 @@ export function useConnections() {
   return {
     connections: query.data ?? null,
     status: toRequestStatus(query),
-    error: query.isError ? errorMessage(query.error, "Couldn't load connections.") : null,
+    error: query.isError ? errorMessage(query.error, t("errors.connections")) : null,
     retry: () => void query.refetch(),
     saveConnections,
     checkConnections,

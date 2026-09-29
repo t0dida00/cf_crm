@@ -108,31 +108,31 @@ describe("tables and categories", () => {
 
 describe("counts and percentages", () => {
   test("counts are whole numbers from 1", () => {
-    expect(countError("1", "Quantity")).toBeUndefined();
-    expect(countError("", "Quantity")).toBe("Quantity is required.");
-    for (const v of ["0", "-2", "1.5", "abc"]) expect(countError(v, "Quantity")).toBe(MESSAGES.count("Quantity"));
+    expect(countError("1", "quantity")).toBeUndefined();
+    expect(countError("", "quantity")).toBe("Quantity is required.");
+    for (const v of ["0", "-2", "1.5", "abc"]) expect(countError(v, "quantity")).toBe(MESSAGES.count("quantity"));
   });
 
   test("percentages respect their maximum", () => {
-    expect(percentError("100", "Common tax", 100)).toBeUndefined();
-    expect(percentError("100.5", "Common tax", 100)).toBe("Common tax can't be more than 100%.");
-    expect(percentError("200", "Tax", 200)).toBeUndefined();
-    expect(percentError("201", "Tax", 200)).toBe("Tax can't be more than 200%.");
+    expect(percentError("100", "commonTax", 100)).toBeUndefined();
+    expect(percentError("100.5", "commonTax", 100)).toBe("Common tax can't be more than 100%.");
+    expect(percentError("200", "tax", 200)).toBeUndefined();
+    expect(percentError("201", "tax", 200)).toBe("Tax can't be more than 200%.");
     expect(validateDish({ name: "Latte", price: "3", catId: "c", taxPct: "250" })).toEqual({ taxPct: "Tax can't be more than 200%." });
   });
 
   test("percentages can be 0 but never negative", () => {
-    for (const v of ["", "0", "10", "12.5"]) expect(percentError(v, "Tax")).toBeUndefined();
-    for (const v of ["-1", "-0.5", "ten"]) expect(percentError(v, "Tax")).toBe(MESSAGES.percent("Tax"));
+    for (const v of ["", "0", "10", "12.5"]) expect(percentError(v, "tax")).toBeUndefined();
+    for (const v of ["-1", "-0.5", "ten"]) expect(percentError(v, "tax")).toBe(MESSAGES.percent("tax"));
   });
 
   test("booking and dish tax", () => {
     expect(validateBooking({ name: "Ana", party: "2" })).toEqual({});
     expect(validateBooking({ name: "", party: "0" })).toEqual({
       name: "Guest name is required.",
-      party: MESSAGES.count("Party size"),
+      party: MESSAGES.count("partySize"),
     });
-    expect(validateDish({ name: "Latte", price: "3", catId: "c", taxPct: "-5" })).toEqual({ taxPct: MESSAGES.percent("Tax") });
+    expect(validateDish({ name: "Latte", price: "3", catId: "c", taxPct: "-5" })).toEqual({ taxPct: MESSAGES.percent("tax") });
   });
 });
 
@@ -187,5 +187,22 @@ describe("withFieldError", () => {
     expect(withFieldError(start, "phone", undefined)).toEqual({ name: "Name is required." });
     expect(withFieldError(start, "name", "Other")).toEqual({ name: "Other", phone: "Phone is required." });
     expect(start).toEqual({ name: "Name is required.", phone: "Phone is required." });
+  });
+});
+
+describe("messages in Vietnamese", () => {
+  test("follow the language in use, worded the Vietnamese way", async () => {
+    const { i18n } = await import("./i18n");
+    await i18n.changeLanguage("vi");
+    try {
+      expect(countError("", "quantity")).toBe("Vui lòng nhập số lượng.");
+      expect(percentError("201", "tax", 200)).toBe("Giá trị thuế không được vượt quá 200%.");
+      expect(validateDish({ name: "", price: "3", catId: "" })).toMatchObject({
+        name: "Vui lòng nhập tên.",
+        catId: "Vui lòng chọn danh mục.",
+      });
+    } finally {
+      await i18n.changeLanguage("en");
+    }
   });
 });

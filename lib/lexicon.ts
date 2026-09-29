@@ -1,71 +1,77 @@
 import type { Domain } from "./types";
+import type { Messages } from "./i18n/messages";
 
+type LexiconText = Messages["lexicon"];
+export type ZoneKey = keyof LexiconText["zones"];
+export type CategoryKey = keyof LexiconText["categories"];
+export type DishKey = keyof LexiconText["dishes"];
+
+/**
+ * Each business type's sample content. Words live in the translation files
+ * (`lexicon.*`), so the landing page's sample menu reads in the visitor's
+ * language; here are only ids, prices and the order flow.
+ */
 export interface DomainLexicon {
-  label: string;
-  blurb: string;
-  zones: string[];
-  categories: { name: string; dishes: [string, number, string][] }[];
+  zones: ZoneKey[];
+  categories: { id: CategoryKey; dishes: { id: DishKey; price: number }[] }[];
+  /** Order statuses in order. Stored on orders as these English words; shown via `common.status.*`. */
   flow: string[];
 }
 
 export const LEXICON: Record<Domain, DomainLexicon> = {
   restaurant: {
-    label: "Restaurant",
-    blurb: "Covers, tables, kitchen",
-    zones: ["Main hall", "Terrace", "Bar"],
+    zones: ["mainHall", "terrace", "bar"],
     categories: [
       {
-        name: "Starters",
+        id: "starters",
         dishes: [
-          ["Pan con tomate", 5.5, "Toasted sourdough, tomato, olive oil"],
-          ["Padrón peppers", 7, "Blistered, sea salt"],
-          ["Iberian ham plate", 14, "24-month cured, 80g"],
+          { id: "panConTomate", price: 5.5 },
+          { id: "padron", price: 7 },
+          { id: "iberianHam", price: 14 },
         ],
       },
       {
-        name: "Mains",
+        id: "mains",
         dishes: [
-          ["Seafood paella", 19.5, "For one · 25 min · prawn, mussel, squid"],
-          ["Grilled sea bass", 22, "Whole fish, lemon, roast potatoes"],
-          ["Ribeye 300g", 26, "Served medium rare unless asked"],
+          { id: "seafoodPaella", price: 19.5 },
+          { id: "seaBass", price: 22 },
+          { id: "ribeye", price: 26 },
         ],
       },
       {
-        name: "Desserts",
+        id: "desserts",
         dishes: [
-          ["Crema catalana", 6.5, "Burnt cinnamon sugar"],
-          ["Cheesecake", 6, "Basque style, lightly burnt"],
+          { id: "cremaCatalana", price: 6.5 },
+          { id: "cheesecake", price: 6 },
         ],
       },
     ],
     flow: ["New", "Preparing", "Served", "Paid"],
   },
   cafe: {
-    label: "Café / Bakery",
-    blurb: "Counter and table service",
-    zones: ["Window", "Back room", "Counter"],
+    zones: ["window", "backRoom", "counter"],
     categories: [
       {
-        name: "Coffee",
+        id: "coffee",
         dishes: [
-          ["Flat white", 3.2, "Double shot, steamed milk"],
-          ["Cortado", 2.4, "Espresso cut with warm milk"],
-          ["Filter batch", 3, "Rotating single origin"],
+          { id: "flatWhite", price: 3.2 },
+          { id: "cortado", price: 2.4 },
+          { id: "filterBatch", price: 3 },
         ],
       },
       {
-        name: "Bakery",
+        id: "bakery",
         dishes: [
-          ["Almond croissant", 3.6, "Twice-baked, almond cream"],
-          ["Sourdough loaf", 4.8, "48-hour ferment, whole loaf"],
-          ["Cinnamon bun", 3.9, "Cardamom sugar, cream cheese glaze"],
+          { id: "almondCroissant", price: 3.6 },
+          { id: "sourdoughLoaf", price: 4.8 },
+          { id: "cinnamonBun", price: 3.9 },
         ],
       },
       {
-        name: "Brunch",
+        id: "brunch",
         dishes: [
-          ["Avocado toast", 9.5, "Sourdough, chilli oil, lime"],
-          ["Eggs benedict", 11, "Poached eggs, hollandaise, muffin"],
+          { id: "avocadoToast", price: 9.5 },
+          { id: "eggsBenedict", price: 11 },
         ],
       },
     ],

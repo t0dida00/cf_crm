@@ -1,5 +1,6 @@
 "use client";
 
+import { t } from "@/lib/i18n";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import { errorMessage, toRequestStatus } from "@/lib/requestStatus";
@@ -43,7 +44,7 @@ export function useOrderStats(lo: number, hi: number) {
   return {
     stats: result.data ?? EMPTY,
     status: result.isFetching ? "loading" as const : toRequestStatus(result),
-    error: result.isError ? errorMessage(result.error, "Couldn't load dashboard figures.") : null,
+    error: result.isError ? errorMessage(result.error, t("errors.dashboard")) : null,
     retry: () => void result.refetch(),
   };
 }

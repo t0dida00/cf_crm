@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("@/components/common/ContactForm", () => ({ ContactForm: () => null }));
 
+import { t } from "@/lib/i18n";
 import { LoginCard, loginNotice } from "./LoginCard";
 
 afterEach(cleanup);
@@ -10,17 +11,17 @@ beforeEach(() => localStorage.clear());
 
 describe("loginNotice", () => {
   test("an account under review is a warning, not an error", () => {
-    expect(loginNotice("CredentialsSignin", "account_pending")).toEqual({
+    expect(loginNotice(t, "CredentialsSignin", "account_pending")).toEqual({
       text: expect.stringMatching(/still being reviewed/),
       tone: "warning",
     });
   });
 
   test("everything else is an error", () => {
-    expect(loginNotice("CredentialsSignin", "account_disabled")?.tone).toBe("error");
-    expect(loginNotice("CredentialsSignin")).toEqual({ text: "Email or password is wrong, please try again.", tone: "error" });
-    expect(loginNotice("Configuration")?.text).toMatch(/Something went wrong/);
-    expect(loginNotice()).toBeNull();
+    expect(loginNotice(t, "CredentialsSignin", "account_disabled")?.tone).toBe("error");
+    expect(loginNotice(t, "CredentialsSignin")).toEqual({ text: "Email or password is wrong, please try again.", tone: "error" });
+    expect(loginNotice(t, "Configuration")?.text).toMatch(/Something went wrong/);
+    expect(loginNotice(t)).toBeNull();
   });
 });
 
