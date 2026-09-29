@@ -10,6 +10,7 @@ import { validateSignup, withFieldError, type FieldErrors } from "@/lib/validati
 import { focusFirstInvalid } from "@/lib/focus";
 import { Input } from "@/components/ui/Input";
 import { RequiredLabel } from "@/components/common/RequiredLabel";
+import { DISPLAY } from "@/components/marketing/typeScale";
 import { LoginSubmitButton } from "./LoginSubmitButton";
 
 export const MIN_PASSWORD_LENGTH = 8;
@@ -28,12 +29,12 @@ export function signupErrorMessage(error?: string, message?: string): string | n
 function PendingReview({ fullName, email }: { fullName: string; email: string }) {
   const router = useRouter();
   return (
-    <div className="rounded-xl border bg-card p-10">
-      <span className="mb-5 flex size-11 items-center justify-center rounded-full bg-brand-500/10 text-brand-700">
+    <div>
+      <span className="mb-5 flex size-11 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-600">
         <Hourglass size={22} weight="bold" aria-hidden />
       </span>
-      <h1 className="text-2xl font-bold">Dear {fullName},</h1>
-      <p role="status" className="mt-3 text-sm text-muted-foreground text-pretty">
+      <h1 className={`${DISPLAY} text-5xl text-balance`}>Dear {fullName},</h1>
+      <p role="status" className="mt-3 text-muted-foreground text-pretty">
         Your request is being reviewed. We&apos;ll notify you at <strong className="text-foreground">{email}</strong>{" "}
         once your account is approved. Then you can sign in and set up your business.
       </p>
@@ -93,10 +94,10 @@ export function SignupCard({
   if (state?.pending) return <PendingReview {...state.pending} />;
 
   return (
-    <div className="rounded-xl border bg-card p-10">
-      <h1 className="text-2xl font-bold">Create your owner account</h1>
-      <p className="mt-2 mb-8 text-sm text-muted-foreground text-pretty">
-        Next you&apos;ll set up your business. You can add staff accounts from the admin panel.
+    <div>
+      <h1 className={`${DISPLAY} text-5xl text-balance sm:text-6xl`}>Create your owner account</h1>
+      <p className="mt-3 mb-7 text-muted-foreground text-pretty">
+        For whoever runs the restaurant or café. Your staff get their own sign-ins from you later.
       </p>
 
       {errorText && (
@@ -157,9 +158,9 @@ export function SignupCard({
         <LoginSubmitButton label="Create account" pendingLabel="Creating account…" />
       </form>
 
-      <p className="mt-6 text-center text-xs text-muted-foreground">
+      <p className="mt-6 text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-foreground underline-offset-2 hover:underline">
+        <Link href="/login" className="rounded-sm font-semibold text-primary underline underline-offset-4">
           Sign in
         </Link>
       </p>

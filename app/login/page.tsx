@@ -6,7 +6,6 @@ import { signIn } from "@/auth";
 import { LoginCard } from "@/components/auth/LoginCard";
 import { MarketingFooter, MarketingHeader, MarketingShell } from "@/components/marketing/MarketingTheme";
 import { PassRail, TicketClip } from "@/components/marketing/TicketRail";
-import { DEMO_ACCOUNT } from "@/lib/demoAccount";
 import { safeCallbackPath } from "@/lib/safeRedirect";
 
 export const metadata = { title: "Sign in" };
@@ -71,11 +70,6 @@ export default async function LoginPage({
         <div className="ticket-torn -mt-1 bg-(--landing-card) px-6 pt-8 pb-12 shadow-[0_14px_24px_-14px_rgb(21_32_45/0.45)] sm:px-10">
           <LoginCard loginWithCredentials={loginWithCredentials} error={error} code={code} />
         </div>
-        <p className="mt-6 text-sm text-pretty text-(--landing-muted)">
-          Trying the demo? Sign in as Owner with{" "}
-          <span className="font-semibold text-(--landing-ink) select-all">{DEMO_ACCOUNT.email}</span> and{" "}
-          <span className="font-semibold text-(--landing-ink) select-all">{DEMO_ACCOUNT.password}</span>.
-        </p>
       </main>
 
       <MarketingFooter />

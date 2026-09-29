@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { BellRinging, ChartLineUp, QrCode, Table } from "@phosphor-icons/react/ssr";
 import { Button } from "@/components/ui/Button";
-import { DEMO_ACCOUNT } from "@/lib/demoAccount";
 import { LEXICON } from "@/lib/lexicon";
 import { SITE_OWNER } from "@/lib/siteOwner";
 import { ContactForm } from "@/components/common/ContactForm";
@@ -196,24 +195,17 @@ function DemoAccess() {
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-8">
         <div>
           <h2 id="demo-title" className="text-xl font-bold">
-            Try it with the demo account
+            Want a demo?
           </h2>
           <p className="mt-1 max-w-xl text-pretty text-(--landing-muted)">
-            Tably is a portfolio project. The demo owner account can see and change everything, so
-            explore the tables, menu, live orders and reports freely.
+            Tably is a portfolio project. Get in touch and I&apos;ll share a demo account to explore
+            the tables, menu, live orders and reports.
           </p>
         </div>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <dl className="flex gap-8">
-            <div>
-              <dt className="text-sm text-(--landing-muted)">Email</dt>
-              <dd className="mt-0.5 font-semibold select-all">{DEMO_ACCOUNT.email}</dd>
-            </div>
-            <div>
-              <dt className="text-sm text-(--landing-muted)">Password</dt>
-              <dd className="mt-0.5 font-semibold select-all">{DEMO_ACCOUNT.password}</dd>
-            </div>
-          </dl>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <Button asChild className={PRIMARY}>
+            <Link href="#contact">Contact me</Link>
+          </Button>
           <Link
             href="/instruction"
             className="rounded-sm text-sm font-medium text-(--landing-accent) underline underline-offset-4 hover:text-(--landing-accent-hover)"
