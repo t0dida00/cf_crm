@@ -1,5 +1,7 @@
 # CRM Restaurant — Frontend
 
+[![Tably preview](docs/preview.png)](https://www.tably.click/)
+
 Next.js 15 (App Router) frontend for a restaurant/cafe ordering and
 management platform: a staff/admin app for running the floor, and a
 guest-facing ordering app reached by scanning a table's QR code. Talks to
